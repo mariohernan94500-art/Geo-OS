@@ -1,0 +1,3043 @@
+Aquí tienes la actualización completa del geo-navigation.html. He reemplazado la sección del Orbe por un Robot CSS 3D complejo que incluye:
+
+Diseño C-3PO Personalizado: Cabeza dorada/metálica, ojos cian brillantes, cuerpo flotante.
+Sincronización Labial (Simulada): Una rejilla de altavoz que vibra cuando "habla".
+Estados de Ánimo:
+Idle: Flota suavemente, parpadea, mira alrededor.
+Thinking: Los ojos escanean de lado a lado, la cabeza se inclina.
+Speaking: La "boca" vibra al ritmo del texto.
+Singing: Baila y cambia de color a naranja/dorado intenso.
+Sleeping: Los ojos se apagan, la cabeza cae, aparecen las "Zzz".
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Geo OS · Navigation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#060810;font-family:'Syne',sans-serif;color:#eef2f8;touch-action:none;}
+
+:root{
+  --accent:#00c8ff;
+  --accent2:#00ffb2;
+  --gold:#f5b731;
+  --gold-dark:#b8860b;
+  --purple:#a78bfa;
+  --red:#ff5c7a;
+  --green:#00e5a0;
+  --bg:#060810;
+  --bg2:#0c0f1a;
+  --card:rgba(255,255,255,.04);
+  --card2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.12);
+  --text:#eef2f8;
+  --muted:rgba(238,242,248,.4);
+  --mono:'DM Mono',monospace;
+  --safe-top:44px;
+  --safe-bottom:34px;
+}
+
+/* ═══════ LAYOUT ROOT ═══════ */
+#os{
+  position:fixed;inset:0;
+  overflow:hidden;
+  background:var(--bg);
+}
+
+/* ═══════ NOISE + GRID ═══════ */
+#os::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+}
+#os::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.02) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+
+/* ═══════ STATUS BAR ═══════ */
+.statusbar{
+  position:absolute;top:0;left:0;right:0;
+  height:var(--safe-top);z-index:200;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 20px 8px;
+  background:linear-gradient(to bottom,rgba(6,8,16,.9),transparent);
+}
+.sb-time{font-size:15px;font-weight:700;font-family:var(--mono);letter-spacing:.02em;}
+.sb-icons{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);}
+.sb-signal{display:flex;gap:2px;align-items:flex-end;}
+.sb-bar{width:3px;border-radius:1px;background:var(--text);}
+
+/* ═══════ BOTTOM NAV ═══════ */
+.bottomnav{
+  position:absolute;bottom:0;left:0;right:0;
+  height:calc(60px + var(--safe-bottom));
+  z-index:200;
+  display:flex;align-items:flex-start;justify-content:space-around;
+  padding:8px 20px 0;
+  background:linear-gradient(to top,rgba(6,8,16,.95) 60%,transparent);
+  backdrop-filter:blur(20px);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 16px;border-radius:16px;cursor:pointer;
+  transition:all .2s;border:none;background:transparent;
+  color:var(--muted);font-family:'Syne',sans-serif;
+  -webkit-user-select:none;user-select:none;
+}
+.nav-btn.active{color:var(--accent);}
+.nav-btn:active{transform:scale(.9);}
+.nav-icon{font-size:22px;line-height:1;}
+.nav-label{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+.nav-dot{
+  width:4px;height:4px;border-radius:50%;background:var(--accent);
+  opacity:0;margin-top:-2px;transition:opacity .2s;
+}
+.nav-btn.active .nav-dot{opacity:1;}
+
+/* ═══════ SCREEN LAYER ═══════ */
+.screen{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  transition:transform .4s cubic-bezier(.4,0,.2,1), opacity .4s;
+  will-change:transform;
+  pointer-events:none;
+  opacity:0;
+}
+.screen.active{
+  pointer-events:all;
+  opacity:1;
+  transform:translateX(0) !important;
+}
+.screen.left {transform:translateX(-100%);opacity:0;}
+.screen.right{transform:translateX( 100%);opacity:0;}
+
+/* ═══════════════════════════════════════════
+   SCREEN 0 — AVATAR (C-3PO STYLE)
+═══════════════════════════════════════════ */
+#screenAvatar{background:var(--bg);z-index:10;}
+
+.avatar-bg{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+}
+.amb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;}
+.amb-a{width:500px;height:500px;background:rgba(245,183,49,.05);top:-100px;right:-120px;animation:ambFloat 8s ease-in-out infinite;}
+.amb-b{width:400px;height:400px;background:rgba(0,255,178,.04);bottom:-80px;left:-100px;animation:ambFloat 10s ease-in-out 2s infinite reverse;}
+@keyframes ambFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,20px)}}
+
+/* ── ROBOT CONTAINER ── */
+.orb-stage{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:5;
+  padding-top:var(--safe-top);
+}
+.robot-wrap{
+  position:relative;
+  width:160px;height:220px; /* Taller for body */
+  cursor:pointer;
+  transition: transform .5s cubic-bezier(.34,1.56,.64,1);
+  animation: robotFloat 4s ease-in-out infinite;
+}
+@keyframes robotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+
+/* ── HEAD ── */
+.r-head{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:110px;height:130px;
+  background: linear-gradient(135deg, #e6c86e 0%, #b8860b 40%, #5c4005 100%);
+  border-radius: 40px 40px 30px 30px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.4);
+  z-index:2;
+  display:flex;flex-direction:column;align-items:center;
+  transition: transform .3s;
+}
+/* Antenna */
+.r-head::before{
+  content:'';position:absolute;top:-25px;left:50%;transform:translateX(-50%);
+  width:4px;height:25px;background:#b8860b;
+}
+.r-head::after{
+  content:'';position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #fff, var(--accent));
+  box-shadow:0 0 10px var(--accent);
+  animation: antennaBlink 2s infinite;
+}
+@keyframes antennaBlink{0%,100%{opacity:1;box-shadow:0 0 10px var(--accent)}50%{opacity:.5;box-shadow:0 0 2px var(--accent)}}
+
+/* Eyes */
+.r-eyes{
+  width:70%;height:18px;margin-top:35px;
+  display:flex;justify-content:space-between;
+  background:rgba(0,0,0,.6);
+  border-radius:10px;
+  padding:2px;
+  box-shadow:inset 0 0 5px #000;
+}
+.r-eye{
+  flex:1;background:var(--accent);
+  border-radius:4px;
+  box-shadow:0 0 8px var(--accent);
+  transition: all .2s;
+}
+/* Mouth / Speaker */
+.r-mouth{
+  margin-top:25px;
+  width:60%;height:12px;
+  background:rgba(0,0,0,.8);
+  border-radius:4px;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:2px;
+}
+.r-m-line{
+  width:2px;height:60%;background:#333;border-radius:1px;
+  transition:height .1s, background .1s;
+}
+
+/* ── BODY ── */
+.r-body{
+  position:absolute;top:110px;left:50%;transform:translateX(-50%);
+  width:90px;height:110px;
+  background: linear-gradient(135deg, #d4af37 0%, #8a6e2f 50%, #3e2f0f 100%);
+  border-radius: 20px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,.6), 0 15px 35px rgba(0,0,0,.5);
+  z-index:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+/* Chest Light */
+.r-chest-light{
+  width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(circle, rgba(0,200,255,.8), rgba(0,50,100,.2));
+  box-shadow:0 0 15px rgba(0,200,255,.4);
+  border:2px solid rgba(255,255,255,.2);
+  animation: chestPulse 3s infinite;
+}
+@keyframes chestPulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
+
+/* Arms */
+.r-arm{
+  position:absolute;top:120px;width:25px;height:70px;
+  background: linear-gradient(to bottom, #d4af37, #8a6e2f);
+  border-radius:12px;
+  z-index:0;
+  transform-origin: top center;
+  transition: transform .5s;
+}
+.r-arm.left{left:calc(50% - 60px);transform:rotate(20deg);}
+.r-arm.right{right:calc(50% - 60px);transform:rotate(-20deg);}
+
+/* ── STATES ── */
+
+/* THINKING */
+.robot-wrap[data-state="thinking"] .r-head{transform:translateX(-50%) rotate(-5deg);}
+.robot-wrap[data-state="thinking"] .r-eye{
+  width:4px;height:4px;border-radius:50%;
+  background:#fff;box-shadow:0 0 5px #fff;
+  animation: eyeScan 1s infinite alternate;
+}
+@keyframes eyeScan{0%{transform:translateX(-5px)}100%{transform:translateX(5px)}}
+.robot-wrap[data-state="thinking"] .r-chest-light{background:radial-gradient(circle, rgba(167,139,250,.8), rgba(50,20,100,.2));box-shadow:0 0 15px rgba(167,139,250,.4);}
+
+/* SPEAKING */
+.robot-wrap[data-state="speaking"] .r-mouth{gap:1px;}
+.robot-wrap[data-state="speaking"] .r-m-line{
+  background:var(--accent);
+  animation: talkAnim .2s infinite alternate;
+}
+/* Randomize bar heights via nth-child in JS or CSS */
+.robot-wrap[data-state="speaking"] .r-m-line:nth-child(odd){animation-duration:.15s}
+.robot-wrap[data-state="speaking"] .r-m-line:nth-child(even){animation-duration:.25s}
+@keyframes talkAnim{0%{height:20%}100%{height:90%}}
+.robot-wrap[data-state="speaking"] .r-arm.left{transform:rotate(40deg);}
+.robot-wrap[data-state="speaking"] .r-arm.right{transform:rotate(-40deg);}
+
+/* SINGING */
+.robot-wrap[data-state="singing"]{animation: robotDance .6s infinite alternate;}
+@keyframes robotDance{0%{transform:rotate(-5deg) translateY(0)}100%{transform:rotate(5deg) translateY(-10px)}}
+.robot-wrap[data-state="singing"] .r-head{transform:translateX(-50%) rotate(10deg);}
+.robot-wrap[data-state="singing"] .r-chest-light{background:radial-gradient(circle, rgba(255,180,0,.9), rgba(180,50,0,.2));box-shadow:0 0 20px rgba(255,180,0,.6);}
+.robot-wrap[data-state="singing"] .r-eye{background:#ff9f1c;box-shadow:0 0 10px #ff9f1c;}
+.robot-wrap[data-state="singing"] .r-arm.left{transform:rotate(120deg);}
+.robot-wrap[data-state="singing"] .r-arm.right{transform:rotate(-120deg);}
+
+/* SLEEPING */
+.robot-wrap[data-state="sleeping"]{animation:none;transform:translateY(20px);}
+.robot-wrap[data-state="sleeping"] .r-head{transform:translateX(-50%) rotate(15deg);}
+.robot-wrap[data-state="sleeping"] .r-eye{height:2px;background:#333;box-shadow:none;}
+.robot-wrap[data-state="sleeping"] .r-chest-light{opacity:.2;animation:none;}
+.robot-wrap[data-state="sleeping"] .zzz{opacity:1;}
+
+/* ZZZ Animation */
+.zzz{
+  position:absolute;top:-40px;right:-20px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:0;transition:opacity .5s;pointer-events:none;z-index:10;
+}
+.z{font-size:16px;font-weight:800;color:rgba(140,160,255,.7);animation:zFloat 2s ease-in-out infinite;}
+.z:nth-child(1){font-size:10px;animation-delay:0s;}
+.z:nth-child(2){font-size:14px;animation-delay:.5s;}
+.z:nth-child(3){font-size:18px;animation-delay:1s;}
+@keyframes zFloat{0%{transform:translateY(0);opacity:.8}100%{transform:translateY(-20px);opacity:0}}
+
+/* avatar greeting */
+.avatar-greeting{
+  position:absolute;
+  bottom:calc(50% + 130px);
+  left:50%;transform:translateX(-50%);
+  white-space:nowrap;
+  background:rgba(12,15,26,.9);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:10px 18px;
+  font-size:14px;
+  line-height:1.5;
+  backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  z-index:10;
+  pointer-events:none;
+  opacity:0;
+  animation:greetIn .4s ease .3s both;
+}
+.avatar-greeting::after{
+  content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;background:rgba(12,15,26,.9);
+  border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);
+  transform:translateX(-50%) rotate(45deg);
+}
+@keyframes greetIn{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* bottom chat strip */
+.avatar-chat-strip{
+  position:relative;z-index:10;
+  padding:12px 16px calc(12px + var(--safe-bottom)) 16px;
+  display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(to top,rgba(6,8,16,.98) 70%,transparent);
+}
+.msg-row{display:flex;align-items:flex-end;gap:10px;}
+.msg-orb-mini{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 12px rgba(245,183,49,.4);
+}
+.msg-bubble{
+  flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:16px 16px 16px 4px;
+  padding:12px 16px;font-size:13px;line-height:1.65;
+  backdrop-filter:blur(12px);
+  transition:border-color .3s;
+  min-height:46px;
+}
+.msg-bubble.glow{border-color:rgba(245,183,49,.25);box-shadow:0 0 16px rgba(245,183,49,.06);}
+.msg-typing::after{content:'▋';animation:cr .7s step-end infinite;color:var(--gold);font-size:11px;}
+@keyframes cr{0%,100%{opacity:1}50%{opacity:0}}
+
+.inp-row{display:flex;gap:8px;align-items:center;}
+.inp{
+  flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:14px;padding:12px 16px;
+  font-size:14px;color:var(--text);font-family:'Syne',sans-serif;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.inp::placeholder{color:var(--muted);}
+.inp:focus{border-color:rgba(245,183,49,.3);box-shadow:0 0 16px rgba(245,183,49,.06);}
+
+.voice-btn{
+  width:44px;height:44px;border-radius:50%;border:none;flex-shrink:0;
+  background:rgba(245,183,49,.1);color:var(--gold);
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(245,183,49,.2);transition:all .2s;
+}
+.voice-btn.listening{
+  background:rgba(255,92,122,.15);color:var(--red);border-color:rgba(255,92,122,.3);
+  animation:listenPulse 1s ease-in-out infinite;
+}
+@keyframes listenPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,92,122,.3)}50%{box-shadow:0 0 0 10px rgba(255,92,122,0)}}
+.send-btn{
+  width:44px;height:44px;border-radius:14px;border:none;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold),#b8860b);
+  color:#000;font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(245,183,49,.3);transition:all .2s;
+}
+.send-btn:hover{transform:scale(1.06);}
+
+/* swipe hint */
+.swipe-hint{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:.3;pointer-events:none;z-index:5;
+  animation:hintPulse 3s ease-in-out 2s infinite;
+}
+@keyframes hintPulse{0%,100%{opacity:.3}50%{opacity:.6}}
+.sh-arrow{font-size:18px;color:var(--gold);}
+.sh-text{font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;writing-mode:vertical-rl;}
+
+/* ═══════════════════════════════════════════
+   SCREEN 1 — VIDA (projects list)
+═══════════════════════════════════════════ */
+#screenVida{
+  background:var(--bg);z-index:10;
+  padding-top:var(--safe-top);
+}
+
+.screen-header{
+  padding:16px 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.screen-title{
+  font-size:26px;font-weight:800;letter-spacing:-.03em;
+}
+.screen-title span{color:var(--gold);}
+.header-actions{display:flex;gap:8px;}
+.icon-btn{
+  width:38px;height:38px;border-radius:12px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:all .2s;
+  color:var(--muted);
+}
+.icon-btn:hover{border-color:var(--border2);color:var(--text);}
+.icon-btn:active{transform:scale(.9);}
+
+.vida-scroll{
+  flex:1;overflow-y:auto;padding:8px 20px calc(80px + var(--safe-bottom));
+  display:flex;flex-direction:column;gap:14px;
+  -webkit-overflow-scrolling:touch;
+}
+.vida-scroll::-webkit-scrollbar{display:none;}
+
+/* Project card */
+.proj-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:18px;cursor:pointer;
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.proj-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--proj-color,var(--gold));
+  opacity:.6;
+}
+.proj-card:active{transform:scale(.98);}
+.proj-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.proj-icon{
+  width:44px;height:44px;border-radius:13px;
+  background:rgba(var(--proj-rgb,245,183,49),.1);
+  border:1px solid rgba(var(--proj-rgb,245,183,49),.15);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.proj-meta{flex:1;}
+.proj-name{font-size:16px;font-weight:700;margin-bottom:3px;letter-spacing:-.01em;}
+.proj-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.proj-status{
+  font-size:10px;font-weight:700;letter-spacing:.08em;
+  padding:4px 10px;border-radius:100px;flex-shrink:0;
+  font-family:var(--mono);
+}
+.proj-status.active{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.proj-status.idea{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2);}
+.proj-status.pause{background:rgba(245,183,49,.1);color:var(--gold);border:1px solid rgba(245,183,49,.2);}
+
+/* progress bar */
+.proj-progress{margin-bottom:10px;}
+.prog-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.prog-text{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.prog-pct{font-size:12px;font-weight:700;color:var(--proj-color,var(--gold));}
+.prog-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:var(--proj-color,var(--gold));transition:width 1s ease;}
+
+/* tabs preview */
+.proj-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.proj-tab{
+  padding:4px 10px;border-radius:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  font-size:10px;color:var(--muted);font-family:var(--mono);
+  display:flex;align-items:center;gap:4px;
+}
+.proj-tab-dot{width:5px;height:5px;border-radius:50%;}
+
+/* new project button */
+.new-proj-btn{
+  border:1.5px dashed rgba(255,255,255,.1);border-radius:20px;
+  padding:22px;display:flex;align-items:center;justify-content:center;gap:12px;
+  cursor:pointer;transition:all .25s;color:var(--muted);font-size:14px;
+}
+.new-proj-btn:hover{border-color:rgba(245,183,49,.3);color:var(--gold);background:rgba(245,183,49,.03);}
+.new-proj-btn:active{transform:scale(.98);}
+
+/* ═══════════════════════════════════════════
+   SCREEN 2 — WORKSPACE (single project)
+═══════════════════════════════════════════ */
+#screenWorkspace{
+  background:var(--bg);z-index:20;
+  transform:translateX(100%);
+}
+#screenWorkspace.open{
+  transform:translateX(0);
+}
+
+.ws-header{
+  padding:calc(var(--safe-top) + 8px) 16px 0;
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.back-btn:active{transform:scale(.9);}
+.ws-title-wrap{flex:1;}
+.ws-title{font-size:18px;font-weight:700;letter-spacing:-.02em;}
+.ws-subtitle{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.windows-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:all .2s;
+  color:var(--muted);flex-shrink:0;
+}
+.windows-btn:hover{color:var(--gold);border-color:rgba(245,183,49,.3);}
+
+/* workspace tabs */
+.ws-tabs{
+  display:flex;gap:0;padding:12px 16px 0;
+  overflow-x:auto;flex-shrink:0;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.ws-tabs::-webkit-scrollbar{display:none;}
+.ws-tab{
+  padding:8px 16px;border-radius:12px 12px 0 0;
+  font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:all .2s;
+  border:1px solid transparent;border-bottom:none;
+  color:var(--muted);flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+}
+.ws-tab.active{
+  background:var(--bg2);color:var(--text);
+  border-color:var(--border);
+}
+
+/* workspace content */
+.ws-content{
+  flex:1;overflow-y:auto;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  padding:20px 16px calc(100px + var(--safe-bottom));
+  -webkit-overflow-scrolling:touch;
+}
+.ws-content::-webkit-scrollbar{display:none;}
+
+/* tab panels */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:tabIn .25s ease;}
+@keyframes tabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Idea tab */
+.idea-hero{
+  background:linear-gradient(135deg,rgba(245,183,49,.07),rgba(0,255,178,.04));
+  border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;
+}
+.idea-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:8px;}
+.idea-text{font-size:15px;line-height:1.75;color:var(--text);}
+
+.section-block{margin-bottom:20px;}
+.block-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.block-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Tasks */
+.task-list{display:flex;flex-direction:column;gap:8px;}
+.task{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;cursor:pointer;
+  transition:all .2s;
+}
+.task:active{transform:scale(.98);}
+.task-check{
+  width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .2s;font-size:12px;
+}
+.task.done .task-check{background:var(--green);border-color:var(--green);color:#000;}
+.task-text{font-size:13px;flex:1;line-height:1.4;}
+.task.done .task-text{color:var(--muted);text-decoration:line-through;}
+.task-pri{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:6px;}
+.pri-high{background:rgba(255,92,122,.1);color:var(--red);}
+.pri-med{background:rgba(245,183,49,.1);color:var(--gold);}
+.pri-low{background:rgba(0,200,255,.1);color:var(--accent);}
+
+/* Image grid */
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.img-thumb{
+  aspect-ratio:4/3;border-radius:12px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:var(--muted);cursor:pointer;
+  overflow:hidden;transition:all .2s;position:relative;
+}
+.img-thumb:active{transform:scale(.97);}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-thumb.add-btn{border-style:dashed;}
+.img-thumb.add-btn:hover{border-color:rgba(245,183,49,.3);color:var(--gold);}
+
+/* Stats / chart */
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px;text-align:center;
+}
+.stat-val{font-size:20px;font-weight:800;margin-bottom:2px;}
+.stat-key{font-size:10px;color:var(--muted);font-family:var(--mono);}
+
+.chart-wrap{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px;
+}
+.chart-title{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:12px;}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-fill{
+  width:100%;border-radius:4px 4px 0 0;
+  background:linear-gradient(to top,var(--gold),rgba(245,183,49,.4));
+  transition:height .8s cubic-bezier(.4,0,.2,1);
+  min-height:4px;
+}
+.bar-label{font-size:9px;font-family:var(--mono);color:var(--muted);}
+
+/* Chat tab in workspace */
+.ws-chat{display:flex;flex-direction:column;gap:10px;}
+.wsc-msg{
+  display:flex;gap:10px;
+}
+.wsc-msg.user{flex-direction:row-reverse;}
+.wsc-avatar{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 10px rgba(245,183,49,.3);
+}
+.wsc-bubble{
+  max-width:78%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;
+}
+.wsc-msg.geo .wsc-bubble{
+  background:var(--card);border:1px solid var(--border);border-radius:14px 14px 14px 4px;
+}
+.wsc-msg.user .wsc-bubble{
+  background:rgba(245,183,49,.1);border:1px solid rgba(245,183,49,.15);
+  border-radius:14px 14px 4px 14px;
+}
+.wsc-time{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;text-align:right;}
+
+/* ═══════════════════════════════════════════
+   WINDOWS MANAGER (like app switcher)
+═══════════════════════════════════════════ */
+#windowManager{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(6,8,16,.92);
+  backdrop-filter:blur(20px);
+  display:none;
+  flex-direction:column;
+  padding:calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 20px);
+}
+#windowManager.open{display:flex;animation:wmIn .3s ease;}
+@keyframes wmIn{from{opacity:0}to{opacity:1}}
+
+.wm-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.wm-title{font-size:18px;font-weight:700;}
+.wm-close{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;color:var(--muted);
+}
+
+.wm-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  overflow-y:auto;flex:1;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:20px;
+}
+.wm-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;cursor:pointer;
+  transition:all .2s;position:relative;
+  aspect-ratio:.55;
+  display:flex;flex-direction:column;
+}
+.wm-card:active{transform:scale(.96);}
+.wm-card-preview{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.wm-card-preview .preview-icon{font-size:48px;opacity:.3;}
+.wm-card-preview .preview-content{
+  position:absolute;inset:0;padding:12px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.preview-line{height:6px;border-radius:3px;background:rgba(255,255,255,.08);}
+.wm-card-bar{
+  padding:10px 12px;border-top:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+  display:flex;align-items:center;gap:8px;
+}
+.wm-card-icon{font-size:16px;}
+.wm-card-name{font-size:12px;font-weight:600;flex:1;}
+.wm-card-close{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(255,92,122,.2);border:none;
+  color:var(--red);font-size:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* voice command overlay */
+#voiceOverlay{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(6,8,16,.85);backdrop-filter:blur(24px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#voiceOverlay.open{display:flex;animation:voiceIn .2s ease;}
+@keyframes voiceIn{from{opacity:0}to{opacity:1}}
+.voice-orb{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 50px rgba(245,183,49,.5),0 0 100px rgba(245,183,49,.2);
+  animation:voicePulse .8s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.voice-orb::before{content:'';position:absolute;width:55%;height:42%;background:radial-gradient(ellipse,rgba(255,255,255,.45) 0%,transparent 70%);top:12%;left:15%;border-radius:50%;filter:blur(3px);}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 50px rgba(245,183,49,.5),0 0 100px rgba(245,183,49,.2)}50%{box-shadow:0 0 70px rgba(245,183,49,.7),0 0 140px rgba(245,183,49,.35)}}
+
+/* waveform under voice orb */
+.voice-wave{display:flex;align-items:center;gap:4px;height:40px;}
+.vw-bar{
+  width:4px;border-radius:2px;background:var(--gold);
+  animation:vwAnim .5s ease-in-out infinite;
+}
+.vw-bar:nth-child(1){height:10px;animation-delay:0s}
+.vw-bar:nth-child(2){height:20px;animation-delay:.08s}
+.vw-bar:nth-child(3){height:32px;animation-delay:.16s}
+.vw-bar:nth-child(4){height:40px;animation-delay:.24s}
+.vw-bar:nth-child(5){height:32px;animation-delay:.32s}
+.vw-bar:nth-child(6){height:20px;animation-delay:.4s}
+.vw-bar:nth-child(7){height:10px;animation-delay:.48s}
+@keyframes vwAnim{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+.voice-label{font-size:16px;font-weight:600;color:var(--text);}
+.voice-hint{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.voice-close{
+  padding:10px 28px;border-radius:100px;border:1px solid var(--border);
+  background:var(--card);color:var(--muted);font-family:'Syne',sans-serif;
+  font-size:13px;cursor:pointer;
+}
+
+/* pip avatar (shown when in sub-screens) */
+#pipAvatar{
+  position:fixed;z-index:150;
+  width:56px;height:56px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 20px rgba(245,183,49,.5),0 4px 20px rgba(0,0,0,.4);
+  bottom:calc(80px + var(--safe-bottom));right:16px;
+  cursor:pointer;display:none;
+  align-items:center;justify-content:center;
+  border:2px solid rgba(245,183,49,.3);
+  transition:all .35s cubic-bezier(.34,.8,.44,1);
+  -webkit-user-select:none;user-select:none;
+}
+#pipAvatar::before{content:'';position:absolute;width:50%;height:38%;background:radial-gradient(ellipse,rgba(255,255,255,.4) 0%,transparent 70%);top:12%;left:15%;border-radius:50%;filter:blur(2px);}
+#pipAvatar.show{display:flex;}
+.pip-ring-live{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid rgba(245,183,49,.4);
+  animation:pipRingLive 1.5s ease-out infinite;
+  pointer-events:none;
+}
+@keyframes pipRingLive{0%{transform:scale(.9);opacity:.8}100%{transform:scale(1.4);opacity:0}}
+</style>
+</head>
+<body>
+<div id="os">
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-time" id="clock">9:41</div>
+  <div class="sb-icons">
+    <div class="sb-signal">
+      <div class="sb-bar" style="height:5px"></div>
+      <div class="sb-bar" style="height:8px"></div>
+      <div class="sb-bar" style="height:11px"></div>
+      <div class="sb-bar" style="height:14px"></div>
+    </div>
+    <span>WiFi</span>
+    <span>🔋</span>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 0: AVATAR (C-3PO STYLE) ═══ -->
+<div class="screen active" id="screenAvatar">
+  <div class="avatar-bg">
+    <div class="amb amb-a"></div>
+    <div class="amb amb-b"></div>
+  </div>
+
+  <div class="orb-stage">
+    <!-- ROBOT WRAPPER -->
+    <div class="robot-wrap" id="robotWrap" data-state="idle" onclick="handleRobotTap()">
+      
+      <!-- HEAD -->
+      <div class="r-head">
+        <div class="r-eyes">
+          <div class="r-eye"></div>
+          <div class="r-eye"></div>
+        </div>
+        <div class="r-mouth" id="robotMouth">
+          <!-- Generated by JS for animation -->
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="r-body">
+        <div class="r-chest-light"></div>
+      </div>
+
+      <!-- ARMS -->
+      <div class="r-arm left"></div>
+      <div class="r-arm right"></div>
+
+      <!-- SLEEP ZZZ -->
+      <div class="zzz"><div class="z">z</div><div class="z">z</div><div class="z">Z</div></div>
+    </div>
+
+    <div class="avatar-greeting" id="greeting">Hola 👋 ¿Qué hacemos hoy?</div>
+    <div class="swipe-hint"><div class="sh-arrow">‹</div><div class="sh-text">VIDA</div></div>
+  </div>
+
+  <div class="avatar-chat-strip">
+    <div class="msg-row">
+      <div class="msg-orb-mini"></div>
+      <div class="msg-bubble glow" id="msgBubble">
+        <span id="msgText">Buenos días ☀️ Tienes 3 tareas pendientes en <strong>Sitio Web</strong> y un recordatorio a las 15:00.</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <input class="inp" id="mainInp" placeholder="Escríbele a Geo o toca el mic..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎙️</button>
+      <button class="send-btn" onclick="sendMsg()">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 1: VIDA ═══ -->
+<div class="screen right" id="screenVida">
+  <div class="screen-header">
+    <div class="screen-title">Mi <span>Vida</span></div>
+    <div class="header-actions">
+      <div class="icon-btn" onclick="openVoice()">🎙️</div>
+      <div class="icon-btn" onclick="openWindowManager()">⊞</div>
+    </div>
+  </div>
+
+  <div class="vida-scroll" id="vidaScroll">
+
+    <!-- Project 1 -->
+    <div class="proj-card" style="--proj-color:#00c8ff;--proj-rgb:0,200,255" onclick="openWorkspace('web')">
+      <div class="proj-top">
+        <div class="proj-icon">🌐</div>
+        <div class="proj-meta">
+          <div class="proj-name">Sitio Web Personal</div>
+          <div class="proj-desc">Portfolio + blog personal con integración de proyectos</div>
+        </div>
+        <div class="proj-status active">ACTIVO</div>
+      </div>
+      <div class="proj-progress">
+        <div class="prog-label">
+          <span class="prog-text">PROGRESO</span>
+          <span class="prog-pct">65%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:65%"></div></div>
+      </div>
+      <div class="proj-tabs">
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00c8ff"></div>Idea</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00e5a0"></div>Tareas</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#f5b731"></div>Preview</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#a78bfa"></div>Chat Geo</div>
+      </div>
+    </div>
+
+    <!-- Project 2 -->
+    <div class="proj-card" style="--proj-color:#a78bfa;--proj-rgb:167,139,250" onclick="openWorkspace('fitness')">
+      <div class="proj-top">
+        <div class="proj-icon">💪</div>
+        <div class="proj-meta">
+          <div class="proj-name">Transformación Física</div>
+          <div class="proj-desc">Plan de 90 días · dieta + entrenamiento + métricas</div>
+        </div>
+        <div class="proj-status active">ACTIVO</div>
+      </div>
+      <div class="proj-progress">
+        <div class="prog-label">
+          <span class="prog-text">SEMANA 3 / 12</span>
+          <span class="prog-pct" style="color:#a78bfa">28%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:28%;background:#a78bfa"></div></div>
+      </div>
+      <div class="proj-tabs">
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#a78bfa"></div>Plan</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00e5a0"></div>Métricas</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#f5b731"></div>Dieta</div>
+      </div>
+    </div>
+
+    <!-- Project 3 — idea phase -->
+    <div class="proj-card" style="--proj-color:#f5b731;--proj-rgb:245,183,49" onclick="openWorkspace('negocio')">
+      <div class="proj-top">
+        <div class="proj-icon">🚀</div>
+        <div class="proj-meta">
+          <div class="proj-name">Geo Bot — Producto</div>
+          <div class="proj-desc">Lanzar Geo Bot como SaaS para empresas y creadores</div>
+        </div>
+        <div class="proj-status idea">IDEA</div>
+      </div>
+      <div class="proj-progress">
+        <div class="prog-label">
+          <span class="prog-text">FASE INICIAL</span>
+          <span class="prog-pct" style="color:#f5b731">12%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:12%;background:#f5b731"></div></div>
+      </div>
+      <div class="proj-tabs">
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#f5b731"></div>Concepto</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00c8ff"></div>Mercado</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#a78bfa"></div>Roadmap</div>
+      </div>
+    </div>
+
+    <!-- New project -->
+    <div class="new-proj-btn" onclick="newProject()">
+      <span style="font-size:22px">＋</span>
+      <span>Nuevo proyecto · o pídeselo a Geo</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SCREEN 2: WORKSPACE ═══ -->
+<div class="screen" id="screenWorkspace">
+  <div class="ws-header">
+    <div class="back-btn" onclick="closeWorkspace()">←</div>
+    <div class="ws-title-wrap">
+      <div class="ws-title" id="wsTitle">Sitio Web Personal</div>
+      <div class="ws-subtitle" id="wsSubtitle">ACTIVO · 65% completado</div>
+    </div>
+    <div class="windows-btn" onclick="openWindowManager()">⊞</div>
+  </div>
+
+  <div class="ws-tabs" id="wsTabs">
+    <div class="ws-tab active" onclick="switchTab('idea',this)">💡 Idea</div>
+    <div class="ws-tab" onclick="switchTab('tareas',this)">✅ Tareas</div>
+    <div class="ws-tab" onclick="switchTab('imagenes',this)">🖼️ Imágenes</div>
+    <div class="ws-tab" onclick="switchTab('stats',this)">📊 Avance</div>
+    <div class="ws-tab" onclick="switchTab('chat',this)">💬 Chat Geo</div>
+  </div>
+
+  <div class="ws-content">
+
+    <!-- TAB: IDEA -->
+    <div class="tab-panel active" id="tab-idea">
+      <div class="idea-hero">
+        <div class="idea-label">La Idea</div>
+        <div class="idea-text">Crear un portfolio personal moderno que muestre mis proyectos de desarrollo, integre un blog técnico y conecte con mis redes. Quiero que sea minimalista, rápido y que refleje mi identidad como desarrollador.</div>
+      </div>
+      <div class="section-block">
+        <div class="block-title">Objetivos clave</div>
+        <div class="task-list">
+          <div class="task done" onclick="toggleTask(this)">
+            <div class="task-check">✓</div>
+            <div class="task-text">Definir paleta de colores y tipografía</div>
+            <div class="task-pri pri-low">baja</div>
+          </div>
+          <div class="task done" onclick="toggleTask(this)">
+            <div class="task-check">✓</div>
+            <div class="task-text">Maqueta en Figma sección Hero</div>
+            <div class="task-pri pri-med">media</div>
+          </div>
+          <div class="task" onclick="toggleTask(this)">
+            <div class="task-check"></div>
+            <div class="task-text">Integrar blog con sistema de tags</div>
+            <div class="task-pri pri-high">alta</div>
+          </div>
+          <div class="task" onclick="toggleTask(this)">
+            <div class="task-check"></div>
+            <div class="task-text">SEO básico + meta tags</div>
+            <div class="task-pri pri-med">media</div>
+          </div>
+          <div class="task" onclick="toggleTask(this)">
+            <div class="task-check"></div>
+            <div class="task-text">Conectar dominio en Hostinger</div>
+            <div class="task-pri pri-high">alta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: TAREAS -->
+    <div class="tab-panel" id="tab-tareas">
+      <div class="stat-row" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-val" style="color:var(--green)">5</div><div class="stat-key">LISTAS</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--accent)">3</div><div class="stat-key">PENDIENTES</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--muted)">2</div><div class="stat-key">BLOQUEADAS</div></div>
+      </div>
+      <div class="section-block">
+        <div class="block-title">Esta semana</div>
+        <div class="task-list">
+          <div class="task" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Componente navbar responsive</div><div class="task-pri pri-high">alta</div></div>
+          <div class="task" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Sección proyectos con filtros</div><div class="task-pri pri-high">alta</div></div>
+          <div class="task" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Formulario de contacto</div><div class="task-pri pri-med">media</div></div>
+          <div class="task done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-text">Deploy en Vercel</div><div class="task-pri pri-low">baja</div></div>
+          <div class="task done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-text">Setup repositorio GitHub</div><div class="task-pri pri-low">baja</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: IMÁGENES -->
+    <div class="tab-panel" id="tab-imagenes">
+      <div class="section-block">
+        <div class="block-title">Referencias visuales</div>
+        <div class="img-grid">
+          <div class="img-thumb" style="background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(0,100,200,.1))">
+            <span>🌐</span>
+          </div>
+          <div class="img-thumb" style="background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(100,80,200,.1))">
+            <span>🎨</span>
+          </div>
+          <div class="img-thumb" style="background:linear-gradient(135deg,rgba(0,229,160,.15),rgba(0,150,100,.1))">
+            <span>📐</span>
+          </div>
+          <div class="img-thumb add-btn">＋</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: AVANCE/STATS -->
+    <div class="tab-panel" id="tab-stats">
+      <div class="stat-row">
+        <div class="stat"><div class="stat-val" style="color:var(--accent)">65%</div><div class="stat-key">TOTAL</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--green)">14d</div><div class="stat-key">ACTIVO</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--gold)">8</div><div class="stat-key">SESIONES</div></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">PROGRESO SEMANAL (%)</div>
+        <div class="bar-chart">
+          <div class="bar-col"><div class="bar-fill" style="height:20%"></div><div class="bar-label">L1</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:35%"></div><div class="bar-label">L2</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:45%"></div><div class="bar-label">L3</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:55%"></div><div class="bar-label">L4</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:65%"></div><div class="bar-label">HOY</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:5%;opacity:.3;background:var(--muted)"></div><div class="bar-label">—</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:5%;opacity:.3;background:var(--muted)"></div><div class="bar-label">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CHAT GEO -->
+    <div class="tab-panel" id="tab-chat">
+      <div class="ws-chat" id="wsChat">
+        <div class="wsc-msg geo">
+          <div class="wsc-avatar"></div>
+          <div>
+            <div class="wsc-bubble">Para tu sitio web te sugiero empezar por el navbar y el hero. ¿Quieres que generemos el código base juntos?</div>
+            <div class="wsc-time">ayer 14:22</div>
+          </div>
+        </div>
+        <div class="wsc-msg user">
+          <div>
+            <div class="wsc-bubble">Sí, necesito que sea responsive y con animaciones suaves</div>
+            <div class="wsc-time">ayer 14:25</div>
+          </div>
+        </div>
+        <div class="wsc-msg geo">
+          <div class="wsc-avatar"></div>
+          <div>
+            <div class="wsc-bubble">Perfecto. Aquí tienes una base con Tailwind + Framer Motion. El navbar colapsa en móvil con transición de 300ms...</div>
+            <div class="wsc-time">ayer 14:26</div>
+          </div>
+        </div>
+      </div>
+      <div class="inp-row" style="margin-top:16px">
+        <input class="inp" id="wsInp" placeholder="Pregunta algo sobre este proyecto..." onkeydown="if(event.key==='Enter')sendWsMsg()">
+        <button class="voice-btn" onclick="openVoice()" style="font-size:16px">🎙️</button>
+        <button class="send-btn" onclick="sendWsMsg()">→</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ WINDOW MANAGER ═══ -->
+<div id="windowManager">
+  <div class="wm-header">
+    <div class="wm-title">Ventanas abiertas</div>
+    <div class="wm-close" onclick="closeWindowManager()">✕</div>
+  </div>
+  <div class="wm-grid">
+    <div class="wm-card" onclick="goToScreen('avatar');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content" style="align-items:center;justify-content:center">
+          <div style="width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.8),rgba(184,134,11,.6));box-shadow:0 0 20px rgba(245,183,49,.4)"></div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">🤖</div><div class="wm-card-name">Geo · Inicio</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <div class="wm-card" onclick="goToScreen('vida');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content">
+          <div class="preview-line" style="width:80%"></div>
+          <div class="preview-line" style="width:60%"></div>
+          <div style="height:30px;background:rgba(0,200,255,.1);border-radius:8px;margin-top:4px"></div>
+          <div style="height:30px;background:rgba(167,139,250,.1);border-radius:8px"></div>
+          <div style="height:30px;background:rgba(245,183,49,.1);border-radius:8px"></div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">🌱</div><div class="wm-card-name">Mi Vida</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <div class="wm-card" onclick="openWorkspace('web');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content">
+          <div style="height:14px;background:rgba(0,200,255,.15);border-radius:4px;margin-bottom:6px"></div>
+          <div class="preview-line" style="width:90%"></div>
+          <div class="preview-line" style="width:70%"></div>
+          <div class="preview-line" style="width:80%"></div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">🌐</div><div class="wm-card-name">Sitio Web</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <div class="wm-card" onclick="openWorkspace('fitness');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content">
+          <div style="display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:auto">
+            <div style="flex:1;height:30%;background:rgba(167,139,250,.3);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:50%;background:rgba(167,139,250,.3);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:70%;background:rgba(167,139,250,.5);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:60%;background:rgba(167,139,250,.3);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:85%;background:rgba(167,139,250,.7);border-radius:3px 3px 0 0"></div>
+          </div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">💪</div><div class="wm-card-name">Fitness</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <!-- Add new window slot -->
+    <div class="wm-card" style="border-style:dashed;opacity:.5" onclick="newProject();closeWindowManager()">
+      <div class="wm-card-preview"><div class="preview-icon">＋</div></div>
+      <div class="wm-card-bar"><div class="wm-card-icon">✨</div><div class="wm-card-name">Nuevo</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VOICE OVERLAY ═══ -->
+<div id="voiceOverlay">
+  <div class="voice-orb"></div>
+  <div class="voice-wave">
+    <div class="vw-bar"></div><div class="vw-bar"></div><div class="vw-bar"></div>
+    <div class="vw-bar"></div><div class="vw-bar"></div><div class="vw-bar"></div>
+    <div class="vw-bar"></div>
+  </div>
+  <div class="voice-label" id="voiceLabel">Escuchando...</div>
+  <div class="voice-hint" id="voiceHint">Di: "Abre Fitness" · "Nuevo proyecto" · "Qué tengo hoy"</div>
+  <button class="voice-close" onclick="closeVoice()">Cancelar</button>
+</div>
+
+<!-- PIP Avatar (shows when in sub-screens) -->
+<div id="pipAvatar" onclick="goToScreen('avatar')">
+  <div class="pip-ring-live"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav">
+  <div class="nav-btn active" id="nav-home" onclick="goToScreen('avatar')">
+    <div class="nav-icon">🤖</div>
+    <div class="nav-label">Geo</div>
+    <div class="nav-dot"></div>
+  </div>
+  <div class="nav-btn" id="nav-vida" onclick="goToScreen('vida')">
+    <div class="nav-icon">🌱</div>
+    <div class="nav-label">Vida</div>
+    <div class="nav-dot"></div>
+  </div>
+  <div class="nav-btn" id="nav-windows" onclick="openWindowManager()">
+    <div class="nav-icon">⊞</div>
+    <div class="nav-label">Ventanas</div>
+    <div class="nav-dot"></div>
+  </div>
+</div>
+
+</div><!-- /os -->
+
+<script>
+// ═══════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours()+':'+(String(n.getMinutes()).padStart(2,'0'));
+}
+tick(); setInterval(tick,15000);
+
+// ═══════════════════════════════════
+// ROBOT MOUTH GENERATOR
+// ═══════════════════════════════════
+const mouth = document.getElementById('robotMouth');
+for(let i=0; i<8; i++){
+  const line = document.createElement('div');
+  line.className = 'r-m-line';
+  mouth.appendChild(line);
+}
+
+// ═══════════════════════════════════
+// SCREEN NAV
+// ═══════════════════════════════════
+const screens = { avatar:'screenAvatar', vida:'screenVida' };
+let currentScreen = 'avatar';
+
+function goToScreen(s){
+  // update classes
+  const order = ['avatar','vida'];
+  const ci = order.indexOf(currentScreen);
+  const ti = order.indexOf(s);
+
+  Object.keys(screens).forEach(k=>{
+    const el = document.getElementById(screens[k]);
+    el.classList.remove('active','left','right');
+    const i = order.indexOf(k);
+    if(i < ti) el.classList.add('left');
+    else if(i > ti) el.classList.add('right');
+    else el.classList.add('active');
+  });
+
+  // nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(s==='avatar') document.getElementById('nav-home').classList.add('active');
+  if(s==='vida')   document.getElementById('nav-vida').classList.add('active');
+
+  // pip avatar
+  const pip = document.getElementById('pipAvatar');
+  pip.classList.toggle('show', s!=='avatar');
+
+  currentScreen = s;
+}
+
+// ═══════════════════════════════════
+// WORKSPACE
+// ═══════════════════════════════════
+const wsData = {
+  web:     { title:'Sitio Web Personal',    subtitle:'ACTIVO · 65% completado', color:'#00c8ff' },
+  fitness: { title:'Transformación Física', subtitle:'ACTIVO · Semana 3 / 12',  color:'#a78bfa' },
+  negocio: { title:'Geo Bot — Producto',    subtitle:'IDEA · 12% completado',   color:'#f5b731' },
+};
+
+function openWorkspace(id){
+  const d = wsData[id] || wsData.web;
+  document.getElementById('wsTitle').textContent = d.title;
+  document.getElementById('wsSubtitle').textContent = d.subtitle;
+
+  const ws = document.getElementById('screenWorkspace');
+  ws.style.transition = 'transform .4s cubic-bezier(.4,0,.2,1)';
+  ws.style.transform = 'translateX(0)';
+  ws.style.opacity = '1';
+  ws.style.pointerEvents = 'all';
+
+  // show pip
+  document.getElementById('pipAvatar').classList.add('show');
+}
+
+function closeWorkspace(){
+  const ws = document.getElementById('screenWorkspace');
+  ws.style.transform = 'translateX(100%)';
+  ws.style.pointerEvents = 'none';
+  setTimeout(()=>{ ws.style.opacity='0'; },400);
+}
+
+// ═══════════════════════════════════
+// TABS
+// ═══════════════════════════════════
+function switchTab(name, btn){
+  document.querySelectorAll('.ws-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('tab-'+name);
+  if(panel) panel.classList.add('active');
+}
+
+// ═══════════════════════════════════
+// TASK TOGGLE
+// ═══════════════════════════════════
+function toggleTask(el){
+  el.classList.toggle('done');
+  if(el.classList.contains('done')) el.querySelector('.task-check').textContent='✓';
+  else el.querySelector('.task-check').textContent='';
+}
+
+// ═══════════════════════════════════
+// WINDOW MANAGER
+// ═══════════════════════════════════
+function openWindowManager(){
+  document.getElementById('windowManager').classList.add('open');
+  document.getElementById('nav-windows').classList.add('active');
+}
+function closeWindowManager(){
+  document.getElementById('windowManager').classList.remove('open');
+  document.getElementById('nav-windows').classList.remove('active');
+}
+
+// ═══════════════════════════════════
+// VOICE
+// ═══════════════════════════════════
+let voiceActive = false;
+let voiceTimer = null;
+
+function openVoice(){
+  document.getElementById('voiceOverlay').classList.add('open');
+  voiceActive = true;
+  setRobotState('thinking');
+  // simulate voice command after 2.5s
+  voiceTimer = setTimeout(()=>{
+    const cmds = [
+      { label:'Abre Fitness', action:()=>{ closeVoice(); openWorkspace('fitness'); } },
+      { label:'Qué tengo hoy', action:()=>{ closeVoice(); respondMsg('Hoy tienes: navbar responsive a las 10am, revisión de métricas fitness y 3 tareas pendientes en Sitio Web.'); } },
+      { label:'Nuevo proyecto música', action:()=>{ closeVoice(); newProject(); } },
+    ];
+    const r = cmds[Math.floor(Math.random()*cmds.length)];
+    document.getElementById('voiceLabel').textContent = '"'+r.label+'"';
+    document.getElementById('voiceHint').textContent = '✓ Entendido';
+    setTimeout(r.action, 700);
+  }, 2500);
+}
+
+function toggleVoice(){
+  const btn = document.getElementById('voiceBtn');
+  if(!voiceActive){ openVoice(); btn.classList.add('listening'); }
+  else { closeVoice(); btn.classList.remove('listening'); }
+}
+
+function closeVoice(){
+  clearTimeout(voiceTimer);
+  voiceActive = false;
+  document.getElementById('voiceOverlay').classList.remove('open');
+  document.getElementById('voiceBtn').classList.remove('listening');
+  document.getElementById('voiceLabel').textContent = 'Escuchando...';
+  document.getElementById('voiceHint').textContent = 'Di: "Abre Fitness" · "Nuevo proyecto" · "Qué tengo hoy"';
+  setRobotState('idle');
+}
+
+// ═══════════════════════════════════
+// ROBOT STATE
+// ═══════════════════════════════════
+const STATES = ['idle','thinking','speaking','sleeping','singing'];
+let stateIdx = 0;
+
+function setRobotState(s){
+  document.getElementById('robotWrap').dataset.state = s;
+}
+function handleRobotTap(){
+  // cycle through states for demo
+  stateIdx = (stateIdx+1) % STATES.length;
+  setRobotState(STATES[stateIdx]);
+  if(STATES[stateIdx]==='sleeping'){
+    respondMsg('Buenas noches 🌙 Hasta mañana...');
+  } else if(STATES[stateIdx]==='singing'){
+    respondMsg('🎤 ♪ Serenata especial activada ♪');
+  }
+}
+
+// ═══════════════════════════════════
+// MESSAGING
+// ═══════════════════════════════════
+let busy = false;
+const history = [];
+
+async function sendMsg(){
+  const inp = document.getElementById('mainInp');
+  const text = inp.value.trim();
+  if(!text || busy) return;
+  inp.value='';
+  busy=true;
+  history.push({role:'user',content:text});
+  setRobotState('thinking');
+  document.getElementById('msgBubble').classList.add('glow');
+  document.getElementById('msgText').textContent='...';
+  document.getElementById('msgText').classList.add('msg-typing');
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:`Eres Geo, asistente personal inteligente de un OS llamado Geo OS. Eres como Jarvis: proactivo, conciso, personal. Conoces los proyectos del usuario: Sitio Web (65%), Transformación Física (28%), Geo Bot producto (12%). Responde en máximo 2 frases. Idioma: español.`,
+        messages:history
+      })
+    });
+    const d = await res.json();
+    const reply = d.content?.[0]?.text || 'Entendido.';
+    history.push({role:'assistant',content:reply});
+    respondMsg(reply);
+  } catch(e){
+    respondMsg('Error de conexión. Intenta de nuevo.');
+  }
+  busy=false;
+}
+
+function respondMsg(text){
+  const el = document.getElementById('msgText');
+  el.classList.remove('msg-typing');
+  setRobotState('speaking');
+  let i=0;
+  el.textContent='';
+  el.classList.add('msg-typing');
+  const spd = Math.max(14, Math.min(28, 1000/text.length));
+  const iv = setInterval(()=>{
+    el.textContent += text[i++];
+    if(i>=text.length){
+      clearInterval(iv);
+      el.classList.remove('msg-typing');
+      setTimeout(()=>setRobotState('idle'),1200);
+    }
+  },spd);
+}
+
+// workspace chat
+async function sendWsMsg(){
+  const inp = document.getElementById('wsInp');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  const chat = document.getElementById('wsChat');
+  // add user bubble
+  chat.innerHTML += `<div class="wsc-msg user"><div><div class="wsc-bubble">${text}</div><div class="wsc-time">ahora</div></div></div>`;
+  chat.scrollTop = chat.scrollHeight;
+  // geo response
+  setTimeout(()=>{
+    chat.innerHTML += `<div class="wsc-msg geo"><div class="wsc-avatar"></div><div><div class="wsc-bubble" id="wsTyping">...</div><div class="wsc-time">ahora</div></div></div>`;
+    chat.scrollTop = chat.scrollHeight;
+    // simulate response
+    setTimeout(()=>{
+      document.getElementById('wsTyping').textContent = 'Entendido. Voy a trabajar en eso para tu proyecto. ¿Quieres que también actualice las tareas?';
+      document.getElementById('wsTyping').id='';
+      chat.scrollTop = chat.scrollHeight;
+    },1200);
+  },600);
+}
+
+// ═══════════════════════════════════
+// NEW PROJECT
+// ═══════════════════════════════════
+function newProject(){
+  respondMsg('¡Claro! Cuéntame la idea del nuevo proyecto y le creo una ventana completa con todo lo necesario 🚀');
+  goToScreen('avatar');
+}
+
+// ═══════════════════════════════════
+// SWIPE GESTURE
+// ═══════════════════════════════════
+let tx0=0, ty0=0;
+document.addEventListener('touchstart',e=>{
+  tx0=e.touches[0].clientX;
+  ty0=e.touches[0].clientY;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx0;
+  const dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)>Math.abs(dy)*1.5 && Math.abs(dx)>55){
+    // horizontal swipe
+    if(document.getElementById('windowManager').classList.contains('open')) return;
+    if(document.getElementById('voiceOverlay').classList.contains('open')) return;
+    const ws = document.getElementById('screenWorkspace');
+    if(ws.style.transform==='translateX(0px)'||ws.style.transform==='translateX(0)') return;
+    if(dx < 0 && currentScreen==='avatar') goToScreen('vida');
+    if(dx > 0 && currentScreen==='vida')   goToScreen('avatar');
+  }
+},{passive:true});
+
+// Also mouse drag for desktop testing
+let mx0=0, dragging=false;
+document.addEventListener('mousedown',e=>{ mx0=e.clientX; dragging=true; });
+document.addEventListener('mouseup',e=>{
+  if(!dragging) return; dragging=false;
+  const dx=e.clientX-mx0;
+  if(Math.abs(dx)>80){
+    const ws = document.getElementById('screenWorkspace');
+    if(ws.style.transform==='translateX(0px)'||ws.style.transform==='translateX(0)') return;
+    if(dx < 0 && currentScreen==='avatar') goToScreen('vida');
+    if(dx > 0 && currentScreen==='vida')   goToScreen('avatar');
+  }
+});
+</script>
+</body>
+</html>
+
+
+He creado un Emulador Android Web para que puedas ver la aplicación Geo OS funcionando como si estuviera en un teléfono, y he integrado el Avatar Geo-Droid (C-3PO) completo con sus estados y la navegación por pestañas que definimos en el documento "Vision".
+
+Aquí tienes los dos archivos necesarios para ver tu creación en vivo.
+
+1. El Emulador (emulator.html)
+Este archivo simula un teléfono. Guarda este código y ábrelo en tu navegador.
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo OS Emulator</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: sans-serif;
+            color: white;
+        }
+        .phone-frame {
+            width: 360px;
+            height: 740px;
+            background: #000;
+            border-radius: 40px;
+            border: 12px solid #333;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        /* Dynamic Island / Notch */
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 30px;
+            background: #000;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+            z-index: 1000;
+        }
+        /* Home Indicator */
+        .home-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 5px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 10px;
+            z-index: 1000;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #060810;
+        }
+        .controls {
+            position: absolute;
+            right: -160px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .btn {
+            width: 40px;
+            height: 60px;
+            background: #333;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="phone-frame">
+        <div class="notch"></div>
+        <iframe src="geo-navigation.html"></iframe>
+        <div class="home-bar"></div>
+    </div>
+
+    <div class="controls">
+        <div class="btn" title="Power"></div>
+        <div class="btn" title="Vol Up"></div>
+        <div class="btn" title="Vol Down"></div>
+    </div>
+
+</body>
+</html>
+
+
+2. La Aplicación Geo OS (geo-navigation.html)
+Este es el código completo actualizado con el Avatar C-3PO, la lógica de estados y la navegación. Copia esto en tu archivo geo-navigation.html.
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Geo OS · Navigation</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#060810;font-family:'Syne',sans-serif;color:#eef2f8;touch-action:none;}
+
+:root{
+  --accent:#00c8ff;
+  --accent2:#00ffb2;
+  --gold:#f5b731;
+  --gold-dark:#b8860b;
+  --purple:#a78bfa;
+  --red:#ff5c7a;
+  --green:#00e5a0;
+  --bg:#060810;
+  --bg2:#0c0f1a;
+  --card:rgba(255,255,255,.04);
+  --card2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.12);
+  --text:#eef2f8;
+  --muted:rgba(238,242,248,.4);
+  --mono:'DM Mono',monospace;
+  --safe-top:44px;
+  --safe-bottom:34px;
+}
+
+/* ═══════ LAYOUT ROOT ═══════ */
+#os{
+  position:fixed;inset:0;
+  overflow:hidden;
+  background:var(--bg);
+}
+
+/* ═══════ NOISE + GRID ═══════ */
+#os::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+}
+#os::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.02) 1px,transparent 1px);
+  background-size:44px 44px;
+}
+
+/* ═══════ STATUS BAR ═══════ */
+.statusbar{
+  position:absolute;top:0;left:0;right:0;
+  height:var(--safe-top);z-index:200;
+  display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 20px 8px;
+  background:linear-gradient(to bottom,rgba(6,8,16,.9),transparent);
+}
+.sb-time{font-size:15px;font-weight:700;font-family:var(--mono);letter-spacing:.02em;}
+.sb-icons{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);}
+.sb-signal{display:flex;gap:2px;align-items:flex-end;}
+.sb-bar{width:3px;border-radius:1px;background:var(--text);}
+
+/* ═══════ BOTTOM NAV ═══════ */
+.bottomnav{
+  position:absolute;bottom:0;left:0;right:0;
+  height:calc(60px + var(--safe-bottom));
+  z-index:200;
+  display:flex;align-items:flex-start;justify-content:space-around;
+  padding:8px 20px 0;
+  background:linear-gradient(to top,rgba(6,8,16,.95) 60%,transparent);
+  backdrop-filter:blur(20px);
+}
+.nav-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 16px;border-radius:16px;cursor:pointer;
+  transition:all .2s;border:none;background:transparent;
+  color:var(--muted);font-family:'Syne',sans-serif;
+  -webkit-user-select:none;user-select:none;
+}
+.nav-btn.active{color:var(--gold);}
+.nav-btn:active{transform:scale(.9);}
+.nav-icon{font-size:22px;line-height:1;}
+.nav-label{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;}
+.nav-dot{
+  width:4px;height:4px;border-radius:50%;background:var(--gold);
+  opacity:0;margin-top:-2px;transition:opacity .2s;
+}
+.nav-btn.active .nav-dot{opacity:1;}
+
+/* ═══════ SCREEN LAYER ═══════ */
+.screen{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  transition:transform .4s cubic-bezier(.4,0,.2,1), opacity .4s;
+  will-change:transform;
+  pointer-events:none;
+  opacity:0;
+}
+.screen.active{
+  pointer-events:all;
+  opacity:1;
+  transform:translateX(0) !important;
+}
+.screen.left {transform:translateX(-100%);opacity:0;}
+.screen.right{transform:translateX( 100%);opacity:0;}
+
+/* ═══════════════════════════════════════════
+   SCREEN 0 — AVATAR (C-3PO STYLE)
+═══════════════════════════════════════════ */
+#screenAvatar{background:var(--bg);z-index:10;}
+
+.avatar-bg{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+}
+.amb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;}
+.amb-a{width:500px;height:500px;background:rgba(245,183,49,.05);top:-100px;right:-120px;animation:ambFloat 8s ease-in-out infinite;}
+.amb-b{width:400px;height:400px;background:rgba(0,255,178,.04);bottom:-80px;left:-100px;animation:ambFloat 10s ease-in-out 2s infinite reverse;}
+@keyframes ambFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,20px)}}
+
+/* ── ROBOT CONTAINER ── */
+.orb-stage{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;z-index:5;
+  padding-top:var(--safe-top);
+}
+.robot-wrap{
+  position:relative;
+  width:160px;height:220px; /* Taller for body */
+  cursor:pointer;
+  transition: transform .5s cubic-bezier(.34,1.56,.64,1);
+  animation: robotFloat 4s ease-in-out infinite;
+}
+@keyframes robotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+
+/* ── HEAD ── */
+.r-head{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:110px;height:130px;
+  background: linear-gradient(135deg, #e6c86e 0%, #b8860b 40%, #5c4005 100%);
+  border-radius: 40px 40px 30px 30px;
+  box-shadow: inset 0 0 20px rgba(0,0,0,.5), 0 10px 30px rgba(0,0,0,.4);
+  z-index:2;
+  display:flex;flex-direction:column;align-items:center;
+  transition: transform .3s;
+}
+/* Antenna */
+.r-head::before{
+  content:'';position:absolute;top:-25px;left:50%;transform:translateX(-50%);
+  width:4px;height:25px;background:#b8860b;
+}
+.r-head::after{
+  content:'';position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%, #fff, var(--accent));
+  box-shadow:0 0 10px var(--accent);
+  animation: antennaBlink 2s infinite;
+}
+@keyframes antennaBlink{0%,100%{opacity:1;box-shadow:0 0 10px var(--accent)}50%{opacity:.5;box-shadow:0 0 2px var(--accent)}}
+
+/* Eyes */
+.r-eyes{
+  width:70%;height:18px;margin-top:35px;
+  display:flex;justify-content:space-between;
+  background:rgba(0,0,0,.6);
+  border-radius:10px;
+  padding:2px;
+  box-shadow:inset 0 0 5px #000;
+}
+.r-eye{
+  flex:1;background:var(--accent);
+  border-radius:4px;
+  box-shadow:0 0 8px var(--accent);
+  transition: all .2s;
+}
+/* Mouth / Speaker */
+.r-mouth{
+  margin-top:25px;
+  width:60%;height:12px;
+  background:rgba(0,0,0,.8);
+  border-radius:4px;
+  overflow:hidden;
+  display:flex;align-items:center;justify-content:center;gap:2px;
+}
+.r-m-line{
+  width:2px;height:60%;background:#333;border-radius:1px;
+  transition:height .1s, background .1s;
+}
+
+/* ── BODY ── */
+.r-body{
+  position:absolute;top:110px;left:50%;transform:translateX(-50%);
+  width:90px;height:110px;
+  background: linear-gradient(135deg, #d4af37 0%, #8a6e2f 50%, #3e2f0f 100%);
+  border-radius: 20px;
+  box-shadow: inset 0 0 30px rgba(0,0,0,.6), 0 15px 35px rgba(0,0,0,.5);
+  z-index:1;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+/* Chest Light */
+.r-chest-light{
+  width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(circle, rgba(0,200,255,.8), rgba(0,50,100,.2));
+  box-shadow:0 0 15px rgba(0,200,255,.4);
+  border:2px solid rgba(255,255,255,.2);
+  animation: chestPulse 3s infinite;
+}
+@keyframes chestPulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
+
+/* Arms */
+.r-arm{
+  position:absolute;top:120px;width:25px;height:70px;
+  background: linear-gradient(to bottom, #d4af37, #8a6e2f);
+  border-radius:12px;
+  z-index:0;
+  transform-origin: top center;
+  transition: transform .5s;
+}
+.r-arm.left{left:calc(50% - 60px);transform:rotate(20deg);}
+.r-arm.right{right:calc(50% - 60px);transform:rotate(-20deg);}
+
+/* ── STATES ── */
+
+/* THINKING */
+.robot-wrap[data-state="thinking"] .r-head{transform:translateX(-50%) rotate(-5deg);}
+.robot-wrap[data-state="thinking"] .r-eye{
+  width:4px;height:4px;border-radius:50%;
+  background:#fff;box-shadow:0 0 5px #fff;
+  animation: eyeScan 1s infinite alternate;
+}
+@keyframes eyeScan{0%{transform:translateX(-5px)}100%{transform:translateX(5px)}}
+.robot-wrap[data-state="thinking"] .r-chest-light{background:radial-gradient(circle, rgba(167,139,250,.8), rgba(50,20,100,.2));box-shadow:0 0 15px rgba(167,139,250,.4);}
+
+/* SPEAKING */
+.robot-wrap[data-state="speaking"] .r-mouth{gap:1px;}
+.robot-wrap[data-state="speaking"] .r-m-line{
+  background:var(--accent);
+  animation: talkAnim .2s infinite alternate;
+}
+/* Randomize bar heights via nth-child in JS or CSS */
+.robot-wrap[data-state="speaking"] .r-m-line:nth-child(odd){animation-duration:.15s}
+.robot-wrap[data-state="speaking"] .r-m-line:nth-child(even){animation-duration:.25s}
+@keyframes talkAnim{0%{height:20%}100%{height:90%}}
+.robot-wrap[data-state="speaking"] .r-arm.left{transform:rotate(40deg);}
+.robot-wrap[data-state="speaking"] .r-arm.right{transform:rotate(-40deg);}
+
+/* SINGING */
+.robot-wrap[data-state="singing"]{animation: robotDance .6s infinite alternate;}
+@keyframes robotDance{0%{transform:rotate(-5deg) translateY(0)}100%{transform:rotate(5deg) translateY(-10px)}}
+.robot-wrap[data-state="singing"] .r-head{transform:translateX(-50%) rotate(10deg);}
+.robot-wrap[data-state="singing"] .r-chest-light{background:radial-gradient(circle, rgba(255,180,0,.9), rgba(180,50,0,.2));box-shadow:0 0 20px rgba(255,180,0,.6);}
+.robot-wrap[data-state="singing"] .r-eye{background:#ff9f1c;box-shadow:0 0 10px #ff9f1c;}
+.robot-wrap[data-state="singing"] .r-arm.left{transform:rotate(120deg);}
+.robot-wrap[data-state="singing"] .r-arm.right{transform:rotate(-120deg);}
+
+/* SLEEPING */
+.robot-wrap[data-state="sleeping"]{animation:none;transform:translateY(20px);}
+.robot-wrap[data-state="sleeping"] .r-head{transform:translateX(-50%) rotate(15deg);}
+.robot-wrap[data-state="sleeping"] .r-eye{height:2px;background:#333;box-shadow:none;}
+.robot-wrap[data-state="sleeping"] .r-chest-light{opacity:.2;animation:none;}
+.robot-wrap[data-state="sleeping"] .zzz{opacity:1;}
+
+/* ZZZ Animation */
+.zzz{
+  position:absolute;top:-40px;right:-20px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:0;transition:opacity .5s;pointer-events:none;z-index:10;
+}
+.z{font-size:16px;font-weight:800;color:rgba(140,160,255,.7);animation:zFloat 2s ease-in-out infinite;}
+.z:nth-child(1){font-size:10px;animation-delay:0s;}
+.z:nth-child(2){font-size:14px;animation-delay:.5s;}
+.z:nth-child(3){font-size:18px;animation-delay:1s;}
+@keyframes zFloat{0%{transform:translateY(0);opacity:.8}100%{transform:translateY(-20px);opacity:0}}
+
+/* avatar greeting */
+.avatar-greeting{
+  position:absolute;
+  bottom:calc(50% + 130px);
+  left:50%;transform:translateX(-50%);
+  white-space:nowrap;
+  background:rgba(12,15,26,.9);
+  border:1px solid var(--border2);
+  border-radius:16px;
+  padding:10px 18px;
+  font-size:14px;
+  line-height:1.5;
+  backdrop-filter:blur(20px);
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+  z-index:10;
+  pointer-events:none;
+  opacity:0;
+  animation:greetIn .4s ease .3s both;
+}
+.avatar-greeting::after{
+  content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;background:rgba(12,15,26,.9);
+  border-right:1px solid var(--border2);border-bottom:1px solid var(--border2);
+  transform:translateX(-50%) rotate(45deg);
+}
+@keyframes greetIn{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* bottom chat strip */
+.avatar-chat-strip{
+  position:relative;z-index:10;
+  padding:12px 16px calc(12px + var(--safe-bottom)) 16px;
+  display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(to top,rgba(6,8,16,.98) 70%,transparent);
+}
+.msg-row{display:flex;align-items:flex-end;gap:10px;}
+.msg-orb-mini{
+  width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 12px rgba(245,183,49,.4);
+}
+.msg-bubble{
+  flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:16px 16px 16px 4px;
+  padding:12px 16px;font-size:13px;line-height:1.65;
+  backdrop-filter:blur(12px);
+  transition:border-color .3s;
+  min-height:46px;
+}
+.msg-bubble.glow{border-color:rgba(245,183,49,.25);box-shadow:0 0 16px rgba(245,183,49,.06);}
+.msg-typing::after{content:'▋';animation:cr .7s step-end infinite;color:var(--gold);font-size:11px;}
+@keyframes cr{0%,100%{opacity:1}50%{opacity:0}}
+
+.inp-row{display:flex;gap:8px;align-items:center;}
+.inp{
+  flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:14px;padding:12px 16px;
+  font-size:14px;color:var(--text);font-family:'Syne',sans-serif;outline:none;
+  transition:border-color .2s,box-shadow .2s;
+}
+.inp::placeholder{color:var(--muted);}
+.inp:focus{border-color:rgba(245,183,49,.3);box-shadow:0 0 16px rgba(245,183,49,.06);}
+
+.voice-btn{
+  width:44px;height:44px;border-radius:50%;border:none;flex-shrink:0;
+  background:rgba(245,183,49,.1);color:var(--gold);
+  font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(245,183,49,.2);transition:all .2s;
+}
+.voice-btn.listening{
+  background:rgba(255,92,122,.15);color:var(--red);border-color:rgba(255,92,122,.3);
+  animation:listenPulse 1s ease-in-out infinite;
+}
+@keyframes listenPulse{0%,100%{box-shadow:0 0 0 0 rgba(255,92,122,.3)}50%{box-shadow:0 0 0 10px rgba(255,92,122,0)}}
+.send-btn{
+  width:44px;height:44px;border-radius:14px;border:none;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold),#b8860b);
+  color:#000;font-size:17px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(245,183,49,.3);transition:all .2s;
+}
+.send-btn:hover{transform:scale(1.06);}
+
+/* swipe hint */
+.swipe-hint{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:.3;pointer-events:none;z-index:5;
+  animation:hintPulse 3s ease-in-out 2s infinite;
+}
+@keyframes hintPulse{0%,100%{opacity:.3}50%{opacity:.6}}
+.sh-arrow{font-size:18px;color:var(--gold);}
+.sh-text{font-size:9px;font-family:var(--mono);color:var(--muted);letter-spacing:.06em;writing-mode:vertical-rl;}
+
+/* ═══════════════════════════════════════════
+   SCREEN 1 — VIDA (projects list)
+═══════════════════════════════════════════ */
+#screenVida{
+  background:var(--bg);z-index:10;
+  padding-top:var(--safe-top);
+}
+
+.screen-header{
+  padding:16px 20px 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.screen-title{
+  font-size:26px;font-weight:800;letter-spacing:-.03em;
+}
+.screen-title span{color:var(--gold);}
+.header-actions{display:flex;gap:8px;}
+.icon-btn{
+  width:38px;height:38px;border-radius:12px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:all .2s;
+  color:var(--muted);
+}
+.icon-btn:hover{border-color:var(--border2);color:var(--text);}
+.icon-btn:active{transform:scale(.9);}
+
+.vida-scroll{
+  flex:1;overflow-y:auto;padding:8px 20px calc(80px + var(--safe-bottom));
+  display:flex;flex-direction:column;gap:14px;
+  -webkit-overflow-scrolling:touch;
+}
+.vida-scroll::-webkit-scrollbar{display:none;}
+
+/* Project card */
+.proj-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:20px;padding:18px;cursor:pointer;
+  transition:all .25s;position:relative;overflow:hidden;
+}
+.proj-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--proj-color,var(--gold));
+  opacity:.6;
+}
+.proj-card:active{transform:scale(.98);}
+.proj-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;}
+.proj-icon{
+  width:44px;height:44px;border-radius:13px;
+  background:rgba(var(--proj-rgb,245,183,49),.1);
+  border:1px solid rgba(var(--proj-rgb,245,183,49),.15);
+  display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+}
+.proj-meta{flex:1;}
+.proj-name{font-size:16px;font-weight:700;margin-bottom:3px;letter-spacing:-.01em;}
+.proj-desc{font-size:12px;color:var(--muted);line-height:1.5;}
+.proj-status{
+  font-size:10px;font-weight:700;letter-spacing:.08em;
+  padding:4px 10px;border-radius:100px;flex-shrink:0;
+  font-family:var(--mono);
+}
+.proj-status.active{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.proj-status.idea{background:rgba(167,139,250,.1);color:var(--purple);border:1px solid rgba(167,139,250,.2);}
+.proj-status.pause{background:rgba(245,183,49,.1);color:var(--gold);border:1px solid rgba(245,183,49,.2);}
+
+/* progress bar */
+.proj-progress{margin-bottom:10px;}
+.prog-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.prog-text{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.prog-pct{font-size:12px;font-weight:700;color:var(--proj-color,var(--gold));}
+.prog-bar{height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden;}
+.prog-fill{height:100%;border-radius:2px;background:var(--proj-color,var(--gold));transition:width 1s ease;}
+
+/* tabs preview */
+.proj-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.proj-tab{
+  padding:4px 10px;border-radius:8px;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  font-size:10px;color:var(--muted);font-family:var(--mono);
+  display:flex;align-items:center;gap:4px;
+}
+.proj-tab-dot{width:5px;height:5px;border-radius:50%;}
+
+/* new project button */
+.new-proj-btn{
+  border:1.5px dashed rgba(255,255,255,.1);border-radius:20px;
+  padding:22px;display:flex;align-items:center;justify-content:center;gap:12px;
+  cursor:pointer;transition:all .25s;color:var(--muted);font-size:14px;
+}
+.new-proj-btn:hover{border-color:rgba(245,183,49,.3);color:var(--gold);background:rgba(245,183,49,.03);}
+.new-proj-btn:active{transform:scale(.98);}
+
+/* ═══════════════════════════════════════════
+   SCREEN 2 — WORKSPACE (single project)
+═══════════════════════════════════════════ */
+#screenWorkspace{
+  background:var(--bg);z-index:20;
+  transform:translateX(100%);
+}
+#screenWorkspace.open{
+  transform:translateX(0);
+}
+
+.ws-header{
+  padding:calc(var(--safe-top) + 8px) 16px 0;
+  display:flex;align-items:center;gap:12px;
+  flex-shrink:0;
+}
+.back-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:all .2s;flex-shrink:0;
+}
+.back-btn:active{transform:scale(.9);}
+.ws-title-wrap{flex:1;}
+.ws-title{font-size:18px;font-weight:700;letter-spacing:-.02em;}
+.ws-subtitle{font-size:11px;color:var(--muted);font-family:var(--mono);}
+.windows-btn{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;transition:all .2s;
+  color:var(--muted);flex-shrink:0;
+}
+.windows-btn:hover{color:var(--gold);border-color:rgba(245,183,49,.3);}
+
+/* workspace tabs */
+.ws-tabs{
+  display:flex;gap:0;padding:12px 16px 0;
+  overflow-x:auto;flex-shrink:0;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.ws-tabs::-webkit-scrollbar{display:none;}
+.ws-tab{
+  padding:8px 16px;border-radius:12px 12px 0 0;
+  font-size:12px;font-weight:600;cursor:pointer;
+  white-space:nowrap;transition:all .2s;
+  border:1px solid transparent;border-bottom:none;
+  color:var(--muted);flex-shrink:0;
+  display:flex;align-items:center;gap:6px;
+}
+.ws-tab.active{
+  background:var(--bg2);color:var(--text);
+  border-color:var(--border);
+}
+
+/* workspace content */
+.ws-content{
+  flex:1;overflow-y:auto;
+  background:var(--bg2);
+  border-top:1px solid var(--border);
+  padding:20px 16px calc(100px + var(--safe-bottom));
+  -webkit-overflow-scrolling:touch;
+}
+.ws-content::-webkit-scrollbar{display:none;}
+
+/* tab panels */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;animation:tabIn .25s ease;}
+@keyframes tabIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Idea tab */
+.idea-hero{
+  background:linear-gradient(135deg,rgba(245,183,49,.07),rgba(0,255,178,.04));
+  border:1px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;
+}
+.idea-label{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:8px;}
+.idea-text{font-size:15px;line-height:1.75;color:var(--text);}
+
+.section-block{margin-bottom:20px;}
+.block-title{font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.block-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Tasks */
+.task-list{display:flex;flex-direction:column;gap:8px;}
+.task{
+  display:flex;align-items:center;gap:12px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:12px 14px;cursor:pointer;
+  transition:all .2s;
+}
+.task:active{transform:scale(.98);}
+.task-check{
+  width:22px;height:22px;border-radius:7px;border:1.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .2s;font-size:12px;
+}
+.task.done .task-check{background:var(--green);border-color:var(--green);color:#000;}
+.task-text{font-size:13px;flex:1;line-height:1.4;}
+.task.done .task-text{color:var(--muted);text-decoration:line-through;}
+.task-pri{font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:6px;}
+.pri-high{background:rgba(255,92,122,.1);color:var(--red);}
+.pri-med{background:rgba(245,183,49,.1);color:var(--gold);}
+.pri-low{background:rgba(0,200,255,.1);color:var(--accent);}
+
+/* Image grid */
+.img-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.img-thumb{
+  aspect-ratio:4/3;border-radius:12px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:var(--muted);cursor:pointer;
+  overflow:hidden;transition:all .2s;position:relative;
+}
+.img-thumb:active{transform:scale(.97);}
+.img-thumb img{width:100%;height:100%;object-fit:cover;}
+.img-thumb.add-btn{border-style:dashed;}
+.img-thumb.add-btn:hover{border-color:rgba(245,183,49,.3);color:var(--gold);}
+
+/* Stats / chart */
+.stat-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.stat{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:12px;text-align:center;
+}
+.stat-val{font-size:20px;font-weight:800;margin-bottom:2px;}
+.stat-key{font-size:10px;color:var(--muted);font-family:var(--mono);}
+
+.chart-wrap{
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px;
+}
+.chart-title{font-size:11px;font-family:var(--mono);color:var(--muted);margin-bottom:12px;}
+.bar-chart{display:flex;align-items:flex-end;gap:6px;height:80px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar-fill{
+  width:100%;border-radius:4px 4px 0 0;
+  background:linear-gradient(to top,var(--gold),rgba(245,183,49,.4));
+  transition:height .8s cubic-bezier(.4,0,.2,1);
+  min-height:4px;
+}
+.bar-label{font-size:9px;font-family:var(--mono);color:var(--muted);}
+
+/* Chat tab in workspace */
+.ws-chat{display:flex;flex-direction:column;gap:10px;}
+.wsc-msg{
+  display:flex;gap:10px;
+}
+.wsc-msg.user{flex-direction:row-reverse;}
+.wsc-avatar{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;margin-top:2px;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 10px rgba(245,183,49,.3);
+}
+.wsc-bubble{
+  max-width:78%;padding:10px 14px;border-radius:14px;font-size:13px;line-height:1.6;
+}
+.wsc-msg.geo .wsc-bubble{
+  background:var(--card);border:1px solid var(--border);border-radius:14px 14px 14px 4px;
+}
+.wsc-msg.user .wsc-bubble{
+  background:rgba(245,183,49,.1);border:1px solid rgba(245,183,49,.15);
+  border-radius:14px 14px 4px 14px;
+}
+.wsc-time{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:4px;text-align:right;}
+
+/* ═══════════════════════════════════════════
+   WINDOWS MANAGER (like app switcher)
+═══════════════════════════════════════════ */
+#windowManager{
+  position:fixed;inset:0;z-index:300;
+  background:rgba(6,8,16,.92);
+  backdrop-filter:blur(20px);
+  display:none;
+  flex-direction:column;
+  padding:calc(var(--safe-top) + 12px) 16px calc(var(--safe-bottom) + 20px);
+}
+#windowManager.open{display:flex;animation:wmIn .3s ease;}
+@keyframes wmIn{from{opacity:0}to{opacity:1}}
+
+.wm-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;
+}
+.wm-title{font-size:18px;font-weight:700;}
+.wm-close{
+  width:36px;height:36px;border-radius:10px;
+  background:var(--card);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;cursor:pointer;color:var(--muted);
+}
+
+.wm-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:12px;
+  overflow-y:auto;flex:1;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:20px;
+}
+.wm-card{
+  background:var(--bg2);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;cursor:pointer;
+  transition:all .2s;position:relative;
+  aspect-ratio:.55;
+  display:flex;flex-direction:column;
+}
+.wm-card:active{transform:scale(.96);}
+.wm-card-preview{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+}
+.wm-card-preview .preview-icon{font-size:48px;opacity:.3;}
+.wm-card-preview .preview-content{
+  position:absolute;inset:0;padding:12px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.preview-line{height:6px;border-radius:3px;background:rgba(255,255,255,.08);}
+.wm-card-bar{
+  padding:10px 12px;border-top:1px solid var(--border);
+  background:rgba(0,0,0,.2);
+  display:flex;align-items:center;gap:8px;
+}
+.wm-card-icon{font-size:16px;}
+.wm-card-name{font-size:12px;font-weight:600;flex:1;}
+.wm-card-close{
+  width:20px;height:20px;border-radius:50%;
+  background:rgba(255,92,122,.2);border:none;
+  color:var(--red);font-size:10px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* voice command overlay */
+#voiceOverlay{
+  position:fixed;inset:0;z-index:400;
+  background:rgba(6,8,16,.85);backdrop-filter:blur(24px);
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+}
+#voiceOverlay.open{display:flex;animation:voiceIn .2s ease;}
+@keyframes voiceIn{from{opacity:0}to{opacity:1}}
+.voice-orb{
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 50px rgba(245,183,49,.5),0 0 100px rgba(245,183,49,.2);
+  animation:voicePulse .8s ease-in-out infinite;
+  position:relative;overflow:hidden;
+}
+.voice-orb::before{content:'';position:absolute;width:55%;height:42%;background:radial-gradient(ellipse,rgba(255,255,255,.45) 0%,transparent 70%);top:12%;left:15%;border-radius:50%;filter:blur(3px);}
+@keyframes voicePulse{0%,100%{box-shadow:0 0 50px rgba(245,183,49,.5),0 0 100px rgba(245,183,49,.2)}50%{box-shadow:0 0 70px rgba(245,183,49,.7),0 0 140px rgba(245,183,49,.35)}}
+
+/* waveform under voice orb */
+.voice-wave{display:flex;align-items:center;gap:4px;height:40px;}
+.vw-bar{
+  width:4px;border-radius:2px;background:var(--gold);
+  animation:vwAnim .5s ease-in-out infinite;
+}
+.vw-bar:nth-child(1){height:10px;animation-delay:0s}
+.vw-bar:nth-child(2){height:20px;animation-delay:.08s}
+.vw-bar:nth-child(3){height:32px;animation-delay:.16s}
+.vw-bar:nth-child(4){height:40px;animation-delay:.24s}
+.vw-bar:nth-child(5){height:32px;animation-delay:.32s}
+.vw-bar:nth-child(6){height:20px;animation-delay:.4s}
+.vw-bar:nth-child(7){height:10px;animation-delay:.48s}
+@keyframes vwAnim{0%,100%{transform:scaleY(.3)}50%{transform:scaleY(1)}}
+.voice-label{font-size:16px;font-weight:600;color:var(--text);}
+.voice-hint{font-size:12px;color:var(--muted);font-family:var(--mono);}
+.voice-close{
+  padding:10px 28px;border-radius:100px;border:1px solid var(--border);
+  background:var(--card);color:var(--muted);font-family:'Syne',sans-serif;
+  font-size:13px;cursor:pointer;
+}
+
+/* pip avatar (shown when in sub-screens) */
+#pipAvatar{
+  position:fixed;z-index:150;
+  width:56px;height:56px;border-radius:50%;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 20px rgba(245,183,49,.5),0 4px 20px rgba(0,0,0,.4);
+  bottom:calc(80px + var(--safe-bottom));right:16px;
+  cursor:pointer;display:none;
+  align-items:center;justify-content:center;
+  border:2px solid rgba(245,183,49,.3);
+  transition:all .35s cubic-bezier(.34,.8,.44,1);
+  -webkit-user-select:none;user-select:none;
+}
+#pipAvatar::before{content:'';position:absolute;width:50%;height:38%;background:radial-gradient(ellipse,rgba(255,255,255,.4) 0%,transparent 70%);top:12%;left:15%;border-radius:50%;filter:blur(2px);}
+#pipAvatar.show{display:flex;}
+.pip-ring-live{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:2px solid rgba(245,183,49,.4);
+  animation:pipRingLive 1.5s ease-out infinite;
+  pointer-events:none;
+}
+@keyframes pipRingLive{0%{transform:scale(.9);opacity:.8}100%{transform:scale(1.4);opacity:0}}
+</style>
+</head>
+<body>
+<div id="os">
+
+<!-- STATUS BAR -->
+<div class="statusbar">
+  <div class="sb-time" id="clock">9:41</div>
+  <div class="sb-icons">
+    <div class="sb-signal">
+      <div class="sb-bar" style="height:5px"></div>
+      <div class="sb-bar" style="height:8px"></div>
+      <div class="sb-bar" style="height:11px"></div>
+      <div class="sb-bar" style="height:14px"></div>
+    </div>
+    <span>WiFi</span>
+    <span>🔋</span>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 0: AVATAR (C-3PO STYLE) ═══ -->
+<div class="screen active" id="screenAvatar">
+  <div class="avatar-bg">
+    <div class="amb amb-a"></div>
+    <div class="amb amb-b"></div>
+  </div>
+
+  <div class="orb-stage">
+    <!-- ROBOT WRAPPER -->
+    <div class="robot-wrap" id="robotWrap" data-state="idle" onclick="handleRobotTap()">
+      
+      <!-- HEAD -->
+      <div class="r-head">
+        <div class="r-eyes">
+          <div class="r-eye"></div>
+          <div class="r-eye"></div>
+        </div>
+        <div class="r-mouth" id="robotMouth">
+          <!-- Generated by JS for animation -->
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="r-body">
+        <div class="r-chest-light"></div>
+      </div>
+
+      <!-- ARMS -->
+      <div class="r-arm left"></div>
+      <div class="r-arm right"></div>
+
+      <!-- SLEEP ZZZ -->
+      <div class="zzz"><div class="z">z</div><div class="z">z</div><div class="z">Z</div></div>
+    </div>
+
+    <div class="avatar-greeting" id="greeting">Hola 👋 ¿Qué hacemos hoy?</div>
+    <div class="swipe-hint"><div class="sh-arrow">‹</div><div class="sh-text">VIDA</div></div>
+  </div>
+
+  <div class="avatar-chat-strip">
+    <div class="msg-row">
+      <div class="msg-orb-mini"></div>
+      <div class="msg-bubble glow" id="msgBubble">
+        <span id="msgText">Buenos días ☀️ Tienes 3 tareas pendientes en <strong>Sitio Web</strong> y un recordatorio a las 15:00.</span>
+      </div>
+    </div>
+    <div class="inp-row">
+      <input class="inp" id="mainInp" placeholder="Escríbele a Geo o toca el mic..." onkeydown="if(event.key==='Enter')sendMsg()">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎙️</button>
+      <button class="send-btn" onclick="sendMsg()">→</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 1: VIDA ═══ -->
+<div class="screen right" id="screenVida">
+  <div class="screen-header">
+    <div class="screen-title">Mi <span>Vida</span></div>
+    <div class="header-actions">
+      <div class="icon-btn" onclick="openVoice()">🎙️</div>
+      <div class="icon-btn" onclick="openWindowManager()">⊞</div>
+    </div>
+  </div>
+
+  <div class="vida-scroll" id="vidaScroll">
+
+    <!-- Project 1 -->
+    <div class="proj-card" style="--proj-color:#00c8ff;--proj-rgb:0,200,255" onclick="openWorkspace('web')">
+      <div class="proj-top">
+        <div class="proj-icon">🌐</div>
+        <div class="proj-meta">
+          <div class="proj-name">Sitio Web Personal</div>
+          <div class="proj-desc">Portfolio + blog personal con integración de proyectos</div>
+        </div>
+        <div class="proj-status active">ACTIVO</div>
+      </div>
+      <div class="proj-progress">
+        <div class="prog-label">
+          <span class="prog-text">PROGRESO</span>
+          <span class="prog-pct">65%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:65%"></div></div>
+      </div>
+      <div class="proj-tabs">
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00c8ff"></div>Idea</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00e5a0"></div>Tareas</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#f5b731"></div>Preview</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#a78bfa"></div>Chat Geo</div>
+      </div>
+    </div>
+
+    <!-- Project 2 -->
+    <div class="proj-card" style="--proj-color:#a78bfa;--proj-rgb:167,139,250" onclick="openWorkspace('fitness')">
+      <div class="proj-top">
+        <div class="proj-icon">💪</div>
+        <div class="proj-meta">
+          <div class="proj-name">Transformación Física</div>
+          <div class="proj-desc">Plan de 90 días · dieta + entrenamiento + métricas</div>
+        </div>
+        <div class="proj-status active">ACTIVO</div>
+      </div>
+      <div class="proj-progress">
+        <div class="prog-label">
+          <span class="prog-text">SEMANA 3 / 12</span>
+          <span class="prog-pct" style="color:#a78bfa">28%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:28%;background:#a78bfa"></div></div>
+      </div>
+      <div class="proj-tabs">
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#a78bfa"></div>Plan</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00e5a0"></div>Métricas</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#f5b731"></div>Dieta</div>
+      </div>
+    </div>
+
+    <!-- Project 3 — idea phase -->
+    <div class="proj-card" style="--proj-color:#f5b731;--proj-rgb:245,183,49" onclick="openWorkspace('negocio')">
+      <div class="proj-top">
+        <div class="proj-icon">🚀</div>
+        <div class="proj-meta">
+          <div class="proj-name">Geo Bot — Producto</div>
+          <div class="proj-desc">Lanzar Geo Bot como SaaS para empresas y creadores</div>
+        </div>
+        <div class="proj-status idea">IDEA</div>
+      </div>
+      <div class="proj-progress">
+        <div class="prog-label">
+          <span class="prog-text">FASE INICIAL</span>
+          <span class="prog-pct" style="color:#f5b731">12%</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" style="width:12%;background:#f5b731"></div></div>
+      </div>
+      <div class="proj-tabs">
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#f5b731"></div>Concepto</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#00c8ff"></div>Mercado</div>
+        <div class="proj-tab"><div class="proj-tab-dot" style="background:#a78bfa"></div>Roadmap</div>
+      </div>
+    </div>
+
+    <!-- New project -->
+    <div class="new-proj-btn" onclick="newProject()">
+      <span style="font-size:22px">＋</span>
+      <span>Nuevo proyecto · o pídeselo a Geo</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ SCREEN 2: WORKSPACE ═══ -->
+<div class="screen" id="screenWorkspace">
+  <div class="ws-header">
+    <div class="back-btn" onclick="closeWorkspace()">←</div>
+    <div class="ws-title-wrap">
+      <div class="ws-title" id="wsTitle">Sitio Web Personal</div>
+      <div class="ws-subtitle" id="wsSubtitle">ACTIVO · 65% completado</div>
+    </div>
+    <div class="windows-btn" onclick="openWindowManager()">⊞</div>
+  </div>
+
+  <div class="ws-tabs" id="wsTabs">
+    <div class="ws-tab active" onclick="switchTab('idea',this)">💡 Idea</div>
+    <div class="ws-tab" onclick="switchTab('tareas',this)">✅ Tareas</div>
+    <div class="ws-tab" onclick="switchTab('imagenes',this)">🖼️ Imágenes</div>
+    <div class="ws-tab" onclick="switchTab('stats',this)">📊 Avance</div>
+    <div class="ws-tab" onclick="switchTab('chat',this)">💬 Chat Geo</div>
+  </div>
+
+  <div class="ws-content">
+
+    <!-- TAB: IDEA -->
+    <div class="tab-panel active" id="tab-idea">
+      <div class="idea-hero">
+        <div class="idea-label">La Idea</div>
+        <div class="idea-text">Crear un portfolio personal moderno que muestre mis proyectos de desarrollo, integre un blog técnico y conecte con mis redes. Quiero que sea minimalista, rápido y que refleje mi identidad como desarrollador.</div>
+      </div>
+      <div class="section-block">
+        <div class="block-title">Objetivos clave</div>
+        <div class="task-list">
+          <div class="task done" onclick="toggleTask(this)">
+            <div class="task-check">✓</div>
+            <div class="task-text">Definir paleta de colores y tipografía</div>
+            <div class="task-pri pri-low">baja</div>
+          </div>
+          <div class="task done" onclick="toggleTask(this)">
+            <div class="task-check">✓</div>
+            <div class="task-text">Maqueta en Figma sección Hero</div>
+            <div class="task-pri pri-med">media</div>
+          </div>
+          <div class="task" onclick="toggleTask(this)">
+            <div class="task-check"></div>
+            <div class="task-text">Integrar blog con sistema de tags</div>
+            <div class="task-pri pri-high">alta</div>
+          </div>
+          <div class="task" onclick="toggleTask(this)">
+            <div class="task-check"></div>
+            <div class="task-text">SEO básico + meta tags</div>
+            <div class="task-pri pri-med">media</div>
+          </div>
+          <div class="task" onclick="toggleTask(this)">
+            <div class="task-check"></div>
+            <div class="task-text">Conectar dominio en Hostinger</div>
+            <div class="task-pri pri-high">alta</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: TAREAS -->
+    <div class="tab-panel" id="tab-tareas">
+      <div class="stat-row" style="margin-bottom:20px">
+        <div class="stat"><div class="stat-val" style="color:var(--green)">5</div><div class="stat-key">LISTAS</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--accent)">3</div><div class="stat-key">PENDIENTES</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--muted)">2</div><div class="stat-key">BLOQUEADAS</div></div>
+      </div>
+      <div class="section-block">
+        <div class="block-title">Esta semana</div>
+        <div class="task-list">
+          <div class="task" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Componente navbar responsive</div><div class="task-pri pri-high">alta</div></div>
+          <div class="task" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Sección proyectos con filtros</div><div class="task-pri pri-high">alta</div></div>
+          <div class="task" onclick="toggleTask(this)"><div class="task-check"></div><div class="task-text">Formulario de contacto</div><div class="task-pri pri-med">media</div></div>
+          <div class="task done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-text">Deploy en Vercel</div><div class="task-pri pri-low">baja</div></div>
+          <div class="task done" onclick="toggleTask(this)"><div class="task-check">✓</div><div class="task-text">Setup repositorio GitHub</div><div class="task-pri pri-low">baja</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: IMÁGENES -->
+    <div class="tab-panel" id="tab-imagenes">
+      <div class="section-block">
+        <div class="block-title">Referencias visuales</div>
+        <div class="img-grid">
+          <div class="img-thumb" style="background:linear-gradient(135deg,rgba(0,200,255,.15),rgba(0,100,200,.1))">
+            <span>🌐</span>
+          </div>
+          <div class="img-thumb" style="background:linear-gradient(135deg,rgba(167,139,250,.15),rgba(100,80,200,.1))">
+            <span>🎨</span>
+          </div>
+          <div class="img-thumb" style="background:linear-gradient(135deg,rgba(0,229,160,.15),rgba(0,150,100,.1))">
+            <span>📐</span>
+          </div>
+          <div class="img-thumb add-btn">＋</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: AVANCE/STATS -->
+    <div class="tab-panel" id="tab-stats">
+      <div class="stat-row">
+        <div class="stat"><div class="stat-val" style="color:var(--accent)">65%</div><div class="stat-key">TOTAL</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--green)">14d</div><div class="stat-key">ACTIVO</div></div>
+        <div class="stat"><div class="stat-val" style="color:var(--gold)">8</div><div class="stat-key">SESIONES</div></div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-title">PROGRESO SEMANAL (%)</div>
+        <div class="bar-chart">
+          <div class="bar-col"><div class="bar-fill" style="height:20%"></div><div class="bar-label">L1</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:35%"></div><div class="bar-label">L2</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:45%"></div><div class="bar-label">L3</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:55%"></div><div class="bar-label">L4</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:65%"></div><div class="bar-label">HOY</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:5%;opacity:.3;background:var(--muted)"></div><div class="bar-label">—</div></div>
+          <div class="bar-col"><div class="bar-fill" style="height:5%;opacity:.3;background:var(--muted)"></div><div class="bar-label">—</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: CHAT GEO -->
+    <div class="tab-panel" id="tab-chat">
+      <div class="ws-chat" id="wsChat">
+        <div class="wsc-msg geo">
+          <div class="wsc-avatar"></div>
+          <div>
+            <div class="wsc-bubble">Para tu sitio web te sugiero empezar por el navbar y el hero. ¿Quieres que generemos el código base juntos?</div>
+            <div class="wsc-time">ayer 14:22</div>
+          </div>
+        </div>
+        <div class="wsc-msg user">
+          <div>
+            <div class="wsc-bubble">Sí, necesito que sea responsive y con animaciones suaves</div>
+            <div class="wsc-time">ayer 14:25</div>
+          </div>
+        </div>
+        <div class="wsc-msg geo">
+          <div class="wsc-avatar"></div>
+          <div>
+            <div class="wsc-bubble">Perfecto. Aquí tienes una base con Tailwind + Framer Motion. El navbar colapsa en móvil con transición de 300ms...</div>
+            <div class="wsc-time">ayer 14:26</div>
+          </div>
+        </div>
+      </div>
+      <div class="inp-row" style="margin-top:16px">
+        <input class="inp" id="wsInp" placeholder="Pregunta algo sobre este proyecto..." onkeydown="if(event.key==='Enter')sendWsMsg()">
+        <button class="voice-btn" onclick="openVoice()" style="font-size:16px">🎙️</button>
+        <button class="send-btn" onclick="sendWsMsg()">→</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ WINDOW MANAGER ═══ -->
+<div id="windowManager">
+  <div class="wm-header">
+    <div class="wm-title">Ventanas abiertas</div>
+    <div class="wm-close" onclick="closeWindowManager()">✕</div>
+  </div>
+  <div class="wm-grid">
+    <div class="wm-card" onclick="goToScreen('avatar');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content" style="align-items:center;justify-content:center">
+          <div style="width:60px;height:60px;border-radius:50%;background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.8),rgba(184,134,11,.6));box-shadow:0 0 20px rgba(245,183,49,.4)"></div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">🤖</div><div class="wm-card-name">Geo · Inicio</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <div class="wm-card" onclick="goToScreen('vida');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content">
+          <div class="preview-line" style="width:80%"></div>
+          <div class="preview-line" style="width:60%"></div>
+          <div style="height:30px;background:rgba(0,200,255,.1);border-radius:8px;margin-top:4px"></div>
+          <div style="height:30px;background:rgba(167,139,250,.1);border-radius:8px"></div>
+          <div style="height:30px;background:rgba(245,183,49,.1);border-radius:8px"></div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">🌱</div><div class="wm-card-name">Mi Vida</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <div class="wm-card" onclick="openWorkspace('web');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content">
+          <div style="height:14px;background:rgba(0,200,255,.15);border-radius:4px;margin-bottom:6px"></div>
+          <div class="preview-line" style="width:90%"></div>
+          <div class="preview-line" style="width:70%"></div>
+          <div class="preview-line" style="width:80%"></div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">🌐</div><div class="wm-card-name">Sitio Web</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <div class="wm-card" onclick="openWorkspace('fitness');closeWindowManager()">
+      <div class="wm-card-preview">
+        <div class="preview-content">
+          <div style="display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:auto">
+            <div style="flex:1;height:30%;background:rgba(167,139,250,.3);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:50%;background:rgba(167,139,250,.3);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:70%;background:rgba(167,139,250,.5);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:60%;background:rgba(167,139,250,.3);border-radius:3px 3px 0 0"></div>
+            <div style="flex:1;height:85%;background:rgba(167,139,250,.7);border-radius:3px 3px 0 0"></div>
+          </div>
+        </div>
+      </div>
+      <div class="wm-card-bar"><div class="wm-card-icon">💪</div><div class="wm-card-name">Fitness</div><button class="wm-card-close">✕</button></div>
+    </div>
+    <!-- Add new window slot -->
+    <div class="wm-card" style="border-style:dashed;opacity:.5" onclick="newProject();closeWindowManager()">
+      <div class="wm-card-preview"><div class="preview-icon">＋</div></div>
+      <div class="wm-card-bar"><div class="wm-card-icon">✨</div><div class="wm-card-name">Nuevo</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ VOICE OVERLAY ═══ -->
+<div id="voiceOverlay">
+  <div class="voice-orb"></div>
+  <div class="voice-wave">
+    <div class="vw-bar"></div><div class="vw-bar"></div><div class="vw-bar"></div>
+    <div class="vw-bar"></div><div class="vw-bar"></div><div class="vw-bar"></div>
+    <div class="vw-bar"></div>
+  </div>
+  <div class="voice-label" id="voiceLabel">Escuchando...</div>
+  <div class="voice-hint" id="voiceHint">Di: "Abre Fitness" · "Nuevo proyecto" · "Qué tengo hoy"</div>
+  <button class="voice-close" onclick="closeVoice()">Cancelar</button>
+</div>
+
+<!-- PIP Avatar (shows when in sub-screens) -->
+<div id="pipAvatar" onclick="goToScreen('avatar')">
+  <div class="pip-ring-live"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottomnav">
+  <div class="nav-btn active" id="nav-home" onclick="goToScreen('avatar')">
+    <div class="nav-icon">🤖</div>
+    <div class="nav-label">Geo</div>
+    <div class="nav-dot"></div>
+  </div>
+  <div class="nav-btn" id="nav-vida" onclick="goToScreen('vida')">
+    <div class="nav-icon">🌱</div>
+    <div class="nav-label">Vida</div>
+    <div class="nav-dot"></div>
+  </div>
+  <div class="nav-btn" id="nav-windows" onclick="openWindowManager()">
+    <div class="nav-icon">⊞</div>
+    <div class="nav-label">Ventanas</div>
+    <div class="nav-dot"></div>
+  </div>
+</div>
+
+</div><!-- /os -->
+
+<script>
+// ═══════════════════════════════════
+// CLOCK
+// ═══════════════════════════════════
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=
+    n.getHours()+':'+(String(n.getMinutes()).padStart(2,'0'));
+}
+tick(); setInterval(tick,15000);
+
+// ═══════════════════════════════════
+// ROBOT MOUTH GENERATOR
+// ═══════════════════════════════════
+const mouth = document.getElementById('robotMouth');
+for(let i=0; i<8; i++){
+  const line = document.createElement('div');
+  line.className = 'r-m-line';
+  mouth.appendChild(line);
+}
+
+// ═══════════════════════════════════
+// SCREEN NAV
+// ═══════════════════════════════════
+const screens = { avatar:'screenAvatar', vida:'screenVida' };
+let currentScreen = 'avatar';
+
+function goToScreen(s){
+  // update classes
+  const order = ['avatar','vida'];
+  const ci = order.indexOf(currentScreen);
+  const ti = order.indexOf(s);
+
+  Object.keys(screens).forEach(k=>{
+    const el = document.getElementById(screens[k]);
+    el.classList.remove('active','left','right');
+    const i = order.indexOf(k);
+    if(i < ti) el.classList.add('left');
+    else if(i > ti) el.classList.add('right');
+    else el.classList.add('active');
+  });
+
+  // nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(s==='avatar') document.getElementById('nav-home').classList.add('active');
+  if(s==='vida')   document.getElementById('nav-vida').classList.add('active');
+
+  // pip avatar
+  const pip = document.getElementById('pipAvatar');
+  pip.classList.toggle('show', s!=='avatar');
+
+  currentScreen = s;
+}
+
+// ═══════════════════════════════════
+// WORKSPACE
+// ═══════════════════════════════════
+const wsData = {
+  web:     { title:'Sitio Web Personal',    subtitle:'ACTIVO · 65% completado', color:'#00c8ff' },
+  fitness: { title:'Transformación Física', subtitle:'ACTIVO · Semana 3 / 12',  color:'#a78bfa' },
+  negocio: { title:'Geo Bot — Producto',    subtitle:'IDEA · 12% completado',   color:'#f5b731' },
+};
+
+function openWorkspace(id){
+  const d = wsData[id] || wsData.web;
+  document.getElementById('wsTitle').textContent = d.title;
+  document.getElementById('wsSubtitle').textContent = d.subtitle;
+
+  const ws = document.getElementById('screenWorkspace');
+  ws.style.transition = 'transform .4s cubic-bezier(.4,0,.2,1)';
+  ws.style.transform = 'translateX(0)';
+  ws.style.opacity = '1';
+  ws.style.pointerEvents = 'all';
+
+  // show pip
+  document.getElementById('pipAvatar').classList.add('show');
+}
+
+function closeWorkspace(){
+  const ws = document.getElementById('screenWorkspace');
+  ws.style.transform = 'translateX(100%)';
+  ws.style.pointerEvents = 'none';
+  setTimeout(()=>{ ws.style.opacity='0'; },400);
+}
+
+// ═══════════════════════════════════
+// TABS
+// ═══════════════════════════════════
+function switchTab(name, btn){
+  document.querySelectorAll('.ws-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  const panel = document.getElementById('tab-'+name);
+  if(panel) panel.classList.add('active');
+}
+
+// ═══════════════════════════════════
+// TASK TOGGLE
+// ═══════════════════════════════════
+function toggleTask(el){
+  el.classList.toggle('done');
+  if(el.classList.contains('done')) el.querySelector('.task-check').textContent='✓';
+  else el.querySelector('.task-check').textContent='';
+}
+
+// ═══════════════════════════════════
+// WINDOW MANAGER
+// ═══════════════════════════════════
+function openWindowManager(){
+  document.getElementById('windowManager').classList.add('open');
+  document.getElementById('nav-windows').classList.add('active');
+}
+function closeWindowManager(){
+  document.getElementById('windowManager').classList.remove('open');
+  document.getElementById('nav-windows').classList.remove('active');
+}
+
+// ═══════════════════════════════════
+// VOICE
+// ═══════════════════════════════════
+let voiceActive = false;
+let voiceTimer = null;
+
+function openVoice(){
+  document.getElementById('voiceOverlay').classList.add('open');
+  voiceActive = true;
+  setRobotState('thinking');
+  // simulate voice command after 2.5s
+  voiceTimer = setTimeout(()=>{
+    const cmds = [
+      { label:'Abre Fitness', action:()=>{ closeVoice(); openWorkspace('fitness'); } },
+      { label:'Qué tengo hoy', action:()=>{ closeVoice(); respondMsg('Hoy tienes: navbar responsive a las 10am, revisión de métricas fitness y 3 tareas pendientes en Sitio Web.'); } },
+      { label:'Nuevo proyecto música', action:()=>{ closeVoice(); newProject(); } },
+    ];
+    const r = cmds[Math.floor(Math.random()*cmds.length)];
+    document.getElementById('voiceLabel').textContent = '"'+r.label+'"';
+    document.getElementById('voiceHint').textContent = '✓ Entendido';
+    setTimeout(r.action, 700);
+  }, 2500);
+}
+
+function toggleVoice(){
+  const btn = document.getElementById('voiceBtn');
+  if(!voiceActive){ openVoice(); btn.classList.add('listening'); }
+  else { closeVoice(); btn.classList.remove('listening'); }
+}
+
+function closeVoice(){
+  clearTimeout(voiceTimer);
+  voiceActive = false;
+  document.getElementById('voiceOverlay').classList.remove('open');
+  document.getElementById('voiceBtn').classList.remove('listening');
+  document.getElementById('voiceLabel').textContent = 'Escuchando...';
+  document.getElementById('voiceHint').textContent = 'Di: "Abre Fitness" · "Nuevo proyecto" · "Qué tengo hoy"';
+  setRobotState('idle');
+}
+
+// ═══════════════════════════════════
+// ROBOT STATE
+// ═══════════════════════════════════
+const STATES = ['idle','thinking','speaking','sleeping','singing'];
+let stateIdx = 0;
+
+function setRobotState(s){
+  document.getElementById('robotWrap').dataset.state = s;
+}
+function handleRobotTap(){
+  // cycle through states for demo
+  stateIdx = (stateIdx+1) % STATES.length;
+  setRobotState(STATES[stateIdx]);
+  if(STATES[stateIdx]==='sleeping'){
+    respondMsg('Buenas noches 🌙 Hasta mañana...');
+  } else if(STATES[stateIdx]==='singing'){
+    respondMsg('🎤 ♪ Serenata especial activada ♪');
+  }
+}
+
+// ═══════════════════════════════════
+// MESSAGING
+// ═══════════════════════════════════
+let busy = false;
+const history = [];
+
+async function sendMsg(){
+  const inp = document.getElementById('mainInp');
+  const text = inp.value.trim();
+  if(!text || busy) return;
+  inp.value='';
+  busy=true;
+  history.push({role:'user',content:text});
+  setRobotState('thinking');
+  document.getElementById('msgBubble').classList.add('glow');
+  document.getElementById('msgText').textContent='...';
+  document.getElementById('msgText').classList.add('msg-typing');
+
+  try{
+    const res = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',max_tokens:1000,
+        system:`Eres Geo, asistente personal inteligente de un OS llamado Geo OS. Eres como Jarvis: proactivo, conciso, personal. Conoces los proyectos del usuario: Sitio Web (65%), Transformación Física (28%), Geo Bot producto (12%). Responde en máximo 2 frases. Idioma: español.`,
+        messages:history
+      })
+    });
+    const d = await res.json();
+    const reply = d.content?.[0]?.text || 'Entendido.';
+    history.push({role:'assistant',content:reply});
+    respondMsg(reply);
+  } catch(e){
+    respondMsg('Error de conexión. Intenta de nuevo.');
+  }
+  busy=false;
+}
+
+function respondMsg(text){
+  const el = document.getElementById('msgText');
+  el.classList.remove('msg-typing');
+  setRobotState('speaking');
+  let i=0;
+  el.textContent='';
+  el.classList.add('msg-typing');
+  const spd = Math.max(14, Math.min(28, 1000/text.length));
+  const iv = setInterval(()=>{
+    el.textContent += text[i++];
+    if(i>=text.length){
+      clearInterval(iv);
+      el.classList.remove('msg-typing');
+      setTimeout(()=>setRobotState('idle'),1200);
+    }
+  },spd);
+}
+
+// workspace chat
+async function sendWsMsg(){
+  const inp = document.getElementById('wsInp');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value='';
+  const chat = document.getElementById('wsChat');
+  // add user bubble
+  chat.innerHTML += `<div class="wsc-msg user"><div><div class="wsc-bubble">${text}</div><div class="wsc-time">ahora</div></div></div>`;
+  chat.scrollTop = chat.scrollHeight;
+  // geo response
+  setTimeout(()=>{
+    chat.innerHTML += `<div class="wsc-msg geo"><div class="wsc-avatar"></div><div><div class="wsc-bubble" id="wsTyping">...</div><div class="wsc-time">ahora</div></div></div>`;
+    chat.scrollTop = chat.scrollHeight;
+    // simulate response
+    setTimeout(()=>{
+      document.getElementById('wsTyping').textContent = 'Entendido. Voy a trabajar en eso para tu proyecto. ¿Quieres que también actualice las tareas?';
+      document.getElementById('wsTyping').id='';
+      chat.scrollTop = chat.scrollHeight;
+    },1200);
+  },600);
+}
+
+// ═══════════════════════════════════
+// NEW PROJECT
+// ═══════════════════════════════════
+function newProject(){
+  respondMsg('¡Claro! Cuéntame la idea del nuevo proyecto y le creo una ventana completa con todo lo necesario 🚀');
+  goToScreen('avatar');
+}
+
+// ═══════════════════════════════════
+// SWIPE GESTURE
+// ═══════════════════════════════════
+let tx0=0, ty0=0;
+document.addEventListener('touchstart',e=>{
+  tx0=e.touches[0].clientX;
+  ty0=e.touches[0].clientY;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+  const dx=e.changedTouches[0].clientX-tx0;
+  const dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)>Math.abs(dy)*1.5 && Math.abs(dx)>55){
+    // horizontal swipe
+    if(document.getElementById('windowManager').classList.contains('open')) return;
+    if(document.getElementById('voiceOverlay').classList.contains('open')) return;
+
+

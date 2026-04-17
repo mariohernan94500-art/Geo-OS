@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geos OS · Android Preview</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;600;700;800&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0c14;font-family:'Syne',sans-serif;color:#eef2f8;}
+
+:root{
+  --gold:#f5b731;--green:#00e5a0;--accent:#00c8ff;--purple:#a78bfa;--red:#ff5c7a;--orange:#ff9f1c;
+  --bg:#0a0c14;--bg2:#0f1120;--bg3:#141728;
+  --card:rgba(255,255,255,.042);--border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --muted:rgba(238,242,248,.42);--mono:'DM Mono',monospace;
+  --panel:260px;
+  --phone-w:393px; --phone-h:851px;
+  --bezel:14px;
+  --radius:44px;
+}
+
+/* ── LAYOUT ── */
+#app{display:flex;width:100%;height:100%;overflow:hidden;}
+
+/* ── LEFT PANEL ── */
+#panel{
+  width:var(--panel);flex-shrink:0;height:100%;
+  background:var(--bg2);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.1) transparent;
+}
+#panel::-webkit-scrollbar{width:4px;}
+#panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px;}
+
+.panel-logo{padding:20px 18px 14px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.logo-title{font-size:16px;font-weight:800;letter-spacing:-.02em;}
+.logo-title span{color:var(--gold);}
+.logo-sub{font-size:10px;color:var(--muted);font-family:var(--mono);letter-spacing:.06em;margin-top:3px;}
+
+.panel-section{padding:14px 16px;border-bottom:1px solid var(--border);}
+.ps-label{font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:var(--mono);margin-bottom:10px;}
+
+/* Device selector */
+.device-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.device-btn{background:var(--card);border:1px solid var(--border);border-radius:11px;padding:9px 8px;cursor:pointer;transition:all .2s;text-align:center;}
+.device-btn:hover{border-color:var(--border2);}
+.device-btn.active{border-color:rgba(245,183,49,.45);background:rgba(245,183,49,.07);}
+.device-icon{font-size:18px;margin-bottom:4px;}
+.device-name{font-size:9px;font-family:var(--mono);color:var(--muted);font-weight:500;}
+.device-btn.active .device-name{color:var(--gold);}
+.device-res{font-size:8px;color:var(--muted);opacity:.6;}
+
+/* Controls */
+.ctrl-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.ctrl-label{font-size:11px;color:var(--muted);}
+.ctrl-val{font-size:11px;font-family:var(--mono);color:var(--gold);}
+.slider{width:100%;height:4px;border-radius:2px;background:rgba(255,255,255,.08);outline:none;-webkit-appearance:none;cursor:pointer;}
+.slider::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--gold);box-shadow:0 2px 8px rgba(245,183,49,.4);cursor:pointer;}
+.slider::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--gold);border:none;cursor:pointer;}
+
+/* Toggle row */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.toggle-row:last-child{border-bottom:none;}
+.toggle-label{font-size:11px;}
+.tog{width:38px;height:20px;border-radius:10px;border:none;cursor:pointer;transition:all .3s;position:relative;flex-shrink:0;}
+.tog.on{background:var(--gold);}
+.tog.off{background:rgba(255,255,255,.1);}
+.tog::before{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:3px;transition:.3s;box-shadow:0 1px 4px rgba(0,0,0,.3);}
+.tog.on::before{left:20px;}
+.tog.off::before{left:3px;}
+
+/* Action buttons */
+.action-btn{width:100%;padding:10px 14px;border-radius:10px;border:1px solid var(--border);background:var(--card);color:var(--text);font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.action-btn:hover{border-color:var(--border2);background:rgba(255,255,255,.06);}
+.action-btn.gold{border-color:rgba(245,183,49,.35);background:rgba(245,183,49,.08);color:var(--gold);}
+.action-btn.gold:hover{background:rgba(245,183,49,.14);}
+.action-btn.red{border-color:rgba(255,92,122,.3);background:rgba(255,92,122,.07);color:var(--red);}
+.ab-ico{font-size:14px;}
+
+/* Source input */
+.src-inp{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:9px 12px;font-size:11px;color:#eef2f8;font-family:var(--mono);outline:none;transition:border-color .2s;}
+.src-inp:focus{border-color:rgba(245,183,49,.35);}
+
+/* Status row */
+.status-row{display:flex;align-items:center;gap:6px;padding:8px 0;}
+.st-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:blink 2.5s infinite;}
+.st-dot.err{background:var(--red);box-shadow:0 0 6px var(--red);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.28}}
+.st-text{font-size:10px;color:var(--muted);font-family:var(--mono);flex:1;}
+.st-time{font-size:9px;color:var(--muted);font-family:var(--mono);opacity:.5;}
+
+/* Stats */
+.stats-mini{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.stat-m{background:var(--card);border:1px solid var(--border);border-radius:9px;padding:9px;text-align:center;}
+.stat-m-v{font-size:14px;font-weight:800;color:var(--gold);}
+.stat-m-k{font-size:8px;color:var(--muted);font-family:var(--mono);letter-spacing:.05em;margin-top:2px;}
+
+/* Changelog */
+.changelog{display:flex;flex-direction:column;gap:6px;}
+.cl-item{display:flex;gap:7px;align-items:flex-start;font-size:10px;line-height:1.5;}
+.cl-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px;}
+.cl-t{color:var(--muted);}
+
+/* ── MAIN CANVAS ── */
+#canvas{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 40%,rgba(245,183,49,.04) 0%,transparent 70%);}
+#canvas::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,200,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.012) 1px,transparent 1px);background-size:36px 36px;pointer-events:none;}
+
+.canvas-label{position:absolute;top:16px;left:50%;transform:translateX(-50%);font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:.08em;background:rgba(10,12,20,.8);border:1px solid var(--border);border-radius:100px;padding:4px 14px;backdrop-filter:blur(12px);}
+
+/* ── PHONE WRAPPER (scaled) ── */
+#phoneWrapper{display:flex;align-items:center;justify-content:center;transform-origin:center;transition:transform .35s cubic-bezier(.4,0,.2,1);}
+
+/* ── ANDROID PHONE FRAME ── */
+.phone-frame{
+  position:relative;
+  width:calc(var(--phone-w) + var(--bezel)*2 + 4px);
+  height:calc(var(--phone-h) + var(--bezel)*2 + 24px);
+  border-radius:var(--radius);
+  background:linear-gradient(145deg,#1e2030 0%,#151822 35%,#0f1118 70%,#1a1d28 100%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.08),
+    inset 0 2px 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(0,0,0,.6),
+    0 0 0 1px rgba(0,0,0,.8),
+    0 30px 80px rgba(0,0,0,.8),
+    0 8px 24px rgba(0,0,0,.6),
+    0 0 60px rgba(245,183,49,.05);
+  display:flex;flex-direction:column;align-items:center;
+  padding:var(--bezel);
+  padding-top:calc(var(--bezel) + 10px);
+  padding-bottom:calc(var(--bezel) + 10px);
+  flex-shrink:0;
+}
+
+/* Side buttons */
+.vol-up,.vol-down,.power-btn{
+  position:absolute;width:3px;border-radius:2px;
+  background:linear-gradient(to bottom,#2a2d3e,#1a1d28);
+  box-shadow:inset 0 0 0 .5px rgba(255,255,255,.06);
+}
+.vol-up{left:-4px;top:120px;height:60px;}
+.vol-down{left:-4px;top:195px;height:60px;}
+.power-btn{right:-4px;top:155px;height:80px;}
+
+/* Top notch area */
+.phone-top{width:100%;height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:2px;}
+.camera-hole{width:12px;height:12px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#1a1f2e,#0a0c14);border:1.5px solid rgba(255,255,255,.06);box-shadow:inset 0 0 4px rgba(0,0,0,.8);}
+/* Camera lens inner dot */
+.camera-hole::after{content:'';position:absolute;width:5px;height:5px;border-radius:50%;background:rgba(30,50,80,.8);top:50%;left:50%;transform:translate(-50%,-50%);box-shadow:0 0 3px rgba(0,150,255,.2);}
+.camera-hole{position:relative;}
+
+/* Screen area */
+.phone-screen{
+  width:var(--phone-w);
+  height:var(--phone-h);
+  border-radius:28px;
+  overflow:hidden;
+  background:#050609;
+  position:relative;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.8);
+  flex-shrink:0;
+}
+.phone-screen iframe{
+  width:var(--phone-w);
+  height:var(--phone-h);
+  border:none;
+  display:block;
+  border-radius:28px;
+}
+
+/* Loading state */
+.screen-loading{
+  position:absolute;inset:0;border-radius:28px;
+  background:#060810;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  z-index:10;transition:opacity .5s;
+}
+.load-ring{width:44px;height:44px;border-radius:50%;border:3px solid rgba(245,183,49,.2);border-top-color:var(--gold);animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-size:12px;font-family:var(--mono);color:rgba(245,183,49,.6);letter-spacing:.06em;}
+
+/* Screen reflection */
+.phone-screen::after{
+  content:'';position:absolute;top:0;left:0;right:0;height:40%;
+  background:linear-gradient(to bottom,rgba(255,255,255,.035) 0%,transparent 100%);
+  border-radius:28px 28px 0 0;pointer-events:none;z-index:5;
+}
+
+/* Bottom home bar */
+.phone-bottom{width:100%;height:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px;}
+.home-bar{width:100px;height:4px;border-radius:2px;background:rgba(255,255,255,.2);}
+
+/* ── LANDSCAPE MODE ── */
+.phone-frame.landscape{
+  width:calc(var(--phone-h) + var(--bezel)*2 + 24px);
+  height:calc(var(--phone-w) + var(--bezel)*2 + 4px);
+}
+.phone-frame.landscape .phone-screen{
+  width:var(--phone-h);
+  height:var(--phone-w);
+}
+.phone-frame.landscape .phone-screen iframe{
+  width:var(--phone-h);
+  height:var(--phone-w);
+}
+.phone-frame.landscape .vol-up{left:120px;top:-4px;width:60px;height:3px;}
+.phone-frame.landscape .vol-down{left:195px;top:-4px;width:60px;height:3px;}
+.phone-frame.landscape .power-btn{right:155px;bottom:-4px;top:auto;width:80px;height:3px;}
+.phone-frame.landscape .home-bar{width:4px;height:80px;}
+
+/* ── GRID OVERLAY ── */
+.grid-ov{position:absolute;inset:0;pointer-events:none;border-radius:28px;z-index:4;opacity:0;transition:opacity .3s;
+  background-image:
+    linear-gradient(rgba(255,100,100,.2) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(255,100,100,.2) 1px,transparent 1px),
+    linear-gradient(rgba(0,200,255,.08) 8px,transparent 8px),
+    linear-gradient(90deg,rgba(0,200,255,.08) 8px,transparent 8px);
+  background-size:8px 8px,8px 8px,64px 64px,64px 64px;
+}
+.grid-active .grid-ov{opacity:1;}
+
+/* ── COMPARE PANEL (bottom bar) ── */
+#compareBar{
+  position:absolute;bottom:0;left:var(--panel);right:0;
+  background:rgba(10,12,20,.92);border-top:1px solid var(--border);
+  backdrop-filter:blur(20px);padding:8px 16px;
+  display:flex;align-items:center;gap:14px;z-index:200;
+}
+.cb-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--muted);font-family:var(--mono);}
+.cb-dot{width:7px;height:7px;border-radius:50%;}
+
+/* ── ZOOM indicator ── */
+.zoom-ind{position:absolute;top:16px;right:16px;background:rgba(10,12,20,.85);border:1px solid var(--border);border-radius:100px;padding:4px 12px;font-size:10px;font-family:var(--mono);color:var(--muted);backdrop-filter:blur(12px);}
+
+/* ── ROTATE animation ── */
+@keyframes rotateIn{from{transform:rotate(-90deg) scale(.8);opacity:0}to{transform:rotate(0) scale(1);opacity:1}}
+.rotate-anim{animation:rotateIn .4s cubic-bezier(.34,1.3,.64,1);}
+
+/* ── TOAST (preview) ── */
+#prevToast{position:absolute;bottom:calc(16px + 44px);left:50%;transform:translateX(-50%);
+  background:rgba(10,12,20,.95);border:1px solid rgba(245,183,49,.25);border-radius:12px;
+  padding:10px 16px;font-size:12px;color:var(--gold);font-family:var(--mono);
+  backdrop-filter:blur(16px);opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap;}
+#prevToast.show{opacity:1;}
+
+/* ── HOTKEY BADGE ── */
+.hk{display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:5px;padding:1px 5px;font-size:9px;font-family:var(--mono);color:var(--muted);margin-left:auto;}
+
+/* ── RELOAD RING ── */
+.reload-ring{width:18px;height:18px;border-radius:50%;border:2px solid rgba(255,255,255,.12);border-top-color:var(--gold);animation:spin .8s linear infinite;flex-shrink:0;opacity:0;transition:opacity .2s;}
+.reload-ring.spin{opacity:1;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ════ LEFT PANEL ════ -->
+  <div id="panel">
+
+    <div class="panel-logo">
+      <div class="logo-title">Geos OS <span>Preview</span></div>
+      <div class="logo-sub">Android Emulator · Live</div>
+    </div>
+
+    <!-- SOURCE -->
+    <div class="panel-section">
+      <div class="ps-label">Archivo fuente</div>
+      <input class="src-inp" id="srcUrl" value="http://127.0.0.1:8080/geos-os.html" placeholder="URL del archivo...">
+      <div style="height:8px;"></div>
+      <button class="action-btn gold" onclick="loadApp()">
+        <span class="ab-ico">▶</span> Cargar app
+      </button>
+    </div>
+
+    <!-- STATUS -->
+    <div class="panel-section">
+      <div class="ps-label">Estado</div>
+      <div class="status-row">
+        <div class="st-dot" id="stDot"></div>
+        <div class="st-text" id="stText">Conectado · geos-os.html</div>
+        <div class="reload-ring" id="reloadRing"></div>
+      </div>
+      <div class="stats-mini">
+        <div class="stat-m"><div class="stat-m-v" id="statW">393</div><div class="stat-m-k">WIDTH px</div></div>
+        <div class="stat-m"><div class="stat-m-v" id="statH">851</div><div class="stat-m-k">HEIGHT px</div></div>
+        <div class="stat-m"><div class="stat-m-v" id="statZ">65%</div><div class="stat-m-k">ZOOM</div></div>
+        <div class="stat-m"><div class="stat-m-v" id="statFPS">60</div><div class="stat-m-k">FPS est.</div></div>
+      </div>
+    </div>
+
+    <!-- DEVICES -->
+    <div class="panel-section">
+      <div class="ps-label">Dispositivo</div>
+      <div class="device-grid">
+        <div class="device-btn active" onclick="setDevice('pixel7')" id="db-pixel7">
+          <div class="device-icon">📱</div>
+          <div class="device-name">Pixel 7</div>
+          <div class="device-res">393×851</div>
+        </div>
+        <div class="device-btn" onclick="setDevice('pixel4')" id="db-pixel4">
+          <div class="device-icon">📱</div>
+          <div class="device-name">Pixel 4</div>
+          <div class="device-res">393×830</div>
+        </div>
+        <div class="device-btn" onclick="setDevice('samsung')" id="db-samsung">
+          <div class="device-icon">📱</div>
+          <div class="device-name">Samsung S24</div>
+          <div class="device-res">384×826</div>
+        </div>
+        <div class="device-btn" onclick="setDevice('fold')" id="db-fold">
+          <div class="device-icon">📟</div>
+          <div class="device-name">Galaxy Fold</div>
+          <div class="device-res">360×820</div>
+        </div>
+        <div class="device-btn" onclick="setDevice('tablet')" id="db-tablet">
+          <div class="device-icon">🖥️</div>
+          <div class="device-name">Tab S9</div>
+          <div class="device-res">800×1280</div>
+        </div>
+        <div class="device-btn" onclick="setDevice('iphone')" id="db-iphone">
+          <div class="device-icon">📱</div>
+          <div class="device-name">iPhone 15</div>
+          <div class="device-res">390×844</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ZOOM -->
+    <div class="panel-section">
+      <div class="ps-label">Escala y orientación</div>
+      <div class="ctrl-row">
+        <span class="ctrl-label">Zoom</span>
+        <span class="ctrl-val" id="zoomVal">65%</span>
+      </div>
+      <input type="range" class="slider" id="zoomSlider" min="20" max="100" value="65" oninput="setZoom(this.value)">
+      <div style="height:12px;"></div>
+      <button class="action-btn" onclick="toggleOrientation()" id="orientBtn">
+        <span class="ab-ico">🔄</span> Rotar (Portrait) <span class="hk">R</span>
+      </button>
+    </div>
+
+    <!-- TOOLS -->
+    <div class="panel-section">
+      <div class="ps-label">Herramientas</div>
+      <div class="toggle-row">
+        <span class="toggle-label">🔲 Grilla de diseño</span>
+        <button class="tog off" id="togGrid" onclick="toggleGrid(this)"></button>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">🔄 Auto-reload (5s)</span>
+        <button class="tog off" id="togReload" onclick="toggleAutoReload(this)"></button>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">🌑 Marco oscuro</span>
+        <button class="tog on" id="togFrame" onclick="toggleFrame(this)"></button>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">✨ Brillo pantalla</span>
+        <button class="tog on" id="togGlow" onclick="toggleGlow(this)"></button>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="panel-section">
+      <div class="ps-label">Acciones</div>
+      <button class="action-btn gold" onclick="reloadFrame()">
+        <span class="ab-ico">🔃</span> Recargar app <span class="hk">F5</span>
+      </button>
+      <button class="action-btn" onclick="fitToScreen()">
+        <span class="ab-ico">⊡</span> Ajustar pantalla <span class="hk">F</span>
+      </button>
+      <button class="action-btn" onclick="takeSnapshot()">
+        <span class="ab-ico">📸</span> Captura <span class="hk">P</span>
+      </button>
+      <button class="action-btn" onclick="openInTab()">
+        <span class="ab-ico">↗</span> Abrir en pestaña
+      </button>
+      <button class="action-btn red" onclick="resetAll()">
+        <span class="ab-ico">↺</span> Resetear todo
+      </button>
+    </div>
+
+    <!-- CHANGELOG -->
+    <div class="panel-section">
+      <div class="ps-label">Últimos cambios</div>
+      <div class="changelog" id="changelog">
+        <div class="cl-item"><div class="cl-dot" style="background:var(--gold)"></div><div class="cl-t">v3 — Toast system + Agentes</div></div>
+        <div class="cl-item"><div class="cl-dot" style="background:var(--accent)"></div><div class="cl-t">v3 — Búsqueda universal</div></div>
+        <div class="cl-item"><div class="cl-dot" style="background:var(--green)"></div><div class="cl-t">v3 — Web Speech API real</div></div>
+        <div class="cl-item"><div class="cl-dot" style="background:var(--purple)"></div><div class="cl-t">v3 — Kanban + Confetti</div></div>
+        <div class="cl-item"><div class="cl-dot" style="background:var(--orange)"></div><div class="cl-t">v2 — Música + HiNoter</div></div>
+        <div class="cl-item"><div class="cl-dot" style="background:var(--muted)"></div><div class="cl-t">v1 — Avatar + Chat</div></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ════ MAIN CANVAS ════ -->
+  <div id="canvas">
+    <div class="canvas-label" id="canvasLabel">Pixel 7 · 393×851 · Portrait</div>
+    <div class="zoom-ind" id="zoomInd">65%</div>
+
+    <div id="phoneWrapper">
+      <div class="phone-frame" id="phoneFrame">
+        <!-- Side buttons -->
+        <div class="vol-up"></div>
+        <div class="vol-down"></div>
+        <div class="power-btn"></div>
+        <!-- Camera -->
+        <div class="phone-top">
+          <div class="camera-hole"></div>
+        </div>
+        <!-- Screen -->
+        <div class="phone-screen" id="phoneScreen">
+          <div class="screen-loading" id="loadingScreen">
+            <div class="load-ring"></div>
+            <div class="load-text">Cargando Geos OS...</div>
+          </div>
+          <div class="grid-ov" id="gridOv"></div>
+          <iframe id="appFrame" src="about:blank" scrolling="no" allow="microphone;camera"></iframe>
+        </div>
+        <!-- Home bar -->
+        <div class="phone-bottom">
+          <div class="home-bar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom compare bar -->
+    <div id="compareBar">
+      <div class="cb-item"><div class="cb-dot" style="background:var(--green)"></div>Preview Live</div>
+      <div class="cb-item" id="cbDevice">📱 Pixel 7</div>
+      <div class="cb-item" id="cbRes">393 × 851 px</div>
+      <div class="cb-item" id="cbZoom">Zoom: 65%</div>
+      <div class="cb-item" id="cbOrientation">Portrait</div>
+      <div class="cb-item" id="cbTime"></div>
+      <div style="flex:1"></div>
+      <div class="cb-item" style="cursor:pointer;color:var(--gold);" onclick="reloadFrame()">⟳ Recargar</div>
+    </div>
+
+    <!-- Toast -->
+    <div id="prevToast"></div>
+  </div>
+
+</div>
+
+<script>
+// ═══ DEVICE PROFILES ═══
+const DEVICES = {
+  pixel7:  {name:'Pixel 7',   w:393, h:851, r:44, brands:'📱'},
+  pixel4:  {name:'Pixel 4',   w:393, h:830, r:42, brands:'📱'},
+  samsung: {name:'Samsung S24',w:384, h:826, r:40, brands:'📱'},
+  fold:    {name:'Galaxy Fold',w:360, h:820, r:36, brands:'📟'},
+  tablet:  {name:'Tab S9',    w:800, h:1280,r:20, brands:'🖥️'},
+  iphone:  {name:'iPhone 15', w:390, h:844, r:47, brands:'📱'},
+};
+
+let currentDevice = 'pixel7';
+let landscape = false;
+let zoom = 65;
+let gridOn = false;
+let autoReloadInterval = null;
+let glowOn = true;
+let appUrl = 'http://127.0.0.1:8080/geos-os.html';
+
+// ═══ INIT ═══
+window.addEventListener('load', () => {
+  fitToScreen();
+  setTimeout(() => loadApp(), 300);
+  updateClock();
+  setInterval(updateClock, 10000);
+  document.getElementById('srcUrl').addEventListener('keypress', e => {
+    if(e.key === 'Enter') loadApp();
+  });
+});
+
+function updateClock() {
+  const n = new Date();
+  document.getElementById('cbTime').textContent = n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0');
+}
+
+// ═══ LOAD APP ═══
+function loadApp() {
+  appUrl = document.getElementById('srcUrl').value.trim() || appUrl;
+  const frame = document.getElementById('appFrame');
+  const loading = document.getElementById('loadingScreen');
+  const ring = document.getElementById('reloadRing');
+  const dot = document.getElementById('stDot');
+  const stText = document.getElementById('stText');
+
+  loading.style.opacity = '1';
+  loading.style.pointerEvents = 'all';
+  ring.classList.add('spin');
+  dot.className = 'st-dot';
+  stText.textContent = 'Cargando...';
+
+  frame.src = 'about:blank';
+  setTimeout(() => {
+    frame.src = appUrl;
+    frame.onload = () => {
+      loading.style.opacity = '0';
+      loading.style.pointerEvents = 'none';
+      ring.classList.remove('spin');
+      dot.className = 'st-dot';
+      stText.textContent = 'Conectado · ' + appUrl.split('/').pop();
+      showToast('✅ App cargada correctamente');
+    };
+    frame.onerror = () => {
+      dot.className = 'st-dot err';
+      stText.textContent = 'Error al cargar';
+      ring.classList.remove('spin');
+    };
+  }, 200);
+}
+
+// ═══ RELOAD ═══
+function reloadFrame() {
+  const frame = document.getElementById('appFrame');
+  const ring = document.getElementById('reloadRing');
+  const loading = document.getElementById('loadingScreen');
+  ring.classList.add('spin');
+  loading.style.opacity = '1';
+  loading.querySelector('.load-text').textContent = 'Recargando...';
+  loading.style.pointerEvents = 'none';
+  frame.src = frame.src;
+  frame.onload = () => {
+    ring.classList.remove('spin');
+    loading.style.opacity = '0';
+    showToast('🔃 App recargada');
+  };
+}
+
+// ═══ DEVICE ═══
+function setDevice(id) {
+  currentDevice = id;
+  const d = DEVICES[id];
+  
+  // Update buttons
+  document.querySelectorAll('.device-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('db-' + id).classList.add('active');
+
+  // Update CSS vars
+  const frame = document.getElementById('phoneFrame');
+  frame.style.setProperty('--phone-w-local', d.w + 'px');
+  frame.style.setProperty('--phone-h-local', d.h + 'px');
+  document.documentElement.style.setProperty('--phone-w', d.w + 'px');
+  document.documentElement.style.setProperty('--phone-h', d.h + 'px');
+  document.documentElement.style.setProperty('--radius', d.r + 'px');
+
+  // Update stats
+  const dispW = landscape ? d.h : d.w;
+  const dispH = landscape ? d.w : d.h;
+  document.getElementById('statW').textContent = dispW;
+  document.getElementById('statH').textContent = dispH;
+  document.getElementById('cbDevice').textContent = d.brands + ' ' + d.name;
+  document.getElementById('cbRes').textContent = dispW + ' × ' + dispH + ' px';
+
+  // Reload iframe with new dims - set iframe size
+  const iframe = document.getElementById('appFrame');
+  iframe.style.width = dispW + 'px';
+  iframe.style.height = dispH + 'px';
+  const screen = document.getElementById('phoneScreen');
+  screen.style.width = dispW + 'px';
+  screen.style.height = dispH + 'px';
+  screen.style.borderRadius = (d.r - 4) + 'px';
+  iframe.style.borderRadius = (d.r - 4) + 'px';
+
+  updateCanvasLabel();
+  fitToScreen();
+  showToast(`📱 ${d.name} · ${dispW}×${dispH}`);
+}
+
+// ═══ ZOOM ═══
+function setZoom(val) {
+  zoom = parseInt(val);
+  const scale = zoom / 100;
+  document.getElementById('phoneWrapper').style.transform = `scale(${scale})`;
+  document.getElementById('zoomVal').textContent = zoom + '%';
+  document.getElementById('zoomInd').textContent = zoom + '%';
+  document.getElementById('cbZoom').textContent = 'Zoom: ' + zoom + '%';
+  document.getElementById('statZ').textContent = zoom + '%';
+}
+
+function fitToScreen() {
+  const canvas = document.getElementById('canvas');
+  const cw = canvas.offsetWidth - 60;
+  const ch = canvas.offsetHeight - 80;
+  const d = DEVICES[currentDevice];
+  const fw = landscape ? d.h + 60 : d.w + 60;
+  const fh = landscape ? d.w + 80 : d.h + 80;
+  const scaleW = cw / fw;
+  const scaleH = ch / fh;
+  const scale = Math.min(scaleW, scaleH, 1);
+  zoom = Math.round(scale * 100);
+  document.getElementById('zoomSlider').value = zoom;
+  setZoom(zoom);
+}
+
+// ═══ ORIENTATION ═══
+function toggleOrientation() {
+  landscape = !landscape;
+  const frame = document.getElementById('phoneFrame');
+  frame.classList.toggle('landscape', landscape);
+  const btn = document.getElementById('orientBtn');
+  btn.innerHTML = `<span class="ab-ico">🔄</span> Rotar (${landscape ? 'Landscape' : 'Portrait'}) <span class="hk">R</span>`;
+  document.getElementById('cbOrientation').textContent = landscape ? 'Landscape' : 'Portrait';
+  // Re-apply device dims
+  setDevice(currentDevice);
+  showToast(landscape ? '↔ Landscape' : '↕ Portrait');
+}
+
+// ═══ TOOLS ═══
+function toggleGrid(btn) {
+  gridOn = !gridOn;
+  btn.className = 'tog ' + (gridOn ? 'on' : 'off');
+  const screen = document.getElementById('phoneScreen');
+  screen.classList.toggle('grid-active', gridOn);
+  showToast(gridOn ? '🔲 Grilla activada' : '🔲 Grilla desactivada');
+}
+
+function toggleAutoReload(btn) {
+  const on = btn.classList.contains('off');
+  btn.className = 'tog ' + (on ? 'on' : 'off');
+  if(on) {
+    autoReloadInterval = setInterval(() => reloadFrame(), 5000);
+    showToast('🔄 Auto-reload activado (cada 5s)');
+  } else {
+    clearInterval(autoReloadInterval);
+    showToast('🔄 Auto-reload desactivado');
+  }
+}
+
+function toggleFrame(btn) {
+  const on = btn.classList.contains('off');
+  btn.className = 'tog ' + (on ? 'on' : 'off');
+  const frame = document.getElementById('phoneFrame');
+  frame.style.background = on ? 'linear-gradient(145deg,#1e2030,#151822,#0f1118,#1a1d28)' : 'linear-gradient(145deg,#2a2d3e,#1e2130,#1a1d28)';
+}
+
+function toggleGlow(btn) {
+  glowOn = btn.classList.contains('off');
+  btn.className = 'tog ' + (glowOn ? 'on' : 'off');
+  const frame = document.getElementById('phoneFrame');
+  frame.style.boxShadow = glowOn 
+    ? 'inset 0 0 0 1px rgba(255,255,255,.08),inset 0 2px 0 rgba(255,255,255,.12),0 0 0 1px rgba(0,0,0,.8),0 30px 80px rgba(0,0,0,.8),0 8px 24px rgba(0,0,0,.6),0 0 60px rgba(245,183,49,.05)'
+    : 'inset 0 0 0 1px rgba(255,255,255,.08),0 0 0 1px rgba(0,0,0,.8),0 30px 80px rgba(0,0,0,.8)';
+}
+
+function openInTab() {
+  window.open(document.getElementById('srcUrl').value, '_blank');
+}
+
+function takeSnapshot() {
+  showToast('📸 Usa Ctrl+Shift+P → "Capture screenshot" en DevTools');
+}
+
+function resetAll() {
+  landscape = false;
+  setDevice('pixel7');
+  setZoom(65);
+  document.getElementById('zoomSlider').value = 65;
+  document.getElementById('togGrid').className = 'tog off';
+  gridOn = false;
+  document.getElementById('phoneScreen').classList.remove('grid-active');
+  clearInterval(autoReloadInterval);
+  document.getElementById('togReload').className = 'tog off';
+  showToast('↺ Todo reseteado');
+}
+
+function updateCanvasLabel() {
+  const d = DEVICES[currentDevice];
+  const w = landscape ? d.h : d.w;
+  const h = landscape ? d.w : d.h;
+  document.getElementById('canvasLabel').textContent = `${d.name} · ${w}×${h} · ${landscape ? 'Landscape' : 'Portrait'}`;
+}
+
+// ═══ TOAST ═══
+function showToast(msg) {
+  const t = document.getElementById('prevToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ═══ KEYBOARD SHORTCUTS ═══
+document.addEventListener('keydown', e => {
+  if(e.target.tagName === 'INPUT') return;
+  if(e.key === 'F5' || (e.ctrlKey && e.key === 'r')) { e.preventDefault(); reloadFrame(); }
+  if(e.key === 'r' || e.key === 'R') toggleOrientation();
+  if(e.key === 'f' || e.key === 'F') fitToScreen();
+  if(e.key === 'p' || e.key === 'P') takeSnapshot();
+  if(e.key === '+' || e.key === '=') { zoom = Math.min(zoom + 5, 100); document.getElementById('zoomSlider').value = zoom; setZoom(zoom); }
+  if(e.key === '-') { zoom = Math.max(zoom - 5, 20); document.getElementById('zoomSlider').value = zoom; setZoom(zoom); }
+});
+
+// ═══ RESIZE ═══
+window.addEventListener('resize', () => fitToScreen());
+
+// ═══ MOUSE WHEEL ZOOM ═══
+document.getElementById('canvas').addEventListener('wheel', e => {
+  if(e.ctrlKey) {
+    e.preventDefault();
+    zoom = Math.max(20, Math.min(100, zoom - Math.round(e.deltaY / 10)));
+    document.getElementById('zoomSlider').value = zoom;
+    setZoom(zoom);
+  }
+}, {passive: false});
+</script>
+</body>
+</html>

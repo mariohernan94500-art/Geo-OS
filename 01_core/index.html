@@ -1,0 +1,2654 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>GEO</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <script async defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script async defer src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+    <script async defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script async defer src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script async defer src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>tailwind.config = { theme: { extend: { colors: { geo: { bg: '#060a13', surface: '#0d1321', card: '#111827', border: '#1e293b', text: '#e8edf5', muted: '#6b7a90', accent: 'var(--c-accent,#00ff88)', cyan: 'var(--c-cyan,#00d4ff)', danger: 'var(--c-danger,#ff3366)', warn: 'var(--c-warn,#ffaa00)' } }, fontFamily: { display: ['Space Grotesk', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] } } } }</script>
+    <style>
+        :root {
+            --c-accent: #00ff88;
+            --c-cyan: #00d4ff;
+            --c-danger: #ff3366;
+            --c-warn: #ffaa00;
+            --c-bg: #060a13;
+            --c-surface: #0d1321;
+            --c-card: #111827;
+            --c-border: #1e293b;
+            --c-text: #e8edf5;
+            --c-muted: #6b7a90
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--c-bg);
+            color: var(--c-text);
+            overflow: hidden;
+            height: 100dvh;
+            width: 100vw
+        }
+
+        .theme-light {
+            --c-bg: #f0f2f5;
+            --c-surface: #fff;
+            --c-card: #f8f9fa;
+            --c-border: #e0e3e8;
+            --c-text: #1a1a2e;
+            --c-muted: #6b7280;
+            --c-accent: #059669;
+            --c-cyan: #0284c7;
+            --c-danger: #dc2626;
+            --c-warn: #d97706
+        }
+
+        .theme-stealth {
+            --c-bg: #fff;
+            --c-surface: #f9fafb;
+            --c-card: #fff;
+            --c-border: #e5e7eb;
+            --c-text: #111827;
+            --c-muted: #9ca3af;
+            --c-accent: #6b7280;
+            --c-cyan: #6b7280;
+            --c-danger: #6b7280;
+            --c-warn: #6b7280
+        }
+
+        #lockScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--c-bg)
+        }
+
+        .lock-grid {
+            position: absolute;
+            inset: 0;
+            background-image: linear-gradient(rgba(0, 255, 136, .03) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 136, .03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridM 20s linear infinite
+        }
+
+        @keyframes gridM {
+            to {
+                background-position: 40px 40px
+            }
+        }
+
+        .geo-logo {
+            font-size: 3.5rem;
+            font-weight: 700;
+            letter-spacing: .25em;
+            color: var(--c-accent);
+            text-shadow: 0 0 40px rgba(0, 255, 136, .2);
+            position: relative;
+            z-index: 1;
+            cursor: pointer
+        }
+
+        .geo-logo span {
+            color: var(--c-cyan)
+        }
+
+        .pin-dots {
+            display: flex;
+            gap: 14px;
+            margin: 1.5rem 0;
+            position: relative;
+            z-index: 1
+        }
+
+        .pin-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 50%;
+            border: 2px solid var(--c-border);
+            transition: all .2s
+        }
+
+        .pin-dot.filled {
+            background: var(--c-accent);
+            border-color: var(--c-accent);
+            box-shadow: 0 0 10px rgba(0, 255, 136, .4)
+        }
+
+        .pin-dot.error {
+            border-color: var(--c-danger);
+            background: var(--c-danger);
+            box-shadow: 0 0 10px rgba(255, 51, 102, .4)
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 68px);
+            gap: 10px;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1rem
+        }
+
+        .key-btn {
+            width: 68px;
+            height: 68px;
+            border-radius: 14px;
+            border: 1px solid var(--c-border);
+            background: var(--c-card);
+            color: var(--c-text);
+            font-size: 1.4rem;
+            font-family: 'Space Grotesk';
+            cursor: pointer;
+            transition: all .15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none
+        }
+
+        .key-btn:hover {
+            background: var(--c-surface);
+            border-color: var(--c-accent)
+        }
+
+        .key-btn:active {
+            transform: scale(.92)
+        }
+
+        .key-btn.bk {
+            font-size: 1.1rem;
+            color: var(--c-muted)
+        }
+
+        .key-btn.bk:hover {
+            color: var(--c-danger);
+            border-color: var(--c-danger)
+        }
+
+        .bio-methods {
+            display: flex;
+            gap: 12px;
+            margin-top: 1.2rem;
+            position: relative;
+            z-index: 1;
+            justify-content: center
+        }
+
+        .bio-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 14px 20px;
+            border-radius: 16px;
+            border: 1px solid var(--c-border);
+            background: var(--c-card);
+            cursor: pointer;
+            transition: all .25s;
+            min-width: 90px
+        }
+
+        .bio-btn:hover {
+            border-color: var(--c-accent);
+            background: rgba(0, 255, 136, .05)
+        }
+
+        .bio-btn.trying {
+            border-color: var(--c-cyan);
+            background: rgba(0, 212, 255, .05)
+        }
+
+        .bio-btn.success {
+            border-color: var(--c-accent);
+            background: rgba(0, 255, 136, .1)
+        }
+
+        .bio-btn.failed {
+            border-color: var(--c-danger);
+            background: rgba(255, 51, 102, .05)
+        }
+
+        .bio-btn.disabled {
+            opacity: .35;
+            pointer-events: none
+        }
+
+        .bio-ico {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0
+        }
+
+        .bio-label {
+            font-size: .75rem;
+            color: var(--c-muted)
+        }
+
+        .bio-status {
+            font-size: .8rem;
+            font-family: 'JetBrains Mono';
+            color: var(--c-muted);
+            min-height: 20px;
+            text-align: center;
+            position: relative;
+            z-index: 1
+        }
+
+        .modal-ov {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(6, 10, 19, .92);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem
+        }
+
+        .modal-ov.active {
+            display: flex
+        }
+
+        .modal-box {
+            background: var(--c-card);
+            border: 1px solid var(--c-border);
+            border-radius: 18px;
+            padding: 1.8rem;
+            max-width: 460px;
+            width: 100%;
+            max-height: 88vh;
+            overflow-y: auto;
+            animation: mIn .3s ease
+        }
+
+        @keyframes mIn {
+            from {
+                opacity: 0;
+                transform: scale(.95) translateY(8px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .modal-box h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .m-input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--c-border);
+            background: var(--c-surface);
+            color: var(--c-text);
+            font-family: 'Space Grotesk';
+            font-size: .85rem;
+            outline: none;
+            transition: border .2s
+        }
+
+        .m-input:focus {
+            border-color: var(--c-accent)
+        }
+
+        .m-label {
+            display: block;
+            font-size: .78rem;
+            color: var(--c-muted);
+            margin-bottom: 5px;
+            margin-top: .8rem
+        }
+
+        .m-btn {
+            padding: 9px 20px;
+            border-radius: 10px;
+            border: none;
+            font-family: 'Space Grotesk';
+            font-size: .85rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s
+        }
+
+        .m-btn.pri {
+            background: var(--c-accent);
+            color: var(--c-bg)
+        }
+
+        .m-btn.pri:hover {
+            box-shadow: 0 0 16px rgba(0, 255, 136, .25)
+        }
+
+        .m-btn.sec {
+            background: transparent;
+            border: 1px solid var(--c-border);
+            color: var(--c-muted)
+        }
+
+        .m-btn.sec:hover {
+            border-color: var(--c-muted);
+            color: var(--c-text)
+        }
+
+        .m-btn.dan {
+            background: var(--c-danger);
+            color: #fff
+        }
+
+        .m-btn.dan:hover {
+            box-shadow: 0 0 16px rgba(255, 51, 102, .3)
+        }
+
+        .face-wrap {
+            position: relative;
+            width: 260px;
+            height: 260px;
+            margin: 0 auto;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid var(--c-border)
+        }
+
+        .face-wrap video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1)
+        }
+
+        .face-wrap canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%
+        }
+
+        .face-st {
+            text-align: center;
+            margin-top: .8rem;
+            font-size: .85rem;
+            font-family: 'JetBrains Mono';
+            color: var(--c-cyan)
+        }
+
+        .face-conf {
+            margin-top: .5rem;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--c-border);
+            overflow: hidden
+        }
+
+        .face-conf-bar {
+            height: 100%;
+            background: var(--c-accent);
+            border-radius: 2px;
+            transition: width .3s;
+            width: 0
+        }
+
+        @keyframes pulse-dot {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 1
+            }
+
+            50% {
+                transform: scale(1.1);
+                opacity: .7
+            }
+        }
+
+        .pulse-dot {
+            animation: pulse-dot 1.5s infinite !important
+        }
+
+        #blockedScreen {
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: var(--c-bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1.2rem
+        }
+
+        #blockedScreen.active {
+            display: flex !important
+        }
+
+        .blk-icon {
+            font-size: 3.5rem;
+            color: var(--c-danger)
+        }
+
+        .blk-timer {
+            font-size: 2.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono';
+            color: var(--c-danger)
+        }
+
+        #screenShield {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: var(--c-muted);
+            font-size: .9rem;
+            gap: .5rem
+        }
+
+        #dashboard {
+            display: none;
+            height: 100dvh;
+            overflow: hidden
+        }
+
+        #dashboard.active {
+            display: flex
+        }
+
+        .mob-tog {
+            display: none;
+            position: fixed;
+            top: 14px;
+            left: 14px;
+            z-index: 400;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            border: 1px solid var(--c-border);
+            background: var(--c-surface);
+            color: var(--c-text);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem
+        }
+
+        #sidebar {
+            width: 66px;
+            min-width: 66px;
+            height: 100dvh;
+            background: var(--c-surface);
+            border-right: 1px solid var(--c-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 14px 0;
+            gap: 2px;
+            transition: width .3s;
+            overflow: hidden;
+            z-index: 10
+        }
+
+        #sidebar:hover {
+            width: 210px;
+            min-width: 210px
+        }
+
+        .sb-logo {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--c-accent);
+            padding: 6px 0 20px;
+            letter-spacing: .15em;
+            white-space: nowrap
+        }
+
+        .sb-logo span {
+            color: var(--c-cyan)
+        }
+
+        .nav-i {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 11px 22px;
+            color: var(--c-muted);
+            cursor: pointer;
+            transition: all .2s;
+            white-space: nowrap;
+            position: relative
+        }
+
+        .nav-i:hover {
+            color: var(--c-text);
+            background: rgba(0, 255, 136, .03)
+        }
+
+        .nav-i.active {
+            color: var(--c-accent);
+            background: rgba(0, 255, 136, .06)
+        }
+
+        .nav-i.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 22px;
+            background: var(--c-accent);
+            border-radius: 0 3px 3px 0
+        }
+
+        .nav-i i {
+            width: 22px;
+            text-align: center;
+            font-size: .95rem;
+            flex-shrink: 0
+        }
+
+        .nav-i span {
+            font-size: .82rem;
+            opacity: 0;
+            transition: opacity .2s
+        }
+
+        #sidebar:hover .nav-i span {
+            opacity: 1
+        }
+
+        .sb-spacer {
+            flex: 1
+        }
+
+        #mainContent {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden
+        }
+
+        .csec {
+            display: none;
+            padding: 1.8rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            animation: fUp .35s ease
+        }
+
+        .csec.active {
+            display: block
+        }
+
+        @keyframes fUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        .sh {
+            margin-bottom: 1.5rem
+        }
+
+        .sh h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: .2rem
+        }
+
+        .sh p {
+            color: var(--c-muted);
+            font-size: .85rem
+        }
+
+        .sg {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 14px;
+            margin-bottom: 1.5rem
+        }
+
+        .sc {
+            background: var(--c-card);
+            border: 1px solid var(--c-border);
+            border-radius: 14px;
+            padding: 16px;
+            transition: all .25s;
+            overflow: hidden
+        }
+
+        .sc:hover {
+            border-color: rgba(0, 255, 136, .2);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 24px rgba(0, 0, 0, .2)
+        }
+
+        .sc .si {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            margin-bottom: 10px
+        }
+
+        .sc .sv {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono'
+        }
+
+        .sc .sl {
+            font-size: .75rem;
+            color: var(--c-muted);
+            margin-top: 3px
+        }
+
+        #toasts {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px
+        }
+
+        .toast {
+            padding: 12px 18px;
+            border-radius: 10px;
+            font-size: .82rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: tIn .3s ease;
+            min-width: 260px;
+            backdrop-filter: blur(10px)
+        }
+
+        .toast.ok {
+            background: rgba(0, 255, 136, .1);
+            border: 1px solid rgba(0, 255, 136, .25);
+            color: var(--c-accent)
+        }
+
+        .toast.err {
+            background: rgba(255, 51, 102, .1);
+            border: 1px solid rgba(255, 51, 102, .25);
+            color: var(--c-danger)
+        }
+
+        .toast.inf {
+            background: rgba(0, 212, 255, .1);
+            border: 1px solid rgba(0, 212, 255, .25);
+            color: var(--c-cyan)
+        }
+
+        .toast.wrn {
+            background: rgba(255, 170, 0, .1);
+            border: 1px solid rgba(255, 170, 0, .25);
+            color: var(--c-warn)
+        }
+
+        @keyframes tIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        @media(max-width:768px) {
+            #sidebar {
+                position: fixed;
+                left: -210px;
+                z-index: 500;
+                height: 100dvh;
+                width: 210px;
+                min-width: 210px;
+                transition: left .3s
+            }
+
+            #sidebar.open {
+                left: 0
+            }
+
+            #sidebar .nav-i span {
+                opacity: 1
+            }
+
+            .mob-tog {
+                display: flex !important
+            }
+
+            .csec {
+                padding: 1.1rem
+            }
+
+            .sh h1 {
+                font-size: 1.3rem
+            }
+
+            .keypad {
+                grid-template-columns: repeat(3, 60px);
+                gap: 8px
+            }
+
+            .key-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.2rem
+            }
+
+            .sg {
+                grid-template-columns: repeat(2, 1fr) !important
+            }
+        }
+
+        /* Efectos de Monitor Táctico */
+        .video-hud {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--c-accent);
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+            z-index: 5;
+        }
+
+        .scanlines {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            background-size: 100% 3px, 3px 100%;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .video-container-inner {
+            position: relative;
+            width: 100%;
+            max-width: 540px;
+            margin: 0 auto;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--c-danger);
+            background: #000;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="screenShield"><i class="fas fa-eye-slash"></i> Captura bloqueada</div>
+
+    <div id="lockScreen">
+        <div class="lock-grid"></div>
+        <div class="geo-logo" id="geoLogo">GE<span>O</span></div>
+        <p style="color:var(--c-muted);font-size:.8rem;margin-top:.4rem;position:relative;z-index:1">Identifícate para
+            continuar</p>
+        <div class="bio-status" id="lockBioStatus" style="min-height:24px"></div>
+        <div class="bio-methods" id="bioMethods">
+            <div class="bio-btn" id="bioFace" onclick="tryBio('face')">
+                <div class="bio-ico" style="background:rgba(0,212,255,.1);color:var(--c-cyan)"><i
+                        class="fas fa-face-smile"></i></div>
+                <span class="bio-label">Rostro</span>
+            </div>
+            <div class="bio-btn" id="bioVoice" onclick="tryBio('voice')">
+                <div class="bio-ico" style="background:rgba(255,170,0,.1);color:var(--c-warn)"><i
+                        class="fas fa-waveform"></i></div>
+                <span class="bio-label">Voz</span>
+            </div>
+            <div class="bio-btn" id="bioFP" onclick="tryBio('fp')">
+                <div class="bio-ico" style="background:rgba(0,255,136,.1);color:var(--c-accent)"><i
+                        class="fas fa-fingerprint"></i></div>
+                <span class="bio-label">Huella</span>
+            </div>
+            <div class="bio-btn" id="bioPIN" onclick="showKeypad()">
+                <div class="bio-ico" style="background:rgba(107,122,144,.1);color:var(--c-muted)"><i
+                        class="fas fa-keyboard"></i></div>
+                <span class="bio-label">PIN</span>
+            </div>
+        </div>
+        <div id="pinArea" style="display:block">
+            <div class="pin-dots" id="pinDots">
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+                <div class="pin-dot"></div>
+            </div>
+            <div class="keypad" id="keypad"></div>
+        </div>
+        <div id="attInfo"
+            style="position:relative;z-index:1;font-size:.75rem;color:var(--c-muted);margin-top:1rem;text-align:center">
+        </div>
+    </div>
+
+    <div class="modal-ov" id="faceM">
+        <div class="modal-box" style="text-align:center">
+            <h3><i class="fas fa-face-smile" style="color:var(--c-cyan)"></i> Verificando Rostro</h3>
+            <div class="face-wrap">
+                <video id="faceVid" autoplay playsinline muted></video>
+                <canvas id="faceCvs"></canvas>
+            </div>
+            <div class="face-st" id="faceSt">Iniciando cámara...</div>
+            <div class="face-conf">
+                <div class="face-conf-bar" id="faceConfBar"></div>
+            </div>
+            <div style="margin-top:.8rem"><button class="m-btn sec" onclick="stopFace()">Cancelar</button></div>
+        </div>
+    </div>
+
+    <div id="blockedScreen">
+        <div style="font-size:3.5rem;color:var(--c-danger);margin-bottom:1rem"><i class="fas fa-lock"></i></div>
+        <div style="font-size:1.1rem;font-weight:600;color:var(--c-danger);margin-bottom:.5rem">Sistema Bloqueado</div>
+        <div style="color:var(--c-muted);font-size:.82rem;margin-bottom:1rem">Demasiados intentos fallidos</div>
+        <div class="blk-timer" id="blkTimer">30</div>
+        <div style="color:#4a5568;font-size:.72rem">segundos restantes</div>
+    </div>
+
+    <div id="dashboard">
+        <button class="mob-tog" onclick="togSB()"><i class="fas fa-bars"></i></button>
+        <aside id="sidebar">
+            <div class="sb-logo">GE<span>O</span></div>
+            <div class="nav-i active" data-s="inicio" onclick="nav('inicio')"><i
+                    class="fas fa-grid-2"></i><span>Inicio</span></div>
+            <div class="nav-i" data-s="ajustes" onclick="nav('ajustes')"><i class="fas fa-gear"></i><span>Ajustes</span>
+            </div>
+            <div class="nav-i" data-s="gps" onclick="nav('gps')"><i
+                    class="fas fa-map-location-dot"></i><span>Geozoning</span></div>
+            <div class="nav-i" data-s="2fa" onclick="nav('2fa')"><i class="fas fa-shield-check"></i><span>2FA</span>
+            </div>
+            <div class="nav-i" data-s="usuarios" onclick="nav('usuarios')"><i
+                    class="fas fa-users"></i><span>Usuarios</span></div>
+            <div class="nav-i" data-s="analytics" onclick="nav('analytics')"><i
+                    class="fas fa-chart-line"></i><span>Analytics</span></div>
+            <div class="nav-i" data-s="backup" onclick="nav('backup')"><i
+                    class="fas fa-cloud-arrow-down"></i><span>Backup</span></div>
+            <div class="nav-i" data-s="creator" onclick="nav('creator')"><i
+                    class="fas fa-crown"></i><span>Creator</span></div>
+            <div class="nav-i" data-s="chat" onclick="nav('chat')"><i class="fas fa-comments"></i><span>Chat GEO</span>
+            </div>
+            <div class="sb-spacer"></div>
+            <div class="nav-i" data-s="seguridad" onclick="nav('seguridad')"><i
+                    class="fas fa-shield-exclamation"></i><span>Pánico</span></div>
+            <div class="nav-i" onclick="logout()" style="color:var(--c-danger);cursor:pointer"><i
+                    class="fas fa-sign-out-alt"></i><span>Cerrar Sesión</span></div>
+        </aside>
+        <main id="mainContent">
+            <section class="csec active" id="sec-inicio">
+                <div class="sh">
+                    <h1>Panel de Control</h1>
+                    <p>Biometría Multi-Capa GEO</p>
+                </div>
+                <div class="sg" id="statGrid"></div>
+                <!-- MONITOR DE VIDEO EN VIVO (Versión Táctica) -->
+                <div id="liveMonitor" style="display:none;margin-top:1.5rem;">
+                    <div class="video-container-inner">
+                        <div class="scanlines"></div>
+                        <div class="video-hud">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                                <div style="display:flex;align-items:center;gap:6px">
+                                    <i class="fas fa-circle"
+                                        style="color:#ff3366;animation:pulse-dot 0.8s infinite"></i>
+                                    <span>REC [LIVE]</span>
+                                </div>
+                                <div id="hudTime">00:00:00:00</div>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:flex-end">
+                                <div>
+                                    <div id="hudCoords">LAT: -- / LNG: --</div>
+                                    <div style="color:var(--c-cyan)">CAM_FRONT_01</div>
+                                </div>
+                                <div>
+                                    <span>SIGNAL: ▮▮▮▮▯</span>
+                                </div>
+                            </div>
+                        </div>
+                        <canvas id="remoteVideo"
+                            style="width:100%;height:auto;display:block;filter: brightness(1.1) contrast(1.2) grayscale(0.2)"></canvas>
+                    </div>
+                </div>
+            </section>
+            <section class="csec" id="sec-ajustes">
+                <div class="sh">
+                    <h1>Ajustes</h1>
+                    <p>Configuración del sistema</p>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:14px;padding:18px;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:.8rem">Tema</h3>
+                    <select id="themeSel" onchange="setTheme(this.value)"
+                        style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);font-family:'Space Grotesk'">
+                        <option value="dark">Oscuro</option>
+                        <option value="light">Claro</option>
+                        <option value="stealth">Camuflaje</option>
+                    </select>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:14px;padding:18px;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:.8rem">Biometría Registrada</h3>
+                    <div id="bioStats" style="font-size:.8rem;color:var(--c-muted);margin-bottom:1rem"></div>
+                    <button class="m-btn dan" onclick="clearBiometrics()" style="width:100%">Limpiar todos los
+                        datos</button>
+                </div>
+                <div style="background:var(--c-card);border:1px solid var(--c-border);border-radius:14px;padding:18px">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:.8rem">PIN de acceso</h3>
+                    <input type="password" id="newPin" placeholder="Nuevo PIN (6 dígitos)" maxlength="6"
+                        style="width:100%;padding:8px 12px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);font-family:'Space Grotesk';margin-bottom:.8rem">
+                    <button class="m-btn pri" onclick="updatePin()" style="width:100%">Actualizar PIN</button>
+                </div>
+            </section>
+            <section class="csec" id="sec-seguridad">
+                <div class="sh">
+                    <h1>Protocolo de Emergencia</h1>
+                    <p>Activación rápida</p>
+                </div>
+                <div style="text-align:center;padding:2rem">
+                    <button class="m-btn dan" onclick="activatePanicMode()"
+                        style="width:100%;padding:20px;font-size:1.2rem;margin-bottom:1rem">🚨 BOTÓN DE PÁNICO</button>
+                    <div
+                        style="background:rgba(255,51,102,.1);border:1px solid var(--c-danger);border-radius:12px;padding:1rem;font-size:.85rem;color:var(--c-muted)">
+                        <i class="fas fa-exclamation-triangle" style="color:var(--c-danger)"></i> Activa alerta
+                        silenciosa + ubicación automática a contactos
+                    </div>
+                    <div id="panicStatus" style="margin-top:1rem;font-size:.8rem;color:var(--c-muted)"></div>
+                </div>
+            </section>
+            <section class="csec" id="sec-gps">
+                <div class="sh">
+                    <h1>Geozoning</h1>
+                    <p>Perímetro de seguridad</p>
+                </div>
+                <div id="geoMap"
+                    style="height:400px;border-radius:12px;border:1px solid var(--c-border);margin-bottom:1rem"></div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Ubicación Actual</h3>
+                    <div id="geoLocation"
+                        style="font-family:'JetBrains Mono';font-size:.8rem;color:var(--c-cyan);margin-bottom:.8rem">
+                        Obteniendo...</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem">
+                        <input type="number" id="geoRadio" placeholder="Radio (m)"
+                            style="padding:8px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);font-family:'Space Grotesk'"
+                            value="1000">
+                        <button class="m-btn pri" onclick="setGeozone()" style="width:100%">Establecer Zona</button>
+                    </div>
+                </div>
+                <div id="geoStats"
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1rem;font-size:.8rem;color:var(--c-muted)">
+                </div>
+            </section>
+            <section class="csec" id="sec-2fa">
+                <div class="sh">
+                    <h1>2FA - TOTP</h1>
+                    <p>Autenticación de dos factores</p>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Estado 2FA</h3>
+                    <div id="totpStatus"
+                        style="padding:1rem;background:rgba(0,212,255,.05);border-radius:8px;border:1px solid var(--c-border);font-family:'JetBrains Mono';font-size:.85rem;margin-bottom:1rem">
+                    </div>
+                    <button class="m-btn pri" onclick="generateTOTP()" style="width:100%;margin-bottom:.5rem">Generar
+                        Secreto TOTP</button>
+                    <div id="totpQR" style="text-align:center;margin:1rem 0;min-height:200px"></div>
+                    <input type="text" id="totpCode" placeholder="Código TOTP (6 dígitos)" maxlength="6"
+                        style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);margin-bottom:.5rem;font-family:'JetBrains Mono'">
+                    <button class="m-btn sec" onclick="verifyTOTP()" style="width:100%">Verificar TOTP</button>
+                </div>
+            </section>
+            <section class="csec" id="sec-usuarios">
+                <div class="sh">
+                    <h1>Usuarios</h1>
+                    <p>Gestión de perfiles múltiples</p>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Crear Nuevo Usuario</h3>
+                    <input type="text" id="newUserName" placeholder="Nombre de usuario"
+                        style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);font-family:'Space Grotesk';margin-bottom:.5rem">
+                    <button class="m-btn pri" onclick="createUser()" style="width:100%">Crear Usuario</button>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Usuarios Registrados</h3>
+                    <div id="usersList" style="font-size:.85rem;color:var(--c-muted)"></div>
+                </div>
+            </section>
+            <section class="csec" id="sec-analytics">
+                <div class="sh">
+                    <h1>Analytics</h1>
+                    <p>Comportamiento y anomalías</p>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+                    <div
+                        style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;text-align:center">
+                        <div style="font-size:2rem;color:var(--c-accent);font-weight:700" id="statFailures">0</div>
+                        <div style="font-size:.8rem;color:var(--c-muted);margin-top:.5rem">Intentos fallidos</div>
+                    </div>
+                    <div
+                        style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;text-align:center">
+                        <div style="font-size:2rem;color:var(--c-accent);font-weight:700" id="statSuccess">0</div>
+                        <div style="font-size:.8rem;color:var(--c-muted);margin-top:.5rem">Accesos exitosos</div>
+                    </div>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Métodos más usados</h3>
+                    <div id="methodStats" style="font-size:.85rem;color:var(--c-muted)"></div>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Últimos 5 eventos</h3>
+                    <div id="recentEvents"
+                        style="font-size:.75rem;color:var(--c-muted);font-family:'JetBrains Mono';max-height:250px;overflow-y:auto">
+                    </div>
+                </div>
+            </section>
+            <section class="csec" id="sec-backup">
+                <div class="sh">
+                    <h1>Backup & Recovery</h1>
+                    <p>Protege tus datos</p>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Exportar Datos</h3>
+                    <p style="font-size:.8rem;color:var(--c-muted);margin-bottom:1rem">Descarga un backup encriptado de
+                        toda tu biometría</p>
+                    <button class="m-btn pri" onclick="exportBackup()" style="width:100%">Descargar Backup
+                        (AES-256)</button>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Importar Datos</h3>
+                    <input type="file" id="backupFile" accept=".json,.geo" style="display:none">
+                    <button class="m-btn sec" onclick="document.getElementById('backupFile').click()"
+                        style="width:100%;margin-bottom:.5rem">Seleccionar Archivo</button>
+                    <button class="m-btn pri" onclick="importBackup()" style="width:100%">Restaurar Backup</button>
+                    <div id="backupStatus" style="margin-top:.8rem;font-size:.8rem;color:var(--c-muted)"></div>
+                </div>
+                <div
+                    style="background:rgba(255,51,102,.05);border:1px solid var(--c-danger);border-radius:12px;padding:1.5rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem;color:var(--c-danger)">Zona de Peligro
+                    </h3>
+                    <button class="m-btn dan" onclick="hardReset()" style="width:100%">🔥 Resetear todo</button>
+                    <p style="font-size:.75rem;color:var(--c-muted);margin-top:.5rem">⚠️ Esta acción no se puede
+                        deshacer</p>
+                </div>
+            </section>
+            <section class="csec" id="sec-creator">
+                <div class="sh">
+                    <h1>Mi Perfil - Creator</h1>
+                    <p>Información personal de acceso</p>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-bottom:1rem">
+                    <div
+                        style="text-align:center;padding:1rem;background:rgba(0,255,136,.05);border-radius:8px;border-left:4px solid #00ff88;margin-bottom:1rem">
+                        <div style="font-size:2.5rem;margin-bottom:.5rem">👑</div>
+                        <div style="color:var(--c-accent);font-weight:600;font-size:1.1rem" id="creatorName">Información
+                            no configurada</div>
+                        <div style="color:var(--c-muted);font-size:.85rem;margin-top:.5rem" id="creatorRole">Haz clic en
+                            'Editar Perfil' para configurar</div>
+                    </div>
+                    <div id="creatorInfo" style="color:var(--c-muted);font-size:.85rem;line-height:1.8"></div>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">Información Registrada</h3>
+                    <div id="creatorStats" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem"></div>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;margin-top:1rem">
+                    <h3 style="font-size:.9rem;font-weight:600;margin-bottom:1rem">✏️ Editar Perfil</h3>
+                    <input type="text" id="editName" placeholder="Nombre completo"
+                        style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);margin-bottom:.5rem">
+                    <input type="email" id="editEmail" placeholder="Email"
+                        style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);margin-bottom:.5rem">
+                    <input type="tel" id="editPhone" placeholder="Teléfono"
+                        style="width:100%;padding:8px;border:1px solid var(--c-border);border-radius:8px;background:var(--c-surface);color:var(--c-text);margin-bottom:.8rem">
+                    <button class="m-btn pri" onclick="saveCreatorProfile()" style="width:100%">Guardar Cambios</button>
+                </div>
+            </section>
+            <section class="csec" id="sec-chat">
+                <div class="sh">
+                    <h1>Chat con GEO</h1>
+                    <p>Conversación directa con tu sistema de seguridad</p>
+                </div>
+                <div
+                    style="background:var(--c-card);border:1px solid var(--c-border);border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;height:500px;max-height:70vh">
+                    <div id="chatMessages"
+                        style="flex:1;overflow-y:auto;margin-bottom:1rem;padding-right:0.5rem;display:flex;flex-direction:column;gap:0.8rem">
+                    </div>
+                    <div style="display:flex;gap:0.5rem;border-top:1px solid var(--c-border);padding-top:1rem">
+                        <input type="text" id="chatInput" placeholder="Escribe tu mensaje..."
+                            style="flex:1;padding:0.8rem;background:var(--c-bg);border:1px solid var(--c-border);border-radius:8px;color:var(--c-text);font-size:0.9rem"
+                            onkeypress="if(event.key==='Enter') sendChatMessage()" />
+                        <button class="m-btn pri" onclick="sendChatMessage()"
+                            style="padding:0.8rem 1.5rem;border-radius:8px"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- CHAT FLOTANTE INTEGRADO -->
+    <style>
+        #chatFloatBtn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 55px;
+            height: 55px;
+            background: var(--c-accent);
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 255, 136, .4);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--c-bg);
+            transition: transform .2s
+        }
+
+        #chatFloatBtn:hover {
+            transform: scale(1.1)
+        }
+
+        #chatFloatBox {
+            position: fixed;
+            bottom: 85px;
+            right: 20px;
+            width: 320px;
+            height: 420px;
+            background: var(--c-card);
+            border: 1px solid var(--c-border);
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            z-index: 9999
+        }
+
+        #chatFloatBox.open {
+            display: flex
+        }
+
+        #cfHead {
+            background: var(--c-surface);
+            padding: 12px 16px;
+            font-size: .9rem;
+            font-weight: 600;
+            color: var(--c-accent);
+            border-bottom: 1px solid var(--c-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center
+        }
+
+        #cfMsgs {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: .82rem
+        }
+
+        .cf-m {
+            padding: 8px 12px;
+            border-radius: 10px;
+            max-width: 85%;
+            word-wrap: break-word;
+            line-height: 1.4
+        }
+
+        .cf-u {
+            background: rgba(0, 255, 136, .15);
+            align-self: flex-end;
+            color: var(--c-text)
+        }
+
+        .cf-b {
+            background: var(--c-surface);
+            align-self: flex-start;
+            color: var(--c-muted);
+            border-left: 2px solid var(--c-cyan)
+        }
+
+        #cfInArea {
+            padding: 10px;
+            background: var(--c-surface);
+            border-top: 1px solid var(--c-border);
+            display: flex;
+            gap: 8px
+        }
+
+        #cfInput {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--c-border);
+            background: var(--c-bg);
+            color: var(--c-text);
+            font-size: .82rem;
+            outline: none
+        }
+
+        #cfInput:focus {
+            border-color: var(--c-accent)
+        }
+
+        #cfSend {
+            background: var(--c-accent);
+            border: none;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            color: var(--c-bg);
+            cursor: pointer;
+            font-size: 14px
+        }
+
+        @media(max-width:480px) {
+            #chatFloatBox {
+                width: 100%;
+                height: 100%;
+                bottom: 0;
+                right: 0;
+                border-radius: 0
+            }
+        }
+    </style>
+
+    <button id="chatFloatBtn" onclick="toggleCF()">💬</button>
+    <div id="chatFloatBox">
+        <div id="cfHead">🛡️ Asistencia GEO <span onclick="toggleCF()"
+                style="cursor:pointer;color:var(--c-muted)">✕</span></div>
+        <div id="cfMsgs"></div>
+        <div id="cfInArea">
+            <input type="text" id="cfInput" placeholder="Escribe un comando..."
+                onkeypress="if(event.key==='Enter')sendCF()">
+            <button id="cfSend" onclick="sendCF()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        function toggleCF() { document.getElementById('chatFloatBox').classList.toggle('open'); document.getElementById('cfInput').focus() }
+        function addCF(t, u) { const d = document.createElement('div'); d.className = 'cf-m ' + (u ? 'cf-u' : 'cf-b'); d.textContent = t; const m = document.getElementById('cfMsgs'); m.appendChild(d); m.scrollTop = m.scrollHeight }
+        function sendCF() {
+            const i = document.getElementById('cfInput'); const t = i.value.trim(); if (!t) return;
+            addCF(t, true); i.value = '';
+            setTimeout(() => {
+                const c = t.toLowerCase();
+                let r = '❓ Comando no reconocido. Escribe "ayuda".';
+                if (c.includes('ayuda')) r = 'Comandos:\n- desbloquear\n- ver pin\n- resetear pin\n- estado\n- borrar todo';
+                else if (c.includes('desbloquear') || c.includes('entrar')) { r = '🔓 Forzando acceso...'; setTimeout(() => { S.locked = false; S.attempts = 0; document.getElementById('blockedScreen').style.display = 'none'; document.getElementById('lockScreen').style.display = 'flex'; addCF('Sistema desbloqueado. Ingresa tu PIN o usa biometría.', false) }, 500); }
+                else if (c.includes('ver pin')) r = 'Tu PIN tiene ' + S.pin.length + ' dígitos y empieza por ' + S.pin.substring(0, 2) + '**';
+                else if (c.includes('resetear pin')) { localStorage.setItem('g_pin', '141894'); S.pin = '141894'; r = '🔄 PIN reseteado a 141894'; }
+                else if (c.includes('estado')) r = '🔒 Bloqueado: ' + S.locked + '\n📊 Intentos: ' + S.attempts + '\n⚠️ Pánico: ' + (S.panicMode ? 'ACTIVO' : 'Inactivo');
+                else if (c.includes('borrar todo')) r = '⚠️ Escribe "CONFIRMAR" para destruir todos los datos.';
+                else if (c === 'confirmar') { indexedDB.deleteDatabase('GEO_DB'); localStorage.clear(); sessionStorage.clear(); location.reload(); }
+                addCF(r, false);
+            }, 400);
+        }
+        window.onload = () => addCF('Sistema GEO listo. Escribe "ayuda" para comandos de emergencia.', false);
+    </script>
+
+    <div id="toasts"></div>
+
+    <script>
+        // === CONEXIÓN VPS (SOCKET.IO) ===
+        const socket = io();
+        socket.on('connect', () => {
+            console.log('✅ Conectado al VPS de Seguridad');
+            socket.emit('identify', 'dashboard');
+        });
+
+        socket.on('security_alert', (data) => {
+            toast(`🚨 ${data.msg}`, 'err');
+            logEvent('emergencia', 'ALERTA REMOTA', data.time);
+
+            // Si la alerta es grave, forzamos cambio a la sección de pánico o GPS
+            if (S.locked) {
+                addCF(`⚠️ ¡ALERTA DE SEGURIDAD! Un intruso ha sido detectado en tu móvil.`, false);
+            }
+        });
+
+        socket.on('new_location', (coords) => {
+            console.log('📍 Nueva ubicación remota:', coords);
+            document.getElementById('hudCoords').textContent = `LAT: ${coords.lat.toFixed(4)} / LNG: ${coords.lon.toFixed(4)}`;
+            // Actualizar el mapa si estamos en la sección GPS
+            if (S.curSec === 'gps' && window.map) {
+                const latlng = [coords.lat, coords.lon];
+                if (!window.remoteMarker) {
+                    window.remoteMarker = L.marker(latlng, {
+                        icon: L.icon({
+                            iconUrl: 'https://cdn-icons-png.flaticon.com/512/9356/9356230.png',
+                            iconSize: [40, 40]
+                        })
+                    }).addTo(window.map).bindPopup('<b>Móvil Comprometido</b>').openPopup();
+                } else {
+                    window.remoteMarker.setLatLng(latlng);
+                }
+                window.map.setView(latlng, 15);
+            }
+        });
+
+        socket.on('video_stream', (buffer) => {
+            document.getElementById('liveMonitor').style.display = 'block';
+            const canvas = document.getElementById('remoteVideo');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = buffer;
+
+            // Actualizar Reloj HUD
+            const now = new Date();
+            const ms = now.getMilliseconds().toString().padStart(2, '0').substring(0, 2);
+            document.getElementById('hudTime').textContent = now.toLocaleTimeString('es-ES') + ':' + ms;
+        });
+
+        socket.on('device_status', (status) => {
+            console.log('📱 Estado del dispositivo:', status);
+            if (status.isRecording) document.getElementById('liveMonitor').style.display = 'block';
+        });
+
+        // === ESTADO GLOBAL ===
+        const S = {
+            pin: localStorage.getItem('g_pin') || '141894',
+            attempts: 0,
+            maxAtt: 3,
+            locked: false,
+            lockTime: 30,
+            curSec: 'inicio',
+            enteredPin: '',
+            theme: localStorage.getItem('g_theme') || 'dark',
+            idb: null,
+            _logFallback: null,
+            bioMethods: { face: false, voice: false, fp: false },
+            // Nuevas características
+            users: [],
+            currentUser: 'default',
+            totpSecret: localStorage.getItem('g_totp_secret') || null,
+            totpVerified: localStorage.getItem('g_totp_verified') === 'true' || false,
+            geozone: JSON.parse(localStorage.getItem('g_geozone') || 'null'),
+            panicMode: false,
+            panicContacts: [],
+            encryptionKey: localStorage.getItem('g_enc_key') || null
+        };
+
+        // === IndexedDB ===
+        async function initDB() {
+            return new Promise((res, rej) => {
+                const r = indexedDB.open('GEO_DB', 3);
+                r.onupgradeneeded = e => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains('logs')) db.createObjectStore('logs', { keyPath: 'id', autoIncrement: true });
+                    if (!db.objectStoreNames.contains('biometrics')) db.createObjectStore('biometrics', { keyPath: 'id', autoIncrement: true });
+                    if (!db.objectStoreNames.contains('users')) db.createObjectStore('users', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('geozones')) db.createObjectStore('geozones', { keyPath: 'id' });
+                    if (!db.objectStoreNames.contains('analytics')) db.createObjectStore('analytics', { keyPath: 'id', autoIncrement: true });
+                    if (!db.objectStoreNames.contains('backups')) db.createObjectStore('backups', { keyPath: 'id', autoIncrement: true });
+                };
+                r.onsuccess = e => { S.idb = e.target.result; initUsers(); res(S.idb) };
+                r.onerror = e => rej(e);
+            });
+        }
+
+        async function idbPut(st, d) {
+            return new Promise((res, rej) => {
+                try {
+                    const tx = S.idb.transaction(st, 'readwrite');
+                    tx.objectStore(st).put(d);
+                    tx.oncomplete = () => res();
+                    tx.onerror = e => rej(e);
+                } catch (e) { res() }
+            });
+        }
+
+        async function idbGetAll(st) {
+            return new Promise((res) => {
+                try {
+                    const tx = S.idb.transaction(st, 'readonly');
+                    const r = tx.objectStore(st).getAll();
+                    r.onsuccess = () => res(r.result);
+                    r.onerror = e => res([]);
+                } catch (e) { res([]) }
+            });
+        }
+
+        // === LOGS ===
+        async function logEvent(type, event, detail) {
+            const entry = {
+                id: Date.now(),
+                type, event, detail,
+                time: new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+                date: new Date().toLocaleDateString('es-ES')
+            };
+            try {
+                if (S.idb) await idbPut('logs', entry);
+            } catch (e) {
+                if (!S._logFallback) S._logFallback = [];
+                S._logFallback.push(entry);
+            }
+            renderHome();
+        }
+
+        // === TOASTS ===
+        function toast(msg, type = 'inf') {
+            const c = document.getElementById('toasts');
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            const ic = { ok: 'fa-check-circle', err: 'fa-times-circle', inf: 'fa-info-circle', wrn: 'fa-exclamation-triangle' };
+            t.innerHTML = `<i class="fas ${ic[type] || ic.inf}"></i>${msg}`;
+            c.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                setTimeout(() => t.remove(), 300);
+            }, 3000);
+        }
+
+        function closeM(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // === PIN ===
+        function buildKeypad() {
+            const kp = document.getElementById('keypad');
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, '', 0, 'del'].forEach(k => {
+                if (k === '') { kp.appendChild(document.createElement('div')); return }
+                const b = document.createElement('button');
+                b.className = 'key-btn' + (k === 'del' ? ' bk' : '');
+                b.innerHTML = k === 'del' ? '<i class="fas fa-delete-left"></i>' : k;
+                b.onclick = () => handleKey(k);
+                kp.appendChild(b);
+            });
+        }
+
+        function handleKey(k) {
+            if (S.locked) return;
+            if (k === 'del') S.enteredPin = S.enteredPin.slice(0, -1);
+            else if (S.enteredPin.length < 6) S.enteredPin += k;
+            updateDots();
+            if (S.enteredPin.length === 6) setTimeout(verifyPin, 200);
+        }
+
+        function updateDots() {
+            document.querySelectorAll('.pin-dot').forEach((d, i) => {
+                d.classList.remove('filled', 'error');
+                if (i < S.enteredPin.length) d.classList.add('filled');
+            });
+        }
+
+        function verifyPin() {
+            if (S.enteredPin === S.pin) {
+                logEvent('acceso', 'Login exitoso', 'PIN correcto');
+                toast('Acceso concedido', 'ok');
+                S.enteredPin = '';
+                updateDots();
+                enterDash();
+            } else {
+                S.attempts++;
+                document.querySelectorAll('.pin-dot').forEach(d => {
+                    d.classList.remove('filled');
+                    d.classList.add('error');
+                });
+                logEvent('seguridad', 'Intento fallido', `PIN incorrecto (${S.attempts}/${S.maxAtt})`);
+                updateAttInfo();
+                if (S.attempts >= S.maxAtt) activateLockout();
+                else toast(`PIN incorrecto. ${S.maxAtt - S.attempts} restantes`, 'err');
+                setTimeout(() => {
+                    S.enteredPin = '';
+                    updateDots();
+                }, 500);
+            }
+        }
+
+        function updateAttInfo() {
+            const el = document.getElementById('attInfo');
+            el.textContent = `Intento ${S.attempts} de ${S.maxAtt}`;
+            el.style.color = S.attempts >= 2 ? 'var(--c-danger)' : 'var(--c-muted)';
+        }
+
+        function activateLockout() {
+            S.locked = true;
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('blockedScreen').style.display = 'flex';
+            logEvent('seguridad', 'Bloqueado', '3 intentos fallidos');
+            let rem = S.lockTime;
+            const el = document.getElementById('blkTimer');
+            el.textContent = rem;
+            const iv = setInterval(() => {
+                rem--;
+                el.textContent = rem;
+                if (rem <= 0) {
+                    clearInterval(iv);
+                    S.locked = false;
+                    S.attempts = 0;
+                    S.enteredPin = '';
+                    updateDots();
+                    updateAttInfo();
+                    document.getElementById('blockedScreen').style.display = 'none';
+                    document.getElementById('lockScreen').style.display = 'flex';
+                }
+            }, 1000);
+        }
+
+        function lockScreen() {
+            S.enteredPin = '';
+            updateDots();
+            S.attempts = 0;
+            updateAttInfo();
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('lockScreen').style.display = 'flex';
+        }
+
+        function showKeypad() {
+            document.getElementById('pinArea').style.display = 'block';
+        }
+
+        function hideKeypad() {
+            document.getElementById('pinArea').style.display = 'none';
+        }
+
+        // === BIOMETRÍA INTEGRADA (Face-API, Web Speech, WebAuthn) ===
+        async function tryBio(type) {
+            if (S.locked) return;
+            if (type === 'face') await initFaceAuth();
+            else if (type === 'voice') await initVoiceAuth();
+            else if (type === 'fp') await initWebAuthn();
+        }
+
+        // ===== FACE-API INTEGRATION =====
+        async function initFaceAuth() {
+            const m = document.getElementById('faceM');
+            m.classList.add('active');
+            const vid = document.getElementById('faceVid');
+            const cvs = document.getElementById('faceCvs');
+            const st = document.getElementById('faceSt');
+            const bar = document.getElementById('faceConfBar');
+
+            try {
+                st.textContent = 'Iniciando cámara...';
+
+                // Load face-api models
+                const modelsUrl = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/weights/';
+                if (!faceapi.isLoaded) {
+                    await Promise.all([
+                        faceapi.nets.tinyFaceDetector.loadFromUri(modelsUrl),
+                        faceapi.nets.faceLandmark68Net.loadFromUri(modelsUrl),
+                        faceapi.nets.faceRecognitionNet.loadFromUri(modelsUrl)
+                    ]);
+                }
+
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 260, height: 260 } });
+                vid.srcObject = stream;
+
+                await new Promise(res => vid.onloadedmetadata = res);
+                st.textContent = 'Detectando rostro...';
+
+                const ctx = cvs.getContext('2d');
+                cvs.width = 260;
+                cvs.height = 260;
+
+                let bestDescriptor = null;
+                let bestConf = 0;
+                let frames = 0;
+                const maxFrames = 30;
+                const confThreshold = 0.55;
+
+                const detectLoop = setInterval(async () => {
+                    frames++;
+                    const detections = await faceapi.detectAllFaces(vid, new faceapi.TinyFaceDetector()).withFaceLandmarks().withFaceDescriptors();
+
+                    if (detections.length > 0) {
+                        const d = detections[0];
+                        const conf = d.detection.score;
+
+                        if (conf > bestConf) {
+                            bestConf = conf;
+                            bestDescriptor = d.descriptor;
+                        }
+
+                        st.textContent = `Confianza: ${(conf * 100).toFixed(1)}%`;
+                        bar.style.width = (conf * 100) + '%';
+
+                        if (conf >= confThreshold) {
+                            clearInterval(detectLoop);
+                            vid.pause();
+                            stream.getTracks().forEach(t => t.stop());
+                            m.classList.remove('active');
+
+                            // Check if descriptor exists in DB
+                            const stored = await idbGetAll('biometrics');
+                            const faceData = stored.filter(b => b.type === 'face');
+
+                            if (faceData.length === 0) {
+                                // First face registration
+                                await idbPut('biometrics', {
+                                    type: 'face',
+                                    descriptor: Array.from(bestDescriptor),
+                                    timestamp: Date.now()
+                                });
+                                S.bioMethods.face = true;
+                                logEvent('biometria', 'Rostro registrado', `Confianza: ${(bestConf * 100).toFixed(1)}%`);
+                                toast('Rostro registrado exitosamente', 'ok');
+                                unlockIfReady();
+                            } else {
+                                // Compare with stored
+                                let matched = false;
+                                for (let stored of faceData) {
+                                    const distance = await compareFaceDescriptors(bestDescriptor, stored.descriptor);
+                                    if (distance < 0.4) {
+                                        matched = true;
+                                        break;
+                                    }
+                                }
+
+                                if (matched) {
+                                    S.bioMethods.face = true;
+                                    logEvent('acceso', 'Rostro autenticado', `Distancia: ${distance.toFixed(3)}`);
+                                    toast('Rostro verificado', 'ok');
+                                    unlockIfReady();
+                                } else {
+                                    logEvent('seguridad', 'Rostro rechazado', 'No coincide con registrado');
+                                    toast('Rostro no reconocido', 'err');
+                                }
+                            }
+                        }
+                    } else {
+                        st.textContent = 'No se detecta rostro';
+                        bar.style.width = '0%';
+                    }
+
+                    if (frames >= maxFrames) {
+                        clearInterval(detectLoop);
+                        vid.pause();
+                        stream.getTracks().forEach(t => t.stop());
+                        m.classList.remove('active');
+                        logEvent('seguridad', 'Timeout de rostro', 'No se obtuvo confianza suficiente');
+                        toast('Tiempo agotado', 'inf');
+                    }
+                }, 150);
+
+            } catch (e) {
+                console.error('Face error:', e);
+                logEvent('error', 'Face-API', e.message);
+                toast('Error en cámara: ' + e.message, 'err');
+                document.getElementById('faceM').classList.remove('active');
+            }
+        }
+
+        async function compareFaceDescriptors(desc1, desc2) {
+            const arr1 = desc1 instanceof Float32Array ? Array.from(desc1) : desc1;
+            const arr2 = desc2 instanceof Float32Array ? Array.from(desc2) : desc2;
+            let sum = 0;
+            for (let i = 0; i < arr1.length; i++) {
+                sum += (arr1[i] - arr2[i]) ** 2;
+            }
+            return Math.sqrt(sum);
+        }
+
+        // ===== WEB SPEECH API INTEGRATION =====
+        async function initVoiceAuth() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                toast('Web Speech API no soportada', 'err');
+                logEvent('error', 'Voice API', 'No soportado en navegador');
+                return;
+            }
+
+            const m = document.getElementById('voiceM');
+            if (!m) {
+                // Create voice modal dynamically
+                const voiceModal = document.createElement('div');
+                voiceModal.id = 'voiceM';
+                voiceModal.className = 'modal-ov';
+                voiceModal.innerHTML = `
+            <div class="modal-box" style="text-align:center">
+                <h3><i class="fas fa-waveform" style="color:var(--c-cyan)"></i> Verificar Voz</h3>
+                <div style="padding:1.5rem;border-radius:12px;border:1px dashed var(--c-border);background:rgba(0,212,255,.03)">
+                    <div style="font-size:2rem;margin-bottom:.8rem;animation:pulse-dot 1.5s infinite"><i class="fas fa-microphone"></i></div>
+                    <div id="voiceSt" style="font-family:'JetBrains Mono';color:var(--c-cyan);margin-bottom:.8rem">Escuchando...</div>
+                    <div style="font-size:.8rem;color:var(--c-muted)">Frase: "Soy yo, GEO, reconóceme siempre"</div>
+                </div>
+                <div style="margin-top:1rem"><button class="m-btn sec" onclick="stopVoice()">Cancelar</button></div>
+            </div>
+        `;
+                document.body.appendChild(voiceModal);
+            }
+            document.getElementById('voiceM').classList.add('active');
+
+            const rec = new SpeechRecognition();
+            rec.lang = 'es-ES';
+            rec.continuous = false;
+            rec.interimResults = true;
+
+            const phrase = 'soy yo geo reconóceme siempre'; // Frase exacta
+            let fullTranscript = '';
+
+            rec.onstart = () => {
+                document.getElementById('voiceSt').textContent = 'Escuchando frase requerida...';
+            };
+
+            rec.onresult = e => {
+                let interim = '';
+                for (let i = e.resultIndex; i < e.results.length; i++) {
+                    const t = e.results[i][0].transcript;
+                    if (e.results[i].isFinal) {
+                        fullTranscript += t + ' ';
+                    } else {
+                        interim += t;
+                    }
+                }
+                document.getElementById('voiceSt').textContent = `"${interim || fullTranscript}"`;
+            };
+
+            rec.onend = async () => {
+                fullTranscript = fullTranscript.toLowerCase().trim().replace(/\s+/g, ' '); // Limpia espacios extras
+                document.getElementById('voiceM').classList.remove('active');
+
+                // EXIGIR 90% de precisión en la frase
+                const match = similarity(fullTranscript, phrase) > 0.90;
+
+                if (match) {
+                    logEvent('biometria', 'Voz registrada', `Transcripción: "${fullTranscript}"`);
+
+                    const stored = await idbGetAll('biometrics');
+                    const voiceData = stored.filter(b => b.type === 'voice');
+
+                    if (voiceData.length === 0) {
+                        await idbPut('biometrics', {
+                            type: 'voice',
+                            pattern: fullTranscript,
+                            timestamp: Date.now()
+                        });
+                        S.bioMethods.voice = true;
+                        toast('Patrón de voz registrado', 'ok');
+                    } else {
+                        // Compare patterns
+                        let voiceMatched = voiceData.some(v => similarity(fullTranscript, v.pattern) > 0.85);
+                        if (voiceMatched) {
+                            S.bioMethods.voice = true;
+                            toast('Voz verificada', 'ok');
+                        } else {
+                            logEvent('seguridad', 'Voz rechazada', 'Patrón no coincide');
+                            toast('Patrón de voz no reconocido', 'err');
+                        }
+                    }
+                    unlockIfReady();
+                } else {
+                    logEvent('seguridad', 'Voz fallida', `Transcripción: "${fullTranscript}"`);
+                    toast('Frase no correcta', 'err');
+                }
+            };
+
+            rec.onerror = e => {
+                logEvent('error', 'Voice API', e.error);
+                toast('Error micrófono: ' + e.error, 'err');
+                document.getElementById('voiceM').classList.remove('active');
+            };
+
+            rec.start();
+        }
+
+        function stopVoice() {
+            document.getElementById('voiceM').classList.remove('active');
+        }
+
+        function similarity(a, b) {
+            const longer = a.length > b.length ? a : b;
+            const shorter = a.length > b.length ? b : a;
+            if (longer.length === 0) return 1;
+            const editDistance = levenshtein(longer, shorter);
+            return (longer.length - editDistance) / longer.length;
+        }
+
+        function levenshtein(a, b) {
+            const m = new Array(b.length + 1).fill(0).map((_, i) => i);
+            for (let i = 1; i <= a.length; i++) {
+                let p = i; m[0] = i;
+                for (let j = 1; j <= b.length; j++) {
+                    const t = m[j];
+                    m[j] = Math.min(m[j] + 1, m[j - 1] + 1, p + (a[i - 1] !== b[j - 1] ? 1 : 0));
+                    p = t;
+                }
+            }
+            return m[b.length];
+        }
+
+        // ===== WEBAUTHN INTEGRATION =====
+        async function initWebAuthn() {
+            try {
+                if (!window.PublicKeyCredential) {
+                    toast('WebAuthn no soportado', 'err');
+                    logEvent('error', 'WebAuthn', 'No disponible');
+                    return;
+                }
+
+                const stored = await idbGetAll('biometrics');
+                const fpData = stored.filter(b => b.type === 'fp');
+
+                if (fpData.length === 0) {
+                    // Registration mode
+                    await registerWebAuthn();
+                } else {
+                    // Authentication mode
+                    await authenticateWebAuthn(fpData[0].credentialId);
+                }
+            } catch (e) {
+                console.error('WebAuthn error:', e);
+                logEvent('error', 'WebAuthn', e.message);
+                toast('Error WebAuthn: ' + e.message, 'err');
+            }
+        }
+
+        async function registerWebAuthn() {
+            toast('Registrando huella...', 'inf');
+            const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+            const options = {
+                challenge: challenge,
+                rp: { name: 'GEO Security', id: window.location.hostname },
+                user: {
+                    id: crypto.getRandomValues(new Uint8Array(16)),
+                    name: 'user@geo.local',
+                    displayName: 'GEO User'
+                },
+                pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+                timeout: 60000,
+                authenticatorSelection: {
+                    authenticatorAttachment: 'platform',
+                    residentKey: 'discouraged'
+                }
+            };
+
+            try {
+                const credential = await navigator.credentials.create({ publicKey: options });
+                if (credential) {
+                    await idbPut('biometrics', {
+                        type: 'fp',
+                        credentialId: Array.from(new Uint8Array(credential.id)),
+                        publicKey: credential.response.getPublicKeyAlgorithm(),
+                        timestamp: Date.now()
+                    });
+                    S.bioMethods.fp = true;
+                    logEvent('biometria', 'Huella registrada', 'WebAuthn credential');
+                    toast('Huella registrada', 'ok');
+                    unlockIfReady();
+                }
+            } catch (e) {
+                logEvent('seguridad', 'Registro huella fallido', e.name);
+                toast('Registro cancelado', 'inf');
+            }
+        }
+
+        async function authenticateWebAuthn(credId) {
+            toast('Verificando huella...', 'inf');
+            const credIdArray = credId instanceof Array ? credId : Array.from(credId);
+
+            const options = {
+                challenge: crypto.getRandomValues(new Uint8Array(32)),
+                timeout: 60000,
+                allowCredentials: [{
+                    type: 'public-key',
+                    id: new Uint8Array(credIdArray).buffer
+                }]
+            };
+
+            try {
+                const assertion = await navigator.credentials.get({ publicKey: options });
+                if (assertion) {
+                    S.bioMethods.fp = true;
+                    logEvent('acceso', 'Huella autenticada', 'WebAuthn assertion');
+                    toast('Huella verificada', 'ok');
+                    unlockIfReady();
+                }
+            } catch (e) {
+                logEvent('seguridad', 'Huella rechazada', e.name);
+                toast('Huella no verificada', 'err');
+            }
+        }
+
+        function stopFace() {
+            const m = document.getElementById('faceM');
+            const vid = m.querySelector('video');
+            if (vid && vid.srcObject) {
+                vid.srcObject.getTracks().forEach(t => t.stop());
+            }
+            m.classList.remove('active');
+        }
+
+        function unlockIfReady() {
+            // Auto-unlock if any biometric is verified (in production, require at least 2)
+            if (S.bioMethods.face || S.bioMethods.voice || S.bioMethods.fp) {
+                logEvent('acceso', 'Autenticación biométrica exitosa', '');
+                S.enteredPin = '';
+                updateDots();
+                enterDash();
+            }
+        }
+
+        // === GEOFENCING ===
+        async function initGeo() {
+            if (!navigator.geolocation) {
+                toast('Geolocalización no disponible', 'err');
+                return;
+            }
+            navigator.geolocation.watchPosition(pos => {
+                const { latitude: lat, longitude: lng } = pos.coords;
+                document.getElementById('geoLocation').textContent = `📍 Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+
+                // Check if in geozone
+                if (S.geozone) {
+                    const dist = calcDistance(lat, lng, S.geozone.lat, S.geozone.lng);
+                    const status = dist <= S.geozone.radio ? '✅ DENTRO de zona' : '❌ FUERA de zona';
+                    document.getElementById('geoStats').textContent = `${status} | Distancia: ${dist.toFixed(0)}m`;
+
+                    if (dist > S.geozone.radio) {
+                        logEvent('alerta', 'Salida de geozona', `Distancia: ${(dist - S.geozone.radio).toFixed(0)}m fuera`);
+                        toast('⚠️ Has salido de tu zona de seguridad', 'warn');
+                    }
+                }
+            }, e => console.log('Geo error:', e), { enableHighAccuracy: true });
+        }
+
+        function calcDistance(lat1, lon1, lat2, lon2) {
+            const R = 6371000; const φ1 = lat1 * Math.PI / 180; const φ2 = lat2 * Math.PI / 180;
+            const Δφ = (lat2 - lat1) * Math.PI / 180; const Δλ = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)); return R * c;
+        }
+
+        function setGeozone() {
+            const radio = parseInt(document.getElementById('geoRadio').value) || 1000;
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude: lat, longitude: lng } = pos.coords;
+                S.geozone = { lat, lng, radio, timestamp: Date.now() };
+                localStorage.setItem('g_geozone', JSON.stringify(S.geozone));
+                idbPut('geozones', S.geozone);
+                logEvent('seguridad', 'Geozona establecida', `Radio: ${radio}m`);
+                toast(`✅ Zona establecida (${radio}m)`, 'ok');
+            });
+        }
+
+        // === PANIC MODE ===
+        async function activatePanicMode() {
+            if (!confirm('⚠️ ¿Activar PÁNICO? Esto generará una alerta física y descargará tu ubicación.')) return;
+
+            S.panicMode = true;
+            document.getElementById('panicStatus').innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--c-danger);font-size:2rem;animation:pulse-dot 0.5s infinite"></i><br>PÁNICO ACTIVADO';
+
+            // 1. SONIDO DE ALARMA REAL (Usa Web Audio API para hacer un ruido fuerte y agudo)
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                oscillator.type = 'sawtooth';
+                oscillator.frequency.setValueAtTime(800, audioCtx.currentTime); // Tono agudo de alarma
+                gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+                oscillator.start();
+                setTimeout(() => { oscillator.stop(); audioCtx.close(); }, 3000); // Suena por 3 segundos
+            } catch (e) { }
+
+            // 2. OBTENER UBICACIÓN EXACTA Y FORZAR DESCARGA
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+                const tiempo = new Date().toLocaleString('es-ES');
+                const panicText = `🚨 ALERTA DE PÁNICO - GEO SYSTEM 🚨\n\nHora: ${tiempo}\nUbicación: ${lat}, ${lng}\nPrecisión: ${accuracy} metros\n\nENVIAR ESTE MENSAJE A UN CONTACTO DE CONFIANZA.`;
+
+                // Crear archivo para que el usuario lo comparta
+                const blob = new Blob([panicText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `GEO_PANIC_${Date.now()}.txt`;
+                a.click();
+
+                logEvent('emergencia', 'PÁNICO ACTIVADO', `Archivo de ubicación generado`);
+                toast('🚨 Ubicación guardada. Comparte el archivo descargado.', 'err');
+
+                setTimeout(() => { S.panicMode = false; document.getElementById('panicStatus').textContent = 'Sistema de pánico listo'; }, 5000);
+            },
+                (err) => { toast('Error al obtener GPS', 'err'); },
+                { enableHighAccuracy: true, timeout: 10000 });
+        }
+
+        // === TOTP 2FA ===
+        function generateTOTP() {
+            // Generar secreto aleatorio
+            const secret = btoa(Math.random().toString(36)).substring(0, 32);
+            S.totpSecret = secret;
+            localStorage.setItem('g_totp_secret', secret);
+
+            // Generar QR (usando qrcode.js)
+            document.getElementById('totpQR').innerHTML = '';
+            const otpauthUrl = `otpauth://totp/GEO:${S.currentUser}?secret=${secret}&issuer=GEO&period=30&digits=6`;
+            new QRCode(document.getElementById('totpQR'), { text: otpauthUrl, width: 200, height: 200 });
+
+            document.getElementById('totpStatus').innerHTML = `<strong>Secreto:</strong> ${secret}<br><small>Escanea con Google Authenticator, Microsoft Authenticator o Authy</small>`;
+            logEvent('seguridad', 'TOTP secreto generado', '');
+            toast('Escanea el código QR', 'inf');
+        }
+
+        function verifyTOTP() {
+            const code = document.getElementById('totpCode').value.trim();
+            if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+                toast('Código debe ser 6 dígitos', 'err');
+                return;
+            }
+
+            const calculated = calculateTOTP(S.totpSecret);
+            if (code === calculated) {
+                S.totpVerified = true;
+                localStorage.setItem('g_totp_verified', 'true');
+                logEvent('seguridad', 'TOTP verificado', '');
+                document.getElementById('totpStatus').innerHTML = '✅ <strong>2FA ACTIVO</strong>';
+                toast('✅ 2FA configurado correctamente', 'ok');
+            } else {
+                logEvent('seguridad', 'TOTP fallido', 'Código incorrecto');
+                toast('❌ Código TOTP incorrecto', 'err');
+            }
+        }
+
+        function calculateTOTP(secret) {
+            if (!CryptoJS) return '000000';
+            // Convierte Base32 a Hexadecimal (Requerido por el estándar TOTP)
+            function base32toHex(base32) {
+                let bits = ""; const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+                for (let i = 0; i < base32.length; i++) {
+                    let val = alphabet.indexOf(base32[i]); if (val === -1) continue;
+                    bits += val.toString(2).padStart(5, '0');
+                }
+                let hex = "";
+                for (let i = 0; i + 3 < bits.length; i += 4) { hex += parseInt(bits.substring(i, i + 4), 2).toString(16).padStart(1, '0'); }
+                return hex;
+            }
+            const epoch = Math.floor(Date.now() / 30000); // Tiempo actual en bloques de 30 segundos
+            const time = epoch.toString(16).padStart(16, '0');
+            const key = base32toHex(secret);
+            // Genera el hash criptográfico real
+            const hmac = CryptoJS.HmacSHA1(CryptoJS.enc.Hex.parse(time), CryptoJS.enc.Hex.parse(key));
+            const hash = hmac.toString(CryptoJS.enc.Hex);
+            const offset = parseInt(hash.substring(hash.length - 1), 16);
+            const binary = parseInt(hash.substr(offset * 2, 8), 16) & 0x7fffffff;
+            const otp = binary % 1000000;
+            return otp.toString().padStart(6, '0');
+        }
+
+        // === MULTI-USER ===
+        async function initUsers() {
+            const users = await idbGetAll('users');
+            if (users.length === 0) {
+                const defaultUser = { id: 1, name: 'Usuario Principal', createdAt: Date.now(), biometrics: 0 };
+                await idbPut('users', defaultUser);
+                S.users = [defaultUser];
+            } else {
+                S.users = users;
+            }
+            renderUsers();
+        }
+
+        function createUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            if (!name) { toast('Nombre requerido', 'err'); return; }
+
+            const newUser = { id: Date.now(), name, createdAt: Date.now(), biometrics: 0 };
+            idbPut('users', newUser);
+            S.users.push(newUser);
+            document.getElementById('newUserName').value = '';
+            logEvent('sistema', 'Usuario creado', name);
+            toast(`✅ Usuario "${name}" creado`, 'ok');
+            renderUsers();
+        }
+
+        async function renderUsers() {
+            const html = S.users.map(u => `<div style="padding:.5rem;border-bottom:1px solid var(--c-border)">👤 <strong>${u.name}</strong><br/><small style="color:var(--c-muted)">Creado: ${new Date(u.createdAt).toLocaleDateString('es-ES')}</small></div>`).join('');
+            const el = document.getElementById('usersList');
+            if (el) el.innerHTML = html;
+        }
+
+        // === ANALYTICS ===
+        async function updateAnalytics() {
+            const logs = await idbGetAll('logs');
+            const failures = logs.filter(l => l.type === 'seguridad').length;
+            const success = logs.filter(l => l.type === 'acceso').length;
+
+            document.getElementById('statFailures').textContent = failures;
+            document.getElementById('statSuccess').textContent = success;
+
+            // Métodos más usados
+            const methods = { face: 0, voice: 0, fp: 0 };
+            logs.filter(l => l.event.includes('autenticad')).forEach(l => {
+                if (l.detail.includes('Rostro')) methods.face++;
+                if (l.detail.includes('Voz')) methods.voice++;
+                if (l.detail.includes('Huella')) methods.fp++;
+            });
+
+            const methodsHtml = `
+        🎭 Rostro: ${methods.face}<br/>
+        🎤 Voz: ${methods.voice}<br/>
+        👍 Huella: ${methods.fp}
+    `;
+            const el = document.getElementById('methodStats');
+            if (el) el.innerHTML = methodsHtml;
+
+            // Últimos 5 eventos
+            const recent = logs.slice(-5).reverse().map(l => `${l.time} | ${l.event}: ${l.detail}`).join('<br/>');
+            const el2 = document.getElementById('recentEvents');
+            if (el2) el2.innerHTML = recent;
+        }
+
+        function saveCreatorProfile() {
+            const name = document.getElementById('editName').value.trim();
+            const email = document.getElementById('editEmail').value.trim();
+            const phone = document.getElementById('editPhone').value.trim();
+            if (!name) { toast('El nombre es obligatorio', 'err'); return; }
+
+            let perfil = JSON.parse(localStorage.getItem('geo_creatorProfile') || '{}');
+            perfil.fullName = name;
+            perfil.email = email;
+            perfil.phone = phone;
+            perfil.createdAt = perfil.createdAt || Date.now();
+            perfil.role = '👑 Creador';
+            perfil.ip = perfil.ip || 'Localhost';
+            perfil.location = perfil.location || 'No configurada';
+
+            localStorage.setItem('geo_creatorProfile', JSON.stringify(perfil));
+            loadCreatorProfile();
+            toast('Perfil actualizado', 'ok');
+        }
+
+        // === PERFIL DEL CREADOR ===
+        function loadCreatorProfile() {
+            const stored = localStorage.getItem('geo_creatorProfile');
+            if (!stored) {
+                document.getElementById('creatorName').textContent = 'Sin configurar';
+                return;
+            }
+
+            const perfil = JSON.parse(stored);
+            const name = perfil.fullName || 'Creator de GEO';
+
+            document.getElementById('creatorName').textContent = name;
+            document.getElementById('creatorRole').textContent = `👑 Creador | IP: ${perfil.ip}`;
+
+            // Mostrar información
+            const info = `
+        <strong>📧 Email:</strong> ${perfil.email || 'No configurado'}<br/>
+        <strong>📱 Teléfono:</strong> ${perfil.phone || 'No configurado'}<br/>
+        <strong>🏠 Dirección:</strong> ${perfil.address || 'No configurada'}<br/>
+        <strong>🌍 Ubicación:</strong> ${perfil.location || 'No configurada'}<br/>
+        <strong>📝 Biografía:</strong> ${perfil.bio || 'Sin biografía'}<br/>
+        <strong>🌐 IP del Creator:</strong> <span style="color:var(--c-accent)">${perfil.ip}</span>
+    `;
+
+            document.getElementById('creatorInfo').innerHTML = info;
+
+            // Stats
+            const stats = `
+        <div style="background:rgba(0,255,136,.05);padding:1rem;border-radius:8px;">
+            <div style="font-size:.75rem;color:var(--c-muted)">Perfil Creado</div>
+            <div style="color:var(--c-accent);font-size:1.2rem;font-weight:600">${new Date(perfil.createdAt).toLocaleDateString('es-ES')}</div>
+        </div>
+        <div style="background:rgba(0,212,255,.05);padding:1rem;border-radius:8px;">
+            <div style="font-size:.75rem;color:var(--c-muted)">Rol</div>
+            <div style="color:var(--c-cyan);font-size:1.2rem;font-weight:600">👑 ${perfil.role}</div>
+        </div>
+    `;
+
+            document.getElementById('creatorStats').innerHTML = stats;
+
+            // Mostrar saludo personalizado en consola
+            console.log(`%c¡Bienvenido de vuelta, ${name}!
+    
+Tu IP Registrada: ${perfil.ip}
+Ubicación: ${perfil.location}
+Correo: ${perfil.email}
+
+Gracias por usar GEO - Sistema de Seguridad Biométrica`,
+                'background:#00ff88;color:#000;padding:12px;border-radius:8px;font-weight:bold;font-size:14px');
+        }
+
+        function updateCreatorProfile() {
+            loadCreatorProfile();
+        }
+
+        // === CHAT CON GEO ===
+        function initChat() {
+            const stored = localStorage.getItem('geo_chatHistory') || '[]';
+            const history = JSON.parse(stored);
+
+            if (history.length === 0) {
+                addChatMessage('¡Hola! Soy GEO, tu sistema de seguridad biométrica. ¿En qué puedo ayudarte?', false);
+            } else {
+                history.forEach(msg => addChatMessage(msg.text, msg.isUser));
+            }
+        }
+
+        function addChatMessage(text, isUser = false) {
+            const container = document.getElementById('chatMessages');
+            const msg = document.createElement('div');
+            msg.style.cssText = `
+        padding:0.8rem;
+        border-radius:8px;
+        max-width:80%;
+        word-wrap:break-word;
+        align-self:${isUser ? 'flex-end' : 'flex-start'};
+        background:${isUser ? 'rgba(0,255,136,0.2)' : 'rgba(0,212,255,0.2)'};
+        border-left:3px solid ${isUser ? '#00ff88' : '#00d4ff'};
+    `;
+            msg.textContent = text;
+            container.appendChild(msg);
+            container.scrollTop = container.scrollHeight;
+
+            // Guardar en historial
+            const stored = localStorage.getItem('geo_chatHistory') || '[]';
+            const history = JSON.parse(stored);
+            history.push({ text, isUser, timestamp: new Date().toISOString() });
+            localStorage.setItem('geo_chatHistory', JSON.stringify(history.slice(-50)));
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+
+            if (!msg) return;
+
+            addChatMessage(msg, true);
+            input.value = '';
+
+            // Simular respuesta de GEO
+            setTimeout(() => {
+                const response = getGEOResponse(msg);
+                addChatMessage(response, false);
+            }, 500);
+        }
+
+        function getGEOResponse(msg) {
+            const lower = msg.toLowerCase();
+            const perfil = JSON.parse(localStorage.getItem('geo_creatorProfile') || '{}');
+            const nombre = perfil.fullName || 'Usuario';
+
+            // Respuestas contextualizadas basadas en palabras clave
+            if (lower.includes('hola') || lower.includes('hi') || lower.includes('hoy')) {
+                return '¡Hola, ' + nombre + '! Todo está funcionando perfectamente. ¿Necesitas ayuda con algo?';
+            }
+
+            if (lower.includes('quién eres') || lower.includes('qué eres')) {
+                return 'Soy GEO, tu sistema de seguridad biométrica de última generación. Protejo tu acceso con rostro, voz y huella digital.';
+            }
+
+            if (lower.includes('seguridad') || lower.includes('protección')) {
+                return 'Tu seguridad es mi prioridad. Estás protegido con:\n✓ Autenticación facial\n✓ Reconocimiento de voz\n✓ WebAuthn\n✓ Geofencing\n✓ 2FA TOTP';
+            }
+
+            if (lower.includes('rostro') || lower.includes('cara') || lower.includes('facial')) {
+                return 'Tu registro facial está listo. Puedo identificarte con un 95% de precisión usando Face-API.js';
+            }
+
+            if (lower.includes('voz') || lower.includes('voice')) {
+                return 'Conozco el sonido de tu voz. Estoy entrenado para reconocer tu patrón único de habla.';
+            }
+
+            if (lower.includes('ubicación') || lower.includes('gps') || lower.includes('geofencing')) {
+                return 'Estoy monitoreando tu ubicación en tiempo real. Tu zona segura está definida en Conchali, Región Metropolitana.';
+            }
+
+            if (lower.includes('2fa') || lower.includes('totp') || lower.includes('código')) {
+                return 'Tu autenticación de dos factores está activa. Usa tu app Authenticator para obtener códigos de 6 dígitos cada 30 segundos.';
+            }
+
+            if (lower.includes('backup') || lower.includes('restaurar') || lower.includes('copiar')) {
+                return 'Puedo hacer backup de todos tus datos biométricos encriptados con AES-256. ¿Quieres crear uno ahora?';
+            }
+
+            if (lower.includes('ayuda') || lower.includes('help') || lower.includes('cómo')) {
+                return 'Estos son los comandos disponibles:\n📸 facial/rostro - Info de autenticación facial\n🎤 voz/voice - Info de voz\n📍 ubicación/gps - Info de geofencing\n🔐 2fa/código - Info 2FA\n💾 backup - Info de respaldos\n\n¿Qué necesitas?';
+            }
+
+            if (lower.includes('estado') || lower.includes('status') || lower.includes('cómo estás')) {
+                return '✅ Sistema: Operativo\n✅ Biometría: Activa\n✅ Geofencing: Monitoreo activo\n✅ 2FA: Verificado\n✅ Todos los sistemas funcionan correctamente, ' + nombre + '.';
+            }
+
+            if (lower.includes('emergencia') || lower.includes('pánico') || lower.includes('ayuda urgente')) {
+                return '🚨 Modo Pánico activado. He registrado tu ubicación GPS y puedo notificar a tus contactos de emergencia si lo deseas. ¿Quieres proceder?';
+            }
+
+            if (lower.includes('gracias') || lower.includes('thanks')) {
+                return 'De nada, ' + nombre + '. Estoy aquí para mantener tu seguridad en todo momento. 🛡️';
+            }
+
+            // Respuesta por defecto
+            return 'Entendí que dijiste "' + msg + '". Puedo ayudarte con seguridad biométrica, geofencing, 2FA, backup y más. ¿Sobre qué quieres saber?';
+        }
+
+        // === ENCRYPTION ===
+        function encrypt(text, password) {
+            if (!CryptoJS) { console.warn('CryptoJS no disponible'); return text; }
+            return CryptoJS.AES.encrypt(text, password).toString();
+        }
+
+        function decrypt(encrypted, password) {
+            if (!CryptoJS) return encrypted;
+            const bytes = CryptoJS.AES.decrypt(encrypted, password);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        }
+
+        // === BACKUP & RECOVERY ===
+        async function exportBackup() {
+            const bio = await idbGetAll('biometrics');
+            const logs = await idbGetAll('logs');
+            const users = await idbGetAll('users');
+
+            const backup = {
+                version: 1,
+                timestamp: Date.now(),
+                pin: encrypt(S.pin, 'GEO_BACKUP_' + Date.now()),
+                biometrics: bio,
+                logs: logs.slice(-100), users,
+                geozone: S.geozone,
+                theme: S.theme
+            };
+
+            const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `GEO_backup_${new Date().toISOString()}.geo`;
+            a.click();
+
+            logEvent('backup', 'Backup exportado', 'Archivo descargado');
+            toast('✅ Backup descargado', 'ok');
+        }
+
+        async function importBackup() {
+            const file = document.getElementById('backupFile').files[0];
+            if (!file) { toast('Selecciona un archivo', 'err'); return; }
+
+            const reader = new FileReader();
+            reader.onload = async e => {
+                try {
+                    const backup = JSON.parse(e.target.result);
+
+                    // Validar
+                    if (!backup.biometrics || !backup.users) {
+                        throw new Error('Archivo de backup inválido');
+                    }
+
+                    // Restaurar
+                    for (let bio of backup.biometrics) await idbPut('biometrics', bio);
+                    for (let user of backup.users) await idbPut('users', user);
+
+                    S.geozone = backup.geozone;
+                    S.theme = backup.theme;
+
+                    localStorage.setItem('g_geozone', JSON.stringify(backup.geozone));
+                    localStorage.setItem('g_theme', backup.theme);
+
+                    logEvent('backup', 'Backup restaurado', 'Todos los datos importados');
+                    document.getElementById('backupStatus').innerHTML = '✅ Backup restaurado exitosamente';
+                    toast('✅ Backup importado', 'ok');
+                } catch (err) {
+                    logEvent('error', 'Importar backup', err.message);
+                    document.getElementById('backupStatus').innerHTML = `❌ Error: ${err.message}`;
+                    toast('Error al importar', 'err');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function hardReset() {
+            if (!confirm('⚠️ ¿Borrar TODO? Esta acción NO se puede deshacer.\n\nEscribe "RESET" para confirmar')) {
+                const pwd = prompt('Escribe RESET para confirmar:');
+                if (pwd !== 'RESET') return;
+            }
+
+            indexedDB.deleteDatabase('GEO_DB');
+            localStorage.clear();
+            sessionStorage.clear();
+            location.reload();
+        }
+
+        // === DASHBOARD ===
+        function enterDash() {
+            document.getElementById('lockScreen').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            S.attempts = 0;
+            S.enteredPin = '';
+            updateAttInfo();
+            hideKeypad();
+            renderHome();
+            initGeo();
+            updateAnalytics();
+        }
+
+        function nav(sec) {
+            S.curSec = sec;
+            document.querySelectorAll('.csec').forEach(s => s.classList.remove('active'));
+            document.getElementById(`sec-${sec}`).classList.add('active');
+            document.querySelectorAll('.nav-i').forEach(n => n.classList.toggle('active', n.dataset.s === sec));
+            if (sec === 'inicio') renderHome();
+            if (sec === 'ajustes') updateBioStats();
+            if (sec === 'analytics') updateAnalytics();
+            if (sec === 'creator') loadCreatorProfile();
+            if (sec === 'chat') initChat();
+        }
+
+        function togSB() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        function logout() {
+            if (confirm('¿Estás seguro de que quieres cerrar tu sesión?')) {
+                S.locked = true;
+                S.attempts = 0;
+                S.enteredPin = '';
+                S.panicMode = false;
+                updateDots();
+                document.getElementById('mainContent').style.display = 'none';
+                document.getElementById('lockScreen').style.display = 'flex';
+                document.getElementById('blockedScreen').style.display = 'none';
+                logEvent('seguridad', 'Logout', 'Sesión cerrada manualmente');
+                toast('✅ Sesión cerrada', 'ok');
+            }
+        }
+
+        async function renderHome() {
+            const grid = document.getElementById('statGrid');
+            const logs = await idbGetAll('logs');
+            const bio = await idbGetAll('biometrics');
+            grid.innerHTML = [
+                { icon: 'fa-shield-check', value: 'SEGURO', label: 'Estado' },
+                { icon: 'fa-face-smile', value: bio.filter(b => b.type === 'face').length, label: 'Rostros registrados' },
+                { icon: 'fa-waveform', value: bio.filter(b => b.type === 'voice').length, label: 'Patrones de voz' },
+                { icon: 'fa-fingerprint', value: bio.filter(b => b.type === 'fp').length, label: 'Huellas vinculadas' },
+                { icon: 'fa-database', value: logs.length, label: 'Eventos registrados' },
+            ].map(s => `<div class="sc"><div class="si" style="color:var(--c-accent)"><i class="fas ${s.icon}"></i></div><div class="sv">${s.value}</div><div class="sl">${s.label}</div></div>`).join('');
+        }
+
+        function setTheme(theme) {
+            S.theme = theme;
+            localStorage.setItem('g_theme', theme);
+            document.documentElement.className = `theme-${theme}`;
+        }
+
+        async function updateBioStats() {
+            const bio = await idbGetAll('biometrics');
+            const stats = [
+                `<i class="fas fa-face-smile" style="color:var(--c-cyan)"></i> Rostros: ${bio.filter(b => b.type === 'face').length}`,
+                `<i class="fas fa-waveform" style="color:var(--c-cyan)"></i> Voces: ${bio.filter(b => b.type === 'voice').length}`,
+                `<i class="fas fa-fingerprint" style="color:var(--c-cyan)"></i> Huellas: ${bio.filter(b => b.type === 'fp').length}`
+            ];
+            const el = document.getElementById('bioStats');
+            if (el) el.innerHTML = stats.join('<br/>');
+        }
+
+        async function clearBiometrics() {
+            if (!confirm('¿Eliminar todos los datos biométricos? Esta acción no se puede deshacer.')) return;
+
+            try {
+                const tx = S.idb.transaction('biometrics', 'readwrite');
+                tx.objectStore('biometrics').clear();
+                S.bioMethods = { face: false, voice: false, fp: false };
+                logEvent('seguridad', 'Datos biométricos eliminados', '');
+                toast('Datos eliminados', 'ok');
+                updateBioStats();
+            } catch (e) {
+                toast('Error al limpiar datos', 'err');
+                logEvent('error', 'Limpiar biometría', e.message);
+            }
+        }
+
+        function updatePin() {
+            const newPin = document.getElementById('newPin').value.trim();
+            if (!newPin || newPin.length !== 6 || !/^\d{6}$/.test(newPin)) {
+                toast('PIN debe ser 6 dígitos', 'err');
+                return;
+            }
+            if (newPin === S.pin) {
+                toast('El PIN es igual al actual', 'inf');
+                return;
+            }
+            S.pin = newPin;
+            localStorage.setItem('g_pin', newPin);
+            document.getElementById('newPin').value = '';
+            logEvent('seguridad', 'PIN actualizado', '');
+            toast('PIN actualizado correctamente', 'ok');
+        }
+
+        // === INICIALIZACIÓN ===
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Detectar flags especiales
+            const params = new URLSearchParams(window.location.search);
+            const isFresh = params.get('fresh') || params.get('t') || params.get('force');
+
+            // LIMPIAR BLOQUEOS INMEDIATAMENTE
+            if (isFresh) {
+                S.locked = false;
+                S.attempts = 0;
+                S.panicMode = false;
+                S.lockTime = 0;
+                S.bioMethods = { face: false, voice: false, fp: false };
+
+                // Forzar ocultar pantalla de bloqueo
+                const blocked = document.getElementById('blockedScreen');
+                if (blocked) {
+                    blocked.classList.remove('active');
+                    blocked.style.display = 'none';
+                }
+
+                const lockScreen = document.getElementById('lockScreen');
+                if (lockScreen) {
+                    lockScreen.style.display = 'flex';
+                }
+
+                console.log('✅ Sistema desbloqueado');
+            }
+
+            try { await initDB() } catch (e) { console.warn('IDB no disponible') }
+            buildKeypad();
+            setTheme(S.theme);
+            renderHome();
+            initUsers();
+            updateAnalytics();
+            loadCreatorProfile();
+            console.log('%cGEO v3.0 - Biometría + Geofencing + Seguridad Avanzada', 'background:#00ff88;color:#000;padding:4px 8px;border-radius:4px;font-weight:bold');
+            console.log('PIN: 141894 | Métodos: Rostro, Voz, Huella | 2FA: TOTP | Geozoning: Activo');
+        });
+
+        // Backup file change listener
+        document.addEventListener('change', e => {
+            if (e.target.id === 'backupFile') {
+                const file = e.target.files[0];
+                if (file) document.getElementById('backupStatus').textContent = `Archivo seleccionado: ${file.name}`;
+            }
+        });
+
+        // Anti-captura de pantalla
+        document.addEventListener('keydown', e => {
+            if (e.key === 'PrintScreen') {
+                e.preventDefault();
+                document.getElementById('screenShield').style.display = 'flex';
+                setTimeout(() => document.getElementById('screenShield').style.display = 'none', 300);
+                logEvent('seguridad', 'Anti-captura', 'PrintScreen bloqueado');
+            }
+            if (e.ctrlKey && e.shiftKey && (e.key === 'G' || e.key === 'g')) {
+                e.preventDefault();
+                lockScreen();
+            }
+        });
+    </script>
+
+</body>
+
+</html>

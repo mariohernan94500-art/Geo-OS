@@ -1,0 +1,22 @@
+{
+  "name": "maester-app",
+  "version": "1.0.0",
+  "description": "Unified Master App for GeoOS, EcoOrigen, and Voren",
+  "main": "index.js",
+  "scripts": {
+    "dev": "docker-compose up",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "keywords": [
+    "geo-os",
+    "automation",
+    "monorepo"
+  ],
+  "author": "Mario Ovalle",
+  "license": "ISC"
+}

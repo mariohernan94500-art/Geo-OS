@@ -1,0 +1,18 @@
+{
+  "timestamp": "2026-04-02T01:28:37.610Z",
+  "results": [
+    {
+      "name": "OPENAI_API_KEY",
+      "ok": false,
+      "details": "401 Incorrect API key provided: sk-proj-********************************************************************************************************************************************************j84A. You can find your API key at https://platform.openai.com/account/api-keys."
+    },
+    {
+      "name": "TELEGRAM_BOT_TOKEN",
+      "ok": true
+    },
+    {
+      "name": "MÓDULO VOZ",
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Geos Droid — Avatar OS Preview</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{width:100%;height:100%;overflow:hidden;background:#060810;font-family:'Syne',sans-serif;color:#eef2f8;touch-action:none;}
+
+:root{
+  --accent:#00c8ff;
+  --accent2:#00ffb2;
+  --gold:#f5b731;
+  --gold-dark:#b8860b;
+  --purple:#a78bfa;
+  --red:#ff5c7a;
+  --green:#00e5a0;
+  --bg:#060810;
+  --bg2:#0c0f1a;
+  --card:rgba(255,255,255,.04);
+  --card2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.07);
+  --border2:rgba(255,255,255,.12);
+  --text:#eef2f8;
+  --muted:rgba(238,242,248,.4);
+  --mono:'DM Mono',monospace;
+}
+
+#os{position:fixed;inset:0;overflow:hidden;background:var(--bg);}
+
+/* Noise + Grid */
+#os::before{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");}
+#os::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,.02) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.02) 1px,transparent 1px);
+  background-size:44px 44px;}
+
+/* STATUS BAR */
+.statusbar{position:absolute;top:0;left:0;right:0;height:44px;z-index:200;
+  display:flex;align-items:flex-end;justify-content:space-between;padding:0 20px 8px;
+  background:linear-gradient(to bottom,rgba(6,8,16,.9),transparent);}
+.sb-time{font-size:15px;font-weight:700;font-family:var(--mono);letter-spacing:.02em;}
+.sb-icons{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);}
+.sb-signal{display:flex;gap:2px;align-items:flex-end;}
+.sb-bar{width:3px;border-radius:1px;background:var(--text);}
+
+/* AMBIENT BG */
+.avatar-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.amb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;}
+.amb-a{width:500px;height:500px;background:rgba(245,183,49,.06);top:-100px;right:-120px;animation:ambFloat 8s ease-in-out infinite;}
+.amb-b{width:400px;height:400px;background:rgba(0,255,178,.04);bottom:-80px;left:-100px;animation:ambFloat 10s ease-in-out 2s infinite reverse;}
+@keyframes ambFloat{0%,100%{transform:translate(0,0)}50%{transform:translate(20px,20px)}}
+
+/* ROBOT STAGE */
+.orb-stage{
+  position:absolute;top:44px;left:0;right:0;bottom:220px;
+  display:flex;align-items:center;justify-content:center;z-index:5;
+}
+.robot-wrap{
+  position:relative;width:160px;height:220px;cursor:pointer;
+  transition:transform .5s cubic-bezier(.34,1.56,.64,1);
+  animation:robotFloat 4s ease-in-out infinite;
+}
+@keyframes robotFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+
+/* HEAD */
+.r-head{
+  position:absolute;top:0;left:50%;transform:translateX(-50%);
+  width:110px;height:130px;
+  background:linear-gradient(135deg,#e6c86e 0%,#b8860b 40%,#5c4005 100%);
+  border-radius:40px 40px 30px 30px;
+  box-shadow:inset 0 0 20px rgba(0,0,0,.5),0 10px 30px rgba(0,0,0,.4);
+  z-index:2;display:flex;flex-direction:column;align-items:center;
+  transition:transform .3s;
+}
+/* Antenna */
+.r-head::before{content:'';position:absolute;top:-25px;left:50%;transform:translateX(-50%);width:4px;height:25px;background:#b8860b;}
+.r-head::after{content:'';position:absolute;top:-30px;left:50%;transform:translateX(-50%);
+  width:10px;height:10px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#fff,var(--accent));
+  box-shadow:0 0 10px var(--accent);animation:antennaBlink 2s infinite;}
+@keyframes antennaBlink{0%,100%{opacity:1;box-shadow:0 0 10px var(--accent)}50%{opacity:.5;box-shadow:0 0 2px var(--accent)}}
+
+/* Eyes */
+.r-eyes{width:70%;height:18px;margin-top:35px;display:flex;justify-content:space-between;
+  background:rgba(0,0,0,.6);border-radius:10px;padding:2px;box-shadow:inset 0 0 5px #000;}
+.r-eye{flex:1;background:var(--accent);border-radius:4px;box-shadow:0 0 8px var(--accent);transition:all .2s;}
+/* Mouth */
+.r-mouth{margin-top:25px;width:60%;height:12px;background:rgba(0,0,0,.8);border-radius:4px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;gap:2px;}
+.r-m-line{width:2px;height:60%;background:#333;border-radius:1px;transition:height .1s,background .1s;}
+
+/* BODY */
+.r-body{position:absolute;top:110px;left:50%;transform:translateX(-50%);
+  width:90px;height:110px;
+  background:linear-gradient(135deg,#d4af37 0%,#8a6e2f 50%,#3e2f0f 100%);
+  border-radius:20px;box-shadow:inset 0 0 30px rgba(0,0,0,.6),0 15px 35px rgba(0,0,0,.5);
+  z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.r-chest-light{width:40px;height:40px;border-radius:50%;
+  background:radial-gradient(circle,rgba(0,200,255,.8),rgba(0,50,100,.2));
+  box-shadow:0 0 15px rgba(0,200,255,.4);border:2px solid rgba(255,255,255,.2);
+  animation:chestPulse 3s infinite;}
+@keyframes chestPulse{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.1);opacity:1}}
+
+/* Arms */
+.r-arm{position:absolute;top:120px;width:25px;height:70px;
+  background:linear-gradient(to bottom,#d4af37,#8a6e2f);border-radius:12px;
+  z-index:0;transform-origin:top center;transition:transform .5s;}
+.r-arm.left{left:calc(50% - 60px);transform:rotate(20deg);}
+.r-arm.right{right:calc(50% - 60px);transform:rotate(-20deg);}
+
+/* — STATES — */
+/* THINKING */
+.robot-wrap[data-state="thinking"] .r-head{transform:translateX(-50%) rotate(-5deg);}
+.robot-wrap[data-state="thinking"] .r-eye{width:4px;height:4px;border-radius:50%;background:#fff;box-shadow:0 0 5px #fff;animation:eyeScan 1s infinite alternate;}
+@keyframes eyeScan{0%{transform:translateX(-5px)}100%{transform:translateX(5px)}}
+.robot-wrap[data-state="thinking"] .r-chest-light{background:radial-gradient(circle,rgba(167,139,250,.8),rgba(50,20,100,.2));box-shadow:0 0 15px rgba(167,139,250,.4);}
+
+/* SPEAKING */
+.robot-wrap[data-state="speaking"] .r-mouth{gap:1px;}
+.robot-wrap[data-state="speaking"] .r-m-line{background:var(--accent);animation:talkAnim .2s infinite alternate;}
+.robot-wrap[data-state="speaking"] .r-m-line:nth-child(odd){animation-duration:.15s}
+.robot-wrap[data-state="speaking"] .r-m-line:nth-child(even){animation-duration:.25s}
+@keyframes talkAnim{0%{height:20%}100%{height:90%}}
+.robot-wrap[data-state="speaking"] .r-arm.left{transform:rotate(40deg);}
+.robot-wrap[data-state="speaking"] .r-arm.right{transform:rotate(-40deg);}
+
+/* SINGING */
+.robot-wrap[data-state="singing"]{animation:robotDance .6s infinite alternate;}
+@keyframes robotDance{0%{transform:rotate(-5deg) translateY(0)}100%{transform:rotate(5deg) translateY(-10px)}}
+.robot-wrap[data-state="singing"] .r-head{transform:translateX(-50%) rotate(10deg);}
+.robot-wrap[data-state="singing"] .r-chest-light{background:radial-gradient(circle,rgba(255,180,0,.9),rgba(180,50,0,.2));box-shadow:0 0 20px rgba(255,180,0,.6);}
+.robot-wrap[data-state="singing"] .r-eye{background:#ff9f1c;box-shadow:0 0 10px #ff9f1c;}
+.robot-wrap[data-state="singing"] .r-arm.left{transform:rotate(120deg);}
+.robot-wrap[data-state="singing"] .r-arm.right{transform:rotate(-120deg);}
+
+/* SLEEPING */
+.robot-wrap[data-state="sleeping"]{animation:none;transform:translateY(20px);}
+.robot-wrap[data-state="sleeping"] .r-head{transform:translateX(-50%) rotate(15deg);}
+.robot-wrap[data-state="sleeping"] .r-eye{height:2px;background:#333;box-shadow:none;}
+.robot-wrap[data-state="sleeping"] .r-chest-light{opacity:.2;animation:none;}
+.robot-wrap[data-state="sleeping"] .zzz{opacity:1;}
+
+/* ZZZ */
+.zzz{position:absolute;top:-40px;right:-20px;display:flex;flex-direction:column;align-items:center;gap:4px;
+  opacity:0;transition:opacity .5s;pointer-events:none;z-index:10;}
+.z{font-size:16px;font-weight:800;color:rgba(140,160,255,.7);animation:zFloat 2s ease-in-out infinite;}
+.z:nth-child(1){font-size:10px;animation-delay:0s;}
+.z:nth-child(2){font-size:14px;animation-delay:.5s;}
+.z:nth-child(3){font-size:18px;animation-delay:1s;}
+@keyframes zFloat{0%{transform:translateY(0);opacity:.8}100%{transform:translateY(-20px);opacity:0}}
+
+/* Greeting bubble */
+.avatar-greeting{
+  position:absolute;bottom:calc(50% + 120px);left:50%;transform:translateX(-50%);
+  white-space:nowrap;background:rgba(12,15,26,.9);border:1px solid var(--border2);
+  border-radius:16px;padding:10px 18px;font-size:13px;line-height:1.5;
+  backdrop-filter:blur(20px);box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:10;
+  pointer-events:none;opacity:0;animation:greetIn .4s ease .3s both;
+}
+.avatar-greeting::after{content:'';position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);
+  width:12px;height:12px;background:rgba(12,15,26,.9);border-right:1px solid var(--border2);
+  border-bottom:1px solid var(--border2);transform:translateX(-50%) rotate(45deg);}
+@keyframes greetIn{from{opacity:0;transform:translateX(-50%) translateY(-6px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* STATE BADGE */
+.state-badge{
+  position:absolute;bottom:calc(50% - 20px);left:50%;transform:translateX(-50%);
+  background:rgba(12,15,26,.85);border:1px solid var(--border2);
+  border-radius:100px;padding:5px 16px;font-size:11px;font-family:var(--mono);
+  letter-spacing:.1em;color:var(--gold);z-index:10;pointer-events:none;
+  backdrop-filter:blur(20px);
+}
+
+/* CONTROLS */
+.controls{
+  position:absolute;bottom:0;left:0;right:0;height:210px;z-index:10;
+  background:linear-gradient(to top,rgba(6,8,16,.98) 70%,transparent);
+  padding:20px 20px 30px;display:flex;flex-direction:column;gap:14px;
+}
+.ctrl-label{font-size:10px;font-family:var(--mono);color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px;}
+.states-row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.state-btn{
+  padding:8px 16px;border-radius:100px;border:1px solid var(--border2);
+  background:rgba(255,255,255,.04);color:var(--muted);
+  font-family:'Syne',sans-serif;font-size:12px;cursor:pointer;
+  transition:all .2s;
+}
+.state-btn:hover{border-color:var(--gold);color:var(--gold);background:rgba(245,183,49,.05);}
+.state-btn.active{background:rgba(245,183,49,.12);border-color:rgba(245,183,49,.4);color:var(--gold);}
+.state-btn:active{transform:scale(.94);}
+
+.msg-row{display:flex;align-items:flex-end;gap:10px;}
+.msg-orb-mini{width:32px;height:32px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 38% 35%,rgba(245,183,49,.9),rgba(184,134,11,.8));
+  box-shadow:0 0 12px rgba(245,183,49,.4);}
+.msg-bubble{flex:1;background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:16px 16px 16px 4px;padding:12px 16px;font-size:13px;line-height:1.65;
+  backdrop-filter:blur(12px);transition:border-color .3s;min-height:46px;}
+.msg-bubble.glow{border-color:rgba(245,183,49,.25);box-shadow:0 0 16px rgba(245,183,49,.06);}
+.msg-typing::after{content:'▋';animation:cr .7s step-end infinite;color:var(--gold);font-size:11px;}
+@keyframes cr{0%,100%{opacity:1}50%{opacity:0}}
+
+.inp-row{display:flex;gap:8px;align-items:center;}
+.inp{
+  flex:1;background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:14px;padding:12px 16px;font-size:14px;color:var(--text);
+  font-family:'Syne',sans-serif;outline:none;transition:border-color .2s,box-shadow .2s;
+}
+.inp::placeholder{color:var(--muted);}
+.inp:focus{border-color:rgba(245,183,49,.3);box-shadow:0 0 16px rgba(245,183,49,.06);}
+.send-btn{
+  width:44px;height:44px;border-radius:14px;border:none;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold),#b8860b);color:#000;font-size:17px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 16px rgba(245,183,49,.3);transition:all .2s;
+}
+.send-btn:hover{transform:scale(1.06);}
+
+/* back link */
+.back-link{
+  position:absolute;top:50px;left:16px;z-index:200;
+  display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--mono);
+  color:var(--muted);text-decoration:none;transition:color .2s;
+}
+.back-link:hover{color:var(--gold);}
+</style>
+</head>
+<body>
+<div id="os">
+
+  <div class="avatar-bg">
+    <div class="amb amb-a"></div>
+    <div class="amb amb-b"></div>
+  </div>
+
+  <!-- Back to Voren -->
+  <a class="back-link" href="index.html">← Voren</a>
+
+  <!-- Status Bar -->
+  <div class="statusbar">
+    <div class="sb-time" id="clock">--:--</div>
+    <div class="sb-icons">
+      <div class="sb-signal">
+        <div class="sb-bar" style="height:5px"></div>
+        <div class="sb-bar" style="height:8px"></div>
+        <div class="sb-bar" style="height:11px"></div>
+        <div class="sb-bar" style="height:14px"></div>
+      </div>
+      <span>WiFi</span>
+      <span>🔋</span>
+    </div>
+  </div>
+
+  <!-- Avatar Stage -->
+  <div class="orb-stage">
+    <div class="robot-wrap" id="robotWrap" data-state="idle" onclick="cycleState()">
+
+      <!-- HEAD -->
+      <div class="r-head">
+        <div class="r-eyes">
+          <div class="r-eye"></div>
+          <div class="r-eye"></div>
+        </div>
+        <div class="r-mouth" id="rMouth">
+          <div class="r-m-line"></div><div class="r-m-line"></div><div class="r-m-line"></div>
+          <div class="r-m-line"></div><div class="r-m-line"></div><div class="r-m-line"></div>
+          <div class="r-m-line"></div>
+        </div>
+      </div>
+
+      <!-- BODY -->
+      <div class="r-body">
+        <div class="r-chest-light" id="chestLight"></div>
+      </div>
+
+      <!-- ARMS -->
+      <div class="r-arm left"></div>
+      <div class="r-arm right"></div>
+
+      <!-- ZZZ -->
+      <div class="zzz">
+        <div class="z">z</div><div class="z">z</div><div class="z">Z</div>
+      </div>
+    </div>
+
+    <!-- Greeting / State -->
+    <div class="avatar-greeting" id="greeting">¡Hola! Soy Geo Droid 🤖 Toca para cambiar mi estado</div>
+    <div class="state-badge" id="stateBadge">IDLE</div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div>
+      <div class="ctrl-label">Estado del Avatar</div>
+      <div class="states-row">
+        <button class="state-btn active" onclick="setState('idle')">😴 Idle</button>
+        <button class="state-btn" onclick="setState('thinking')">🔮 Pensando</button>
+        <button class="state-btn" onclick="setState('speaking')">💬 Hablando</button>
+        <button class="state-btn" onclick="setState('singing')">🎵 Cantando</button>
+        <button class="state-btn" onclick="setState('sleeping')">💤 Dormido</button>
+      </div>
+    </div>
+    <div class="msg-row">
+      <div class="msg-orb-mini"></div>
+      <div class="msg-bubble" id="geoMsg">Hola, soy tu asistente <b>Geos Droid</b>. Controlando tu sistema...</div>
+    </div>
+    <div class="inp-row">
+      <input class="inp" id="userInp" placeholder="Escríbele algo a Geos..." />
+      <button class="send-btn" onclick="sendMsg()">↑</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const clock = document.getElementById('clock');
+function updateClock(){const n=new Date();clock.textContent=n.getHours().toString().padStart(2,'0')+':'+n.getMinutes().toString().padStart(2,'0');}
+updateClock();setInterval(updateClock,30000);
+
+const STATES = ['idle','thinking','speaking','singing','sleeping'];
+let currentIdx = 0;
+
+const msgs = {
+  idle: 'Esperando instrucciones... estoy listo para trabajar contigo.',
+  thinking: 'Hmm... analizando datos del sistema. Dame un momento...',
+  speaking: 'Aquí te presento el estado actual de todos los agentes del ecosistema.',
+  singing: '🎵 <i>Automatizando el mundo, un proceso a la vez...</i> 🎵',
+  sleeping: 'zzz... Sistema en modo bajo consumo. Toca para despertar.',
+};
+const badges = {idle:'IDLE',thinking:'THINKING',speaking:'SPEAKING',singing:'SINGING',sleeping:'SLEEPING'};
+const colors = {idle:'#f5b731',thinking:'#a78bfa',speaking:'#00c8ff',singing:'#ff9f1c',sleeping:'#8098c8'};
+
+function setState(s){
+  currentIdx = STATES.indexOf(s);
+  const wrap = document.getElementById('robotWrap');
+  wrap.setAttribute('data-state', s);
+  document.getElementById('stateBadge').textContent = badges[s];
+  document.getElementById('stateBadge').style.color = colors[s];
+  const bubble = document.getElementById('geoMsg');
+  bubble.innerHTML = msgs[s];
+  bubble.classList.add('glow');
+  setTimeout(()=>bubble.classList.remove('glow'),1200);
+  document.querySelectorAll('.state-btn').forEach(b=>{
+    b.classList.toggle('active', b.textContent.toLowerCase().includes(s) || b.onclick.toString().includes(`'${s}'`));
+  });
+}
+
+function cycleState(){
+  currentIdx = (currentIdx+1)%STATES.length;
+  setState(STATES[currentIdx]);
+}
+
+const GEO_HIDDEN_REPLIES = [
+  'Procesando tu solicitud... los agentes están trabajando en ello.',
+  'Entendido. He delegado esta tarea al WarRoomAgent para análisis.',
+  'Lo registro en sistema. ¿Quieres que cree una tarea autománticamente en Voren?',
+  'Hmm, interesante. CommerceAgent podría generar ingresos con eso. ¿Lo analizo?',
+  'Guardado en memoria. SentinelAgent está monitoreando en segundo plano.',
+  'Todo bajo control. El ecosistema funciona correctamente 🤖',
+  'Detecté una oportunidad de automatización. ¿Quieres que la implemente?',
+];
+let replyIdx = 0;
+
+function sendMsg(){
+  const inp = document.getElementById('userInp');
+  const text = inp.value.trim();
+  if(!text) return;
+  setState('thinking');
+  inp.value = '';
+  setTimeout(()=>{
+    setState('speaking');
+    const bubble = document.getElementById('geoMsg');
+    bubble.innerHTML = GEO_HIDDEN_REPLIES[replyIdx%GEO_HIDDEN_REPLIES.length];
+    replyIdx++;
+    setTimeout(()=>setState('idle'),4000);
+  }, 1800);
+}
+
+document.getElementById('userInp').addEventListener('keypress',e=>{if(e.key==='Enter')sendMsg();});
+
+// Auto cycle greeting
+const greetings = ['¡Sistema Geo OS activo!','Todos los agentes operativos ✅','Monitoreando EcoOrigen...','Sincronizado con Shopify 🛍️','WarRoom análisis listo 📊'];
+let gIdx = 0;
+function cycleGreeting(){
+  const g = document.getElementById('greeting');
+  g.style.opacity='0';
+  setTimeout(()=>{g.textContent=greetings[gIdx%greetings.length];g.style.opacity='1';gIdx++;},400);
+}
+setInterval(cycleGreeting,5000);
+</script>
+</body>
+</html>

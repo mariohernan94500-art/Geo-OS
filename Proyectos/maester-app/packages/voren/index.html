@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voren — Sistema de Productividad Visual</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body class="dark-mode">
+    <div class="glass-bg"></div>
+    
+    <div class="app-container">
+        <!-- Floating Toggle -->
+        <button id="open-sidebar" class="toggle-btn floating-open-btn">→</button>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">VOREN</div>
+                <button id="toggle-sidebar" class="toggle-btn" title="Contraer/Expandir">←</button>
+            </div>
+            <nav class="sidebar-nav">
+                <button class="nav-item active" data-view="dashboard">
+                    <span class="icon">🏠</span> Dashboard
+                </button>
+                <button class="nav-item" data-view="tasks">
+                    <span class="icon">✅</span> Tareas
+                </button>
+                <button class="nav-item" data-view="projects">
+                    <span class="icon">📁</span> Proyectos
+                </button>
+                <button class="nav-item" data-view="habits">
+                    <span class="icon">🔥</span> Hábitos
+                </button>
+                <button class="nav-item" data-view="focus">
+                    <span class="icon">⏱️</span> Enfoque
+                </button>
+                <div class="nav-divider"></div>
+                <button class="nav-item" data-view="settings">
+                    <span>⚙️</span>
+                    <span>Config</span>
+                </button>
+                <button class="nav-item" data-view="commerce">
+                    <span class="icon">🛍️</span> Mi Tienda
+                </button>
+                <div class="nav-divider"></div>
+                <div class="nav-section-label">Geos OS</div>
+                <button class="nav-item" data-view="geos-progress">
+                    <span class="icon">🚀</span> Geos Progreso
+                </button>
+                <a class="nav-item nav-link-ext" href="geos-os.html" target="_blank">
+                    <span class="icon">🤖</span> Geos OS App
+                </a>
+                <a class="nav-item nav-link-ext" href="geos-avatar.html" target="_blank">
+                    <span class="icon">🎭</span> Avatar Demo
+                </a>
+                <a class="nav-item nav-link-ext" href="geos-vision.html" target="_blank">
+                    <span class="icon">🌐</span> Visión OS
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="avatar">M</div>
+                    <span>Mario Ovalle</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="content-header">
+                <h1 id="view-title">Dashboard</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" id="new-task-btn">+ Nueva Tarea</button>
+                </div>
+            </header>
+
+            <!-- Dashboard: IA-FIRST Interface (ChatGPT Style) -->
+            <section class="dashboard-view active" id="dashboard-view">
+                <div class="chat-container-main">
+                    <div class="chat-header-main">
+                        <h2>¿Qué planeamos hoy, Mario?</h2>
+                        <p class="subtitle">Ecosistema Geo OS v1.0.0 — Todos los sistemas en línea</p>
+                    </div>
+
+                    <div class="suggestions-grid">
+                        <div class="suggestion-card" onclick="document.getElementById('main-chat-input').value='¿Cómo van las ventas hoy?'; document.getElementById('send-main').click();">
+                            <span class="s-icon">📈</span>
+                            <span>Ver reporte de War Room</span>
+                        </div>
+                        <div class="suggestion-card" onclick="document.getElementById('main-chat-input').value='Crea una tarea: '; document.getElementById('main-chat-input').focus();">
+                            <span class="s-icon">✅</span>
+                            <span>Nueva tarea en Voren</span>
+                        </div>
+                        <div class="suggestion-card" onclick="document.getElementById('main-chat-input').value='Resumen de mi stock Shopify'; document.getElementById('send-main').click();">
+                            <span class="s-icon">🛍️</span>
+                            <span>Ver stock EcoOrigen</span>
+                        </div>
+                        <div class="suggestion-card" onclick="document.getElementById('main-chat-input').value='Busca en Notion: '; document.getElementById('main-chat-input').focus();">
+                            <span class="s-icon">📝</span>
+                            <span>Consultar en Notion</span>
+                        </div>
+                    </div>
+
+                    <div class="main-chat-history" id="main-chat-history">
+                        <!-- Chat history here -->
+                        <div class="msg-main bot">Bienvenido al núcleo, Mario. Estoy sincronizado con tu Shopify, Voren y Notion. ¿En qué trabajamos ahora?</div>
+                    </div>
+
+                    <div class="main-chat-input-container">
+                        <div class="input-wrapper">
+                            <input type="text" id="main-chat-input" placeholder="Escribe un comando o pregunta a Geo...">
+                            <button id="send-main">↑</button>
+                        </div>
+                        <span class="input-hint">Presiona <b>Alt + G</b> para abrir Geo desde cualquier vista.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Other views -->
+            <section class="view-panel" id="tasks-view" style="display: none;">
+                <div class="task-filters">
+                    <button class="filter active">Pendientes</button>
+                    <button class="filter">Completadas</button>
+                </div>
+                <div class="main-tasks-list" id="full-tasks-list">
+                    <!-- Loaded from API/localStorage -->
+                </div>
+            </section>
+
+            <!-- GEOS PROGRESS VIEW -->
+            <section class="view-panel" id="geos-progress-view" style="display: none; flex-direction: column; gap: 0; padding: 0; height: 100%; overflow: hidden;">
+                <iframe src="geos-vision.html" style="flex: 1; width: 100%; border: none; border-radius: 0;"></iframe>
+            </section>
+
+            <section class="view-panel" id="commerce-view" style="display: none; height: 100%;">
+                <div class="store-container">
+                    <div class="store-header">
+                        <span class="status-badge">ONLINE</span>
+                        <span class="store-url">ecoorigenchile.com</span>
+                        <a href="https://ecoorigenchile.com" target="_blank" class="btn btn-tiny">Abrir Externo ↗</a>
+                    </div>
+                    <!-- Iframe for the store -->
+                    <iframe src="https://ecoorigenchile.com" frameborder="0" class="store-iframe"></iframe>
+                </div>
+            </section>
+        </main>
+
+        <!-- AI Assistant Overlay -->
+        <div class="ai-overlay" id="geo-assistant">
+            <div class="ai-header">
+                <span>GEO Intelligence</span>
+                <button class="close-btn">×</button>
+            </div>
+            <div class="ai-messages" id="ai-chat">
+                <div class="msg bot">¿En qué puedo ayudarte hoy, Mario? Tengo tus tareas de EcoOrigen sincronizadas.</div>
+            </div>
+            <div class="ai-input">
+                <input type="text" placeholder="Habla con Geo..." id="ai-input-field">
+                <button id="send-ai">↑</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <!-- FASE 4: Panel de configuración de token -->
+    <section class="view-panel" id="settings-view" style="display:none;flex-direction:column;gap:16px;padding:32px;">
+        <h2 style="color:#e8e8e8;font-size:18px;margin:0">⚙️ Configuración</h2>
+        <div style="background:rgba(255,255,255,0.05);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px;">
+            <label style="color:#aaa;font-size:13px">Token JWT de GeoCore API</label>
+            <input id="geo-token-input" type="password" placeholder="pega tu token aquí..." style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 14px;color:#e8e8e8;font-size:13px;outline:none;"/>
+            <button id="save-token-btn" style="background:#00ff88;color:#0a0a0a;border:none;border-radius:8px;padding:10px 20px;font-weight:600;cursor:pointer;width:fit-content">Guardar Token</button>
+            <p style="color:#666;font-size:12px">Genera tu token con: <code style="color:#00ff88">node scripts/gen-token.js</code></p>
+        </div>
+    </section>
+</body>
+</html>

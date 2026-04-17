@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO — Generador de Banner</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 2rem; }
+        h1 { font-size: 1.8rem; font-weight: 700; color: #c084fc; margin-bottom: 0.5rem; text-align: center; }
+        p.sub { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; text-align: center; }
+        .tool { background: #1e293b; padding: 2rem; border-radius: 16px; max-width: 1000px; width: 100%; display: flex; flex-direction: column; gap: 1.5rem; border: 1px solid rgba(255,255,255,0.05); }
+
+        /* ============================================================
+           CONFIGURACIÓN — EDITAR AQUÍ
+           ============================================================ */
+        /* Ver sección CONFIG en el script más abajo */
+
+        .preview { width: 100%; overflow-x: auto; text-align: center; background: #000; border-radius: 8px; padding: 1rem; border: 1px solid #334155; }
+        canvas { max-width: 100%; height: auto; border-radius: 4px; }
+
+        .config-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .config-group { display: flex; flex-direction: column; gap: 6px; }
+        label { font-size: 12px; color: #94a3b8; font-weight: 500; }
+        input[type="text"], textarea { background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 8px 12px; border-radius: 8px; font-size: 13px; font-family: Arial, sans-serif; width: 100%; }
+        textarea { resize: vertical; min-height: 60px; }
+        input[type="color"] { width: 100%; height: 36px; border: 1px solid #334155; border-radius: 8px; background: #0f172a; cursor: pointer; padding: 2px; }
+        input[type="range"] { width: 100%; accent-color: #8b5cf6; }
+
+        .controls { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); }
+        button { background: #8b5cf6; color: white; border: none; padding: 10px 20px; font-size: 14px; font-weight: 500; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        button:hover { background: #7c3aed; }
+        button.sec { background: transparent; border: 1px solid #475569; color: #94a3b8; }
+        button.sec:hover { border-color: #f8fafc; color: #f8fafc; }
+
+        .lang-row { display: flex; gap: 8px; }
+        .lang-btn { flex: 1; padding: 8px; border: 1px solid #334155; border-radius: 8px; background: transparent; color: #94a3b8; font-size: 13px; cursor: pointer; font-weight: 500; }
+        .lang-btn.active { border-color: #8b5cf6; color: #c084fc; background: rgba(139,92,246,0.1); }
+
+        .toast { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%) translateY(100px); background: #10b981; color: white; padding: 10px 20px; border-radius: 50px; opacity: 0; transition: all 0.4s; z-index: 1000; font-size: 14px; font-weight: 500; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+        @media (max-width: 600px) { .config-panel { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<h1>GEO — Generador de Banner</h1>
+<p class="sub">Componente reutilizable · Mario Guillaume</p>
+
+<div class="tool">
+
+    <div class="lang-row">
+        <button class="lang-btn active" onclick="setLang('es', this)">Español</button>
+        <button class="lang-btn" onclick="setLang('fr', this)">Français</button>
+        <button class="lang-btn" onclick="setLang('custom', this)">Personalizado</button>
+    </div>
+
+    <div class="preview">
+        <canvas id="bannerCanvas" width="1200" height="400"></canvas>
+    </div>
+
+    <!-- Panel de configuración visual -->
+    <div class="config-panel">
+        <div class="config-group" style="grid-column: 1 / -1;">
+            <label>Texto principal</label>
+            <textarea id="cfg-main" oninput="updateFromPanel()">¿Qué quieres que la IA haga realmente por ti?</textarea>
+        </div>
+        <div class="config-group" style="grid-column: 1 / -1;">
+            <label>Subtítulo</label>
+            <input type="text" id="cfg-sub" value="Ayúdame a moldear el futuro · Mario Guillaume" oninput="updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Color fondo izquierda</label>
+            <input type="color" id="cfg-color1" value="#0f172a" oninput="updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Color fondo derecha</label>
+            <input type="color" id="cfg-color2" value="#312e81" oninput="updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Color partículas</label>
+            <input type="color" id="cfg-particle" value="#8b5cf6" oninput="updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Color texto principal</label>
+            <input type="color" id="cfg-textcolor" value="#ffffff" oninput="updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Color subtítulo</label>
+            <input type="color" id="cfg-subcolor" value="#a5b4fc" oninput="updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Tamaño fuente: <span id="fs-val">44</span>px</label>
+            <input type="range" id="cfg-fontsize" min="20" max="72" value="44" step="1" oninput="document.getElementById('fs-val').textContent=this.value; updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Cantidad de partículas: <span id="pc-val">60</span></label>
+            <input type="range" id="cfg-particles" min="10" max="120" value="60" step="5" oninput="document.getElementById('pc-val').textContent=this.value; initParticles(); updateFromPanel()">
+        </div>
+        <div class="config-group">
+            <label>Alto del banner: <span id="hv-val">400</span>px</label>
+            <input type="range" id="cfg-height" min="200" max="600" value="400" step="20" oninput="document.getElementById('hv-val').textContent=this.value; canvas.height=parseInt(this.value); initParticles(); updateFromPanel()">
+        </div>
+    </div>
+
+    <div class="controls">
+        <button onclick="regenerateDesign()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            Regenerar fondo
+        </button>
+        <button onclick="downloadBanner()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+            Descargar PNG
+        </button>
+        <button class="sec" onclick="copyConfig()">Copiar configuración</button>
+    </div>
+
+</div>
+
+<div id="toast" class="toast">Listo</div>
+
+<script>
+// ============================================================
+// CONFIGURACIÓN — EDITAR AQUÍ PARA NUEVOS BANNERS
+// ============================================================
+const PRESETS = {
+    es: {
+        main: '¿Qué quieres que la IA haga realmente por ti?',
+        sub: 'Ayúdame a moldear el futuro · Mario Guillaume',
+        color1: '#0f172a',
+        color2: '#312e81',
+        particle: '#8b5cf6',
+        textcolor: '#ffffff',
+        subcolor: '#a5b4fc',
+        fontsize: 44
+    },
+    fr: {
+        main: "Qu'est-ce que tu voudrais vraiment que l'IA fasse pour toi ?",
+        sub: 'Aide-moi à façonner le futur · Mario Guillaume',
+        color1: '#0f172a',
+        color2: '#312e81',
+        particle: '#8b5cf6',
+        textcolor: '#ffffff',
+        subcolor: '#a5b4fc',
+        fontsize: 36
+    },
+    custom: {
+        main: 'Escribe tu texto aquí',
+        sub: 'Tu subtítulo · Mario Guillaume',
+        color1: '#0f172a',
+        color2: '#134e4a',
+        particle: '#14b8a6',
+        textcolor: '#ffffff',
+        subcolor: '#99f6e4',
+        fontsize: 44
+    }
+};
+// ============================================================
+
+const canvas = document.getElementById('bannerCanvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let animId;
+let config = { ...PRESETS.es };
+
+function setLang(lang, btn) {
+    config = { ...PRESETS[lang] };
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    applyConfigToPanel();
+}
+
+function applyConfigToPanel() {
+    document.getElementById('cfg-main').value = config.main;
+    document.getElementById('cfg-sub').value = config.sub;
+    document.getElementById('cfg-color1').value = config.color1;
+    document.getElementById('cfg-color2').value = config.color2;
+    document.getElementById('cfg-particle').value = config.particle;
+    document.getElementById('cfg-textcolor').value = config.textcolor;
+    document.getElementById('cfg-subcolor').value = config.subcolor;
+    document.getElementById('cfg-fontsize').value = config.fontsize;
+    document.getElementById('fs-val').textContent = config.fontsize;
+}
+
+function updateFromPanel() {
+    config.main = document.getElementById('cfg-main').value;
+    config.sub = document.getElementById('cfg-sub').value;
+    config.color1 = document.getElementById('cfg-color1').value;
+    config.color2 = document.getElementById('cfg-color2').value;
+    config.particle = document.getElementById('cfg-particle').value;
+    config.textcolor = document.getElementById('cfg-textcolor').value;
+    config.subcolor = document.getElementById('cfg-subcolor').value;
+    config.fontsize = parseInt(document.getElementById('cfg-fontsize').value);
+}
+
+class Particle {
+    constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2 + 1;
+        this.alpha = Math.random() * 0.5 + 0.1;
+    }
+    update() {
+        this.x += this.vx; this.y += this.vy;
+        if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+        if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+    }
+    draw() {
+        const hex = config.particle;
+        const r = parseInt(hex.slice(1,3),16);
+        const g = parseInt(hex.slice(3,5),16);
+        const b = parseInt(hex.slice(5,7),16);
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r},${g},${b},${this.alpha})`;
+        ctx.fill();
+    }
+}
+
+function initParticles() {
+    particles = [];
+    const count = parseInt(document.getElementById('cfg-particles').value) || 60;
+    for (let i = 0; i < count; i++) particles.push(new Particle());
+}
+
+function hexToRgb(hex, alpha) {
+    const r = parseInt(hex.slice(1,3),16);
+    const g = parseInt(hex.slice(3,5),16);
+    const b = parseInt(hex.slice(5,7),16);
+    return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function drawGradient() {
+    const g = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    g.addColorStop(0, config.color1);
+    g.addColorStop(0.5, '#1e1b4b');
+    g.addColorStop(1, config.color2);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawConnections() {
+    ctx.strokeStyle = hexToRgb(config.particle, 0.15);
+    ctx.lineWidth = 1;
+    for (let i = 0; i < particles.length; i++) {
+        for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            if (Math.sqrt(dx*dx + dy*dy) < 150) {
+                ctx.beginPath();
+                ctx.moveTo(particles[i].x, particles[i].y);
+                ctx.lineTo(particles[j].x, particles[j].y);
+                ctx.stroke();
+            }
+        }
+    }
+}
+
+function drawText() {
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = 15;
+    ctx.fillStyle = config.textcolor;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `700 ${config.fontsize}px Arial, sans-serif`;
+
+    const maxWidth = canvas.width - 120;
+    const words = config.main.split(' ');
+    let lines = [], line = '';
+    for (let w of words) {
+        const test = line ? line + ' ' + w : w;
+        if (ctx.measureText(test).width > maxWidth && line) { lines.push(line); line = w; }
+        else line = test;
+    }
+    lines.push(line);
+
+    const lh = config.fontsize * 1.3;
+    const totalH = lines.length * lh;
+    const startY = canvas.height / 2 - totalH / 2 - 15;
+    lines.forEach((l, i) => ctx.fillText(l, canvas.width / 2, startY + i * lh));
+
+    ctx.font = '300 20px Arial, sans-serif';
+    ctx.fillStyle = config.subcolor;
+    ctx.shadowBlur = 0;
+    ctx.fillText(config.sub, canvas.width / 2, startY + totalH + 30);
+    ctx.shadowColor = 'transparent';
+}
+
+function drawOverlay() {
+    const g = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 200, canvas.width/2, canvas.height/2, 600);
+    g.addColorStop(0, 'rgba(0,0,0,0)');
+    g.addColorStop(1, 'rgba(0,0,0,0.4)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGradient();
+    particles.forEach(p => { p.update(); p.draw(); });
+    drawConnections();
+    drawOverlay();
+    drawText();
+    animId = requestAnimationFrame(animate);
+}
+
+function regenerateDesign() { initParticles(); }
+
+function downloadBanner() {
+    cancelAnimationFrame(animId);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawGradient();
+    particles.forEach(p => p.draw());
+    drawConnections();
+    drawOverlay();
+    drawText();
+    const link = document.createElement('a');
+    const filename = 'banner-' + config.sub.split('·')[0].trim().toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'') + '.png';
+    link.download = filename;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('Imagen descargada');
+    animate();
+}
+
+function copyConfig() {
+    const json = JSON.stringify(config, null, 2);
+    navigator.clipboard.writeText(json).then(() => showToast('Configuración copiada'));
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+initParticles();
+animate();
+</script>
+</body>
+</html>

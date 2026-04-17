@@ -1,0 +1,14 @@
+﻿{
+  "system": "Geo",
+  "version": "1.0",
+  "runtime": {
+    "entry": "01_core",
+    "agents": "02_agents",
+    "data": "04_data",
+    "frontend": "05_frontend"
+  },
+  "rules": {
+    "node_modules": "ephemeral",
+    "reset_allowed": true
+  }
+}

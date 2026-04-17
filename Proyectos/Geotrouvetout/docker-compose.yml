@@ -1,0 +1,36 @@
+version: "3.8"
+
+services:
+  geo-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: geo-core
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/data/memory.db
+    volumes:
+      - geo_data:/data
+    networks:
+      - traefik_proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.geocore.rule=Host(`agent.ecoorigenchile.com`)"
+      - "traefik.http.routers.geocore.entrypoints=websecure"
+      - "traefik.http.routers.geocore.tls.certresolver=letsencrypt"
+      - "traefik.http.services.geocore.loadbalancer.server.port=3000"
+      # Redirect HTTP → HTTPS
+      - "traefik.http.routers.geocore-http.rule=Host(`agent.ecoorigenchile.com`)"
+      - "traefik.http.routers.geocore-http.entrypoints=web"
+      - "traefik.http.routers.geocore-http.middlewares=https-redirect"
+
+volumes:
+  geo_data:
+    driver: local
+
+networks:
+  traefik_proxy:
+    external: true

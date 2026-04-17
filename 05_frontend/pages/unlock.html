@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>GEO - Desbloquear</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #060a13;
+            color: #e8edf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: #0d1321;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            max-width: 500px;
+        }
+        h1 { color: #00d4ff; margin-bottom: 1rem; font-size: 2rem; }
+        .icon { font-size: 3rem; margin-bottom: 1rem; animation: spin 2s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        p { color: #6b7a90; margin-bottom: 1.5rem; line-height: 1.6; }
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 8px;
+            border: 1px solid #00d4ff;
+            color: #00d4ff;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔓</div>
+        <h1>Desbloqueando GEO</h1>
+        <p>Por favor espera mientras se desbloquea el sistema...</p>
+        <div class="status" id="status">Iniciando...</div>
+    </div>
+
+    <script>
+        async function unlock() {
+            const status = document.getElementById('status');
+            
+            try {
+                status.textContent = '1️⃣ Accediendo a datos locales...';
+                
+                // Limpiar todo
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                status.textContent = '2️⃣ Eliminando bloqueos...';
+                
+                // Borrar bases de datos
+                try {
+                    indexedDB.deleteDatabase('GEO_DB');
+                } catch (e) {}
+                
+                status.textContent = '3️⃣ Reseteando aplicación...';
+                
+                // Esperar un poco
+                await new Promise(r => setTimeout(r, 1000));
+                
+                status.textContent = '✅ Sistema desbloqueado';
+                status.style.background = 'rgba(0, 255, 136, 0.1)';
+                status.style.borderColor = '#00ff88';
+                status.style.color = '#00ff88';
+                
+                // Redirigir después de 2 segundos (con flag fresh)
+                setTimeout(() => {
+                    window.location.replace('/?fresh=true&t=' + Date.now());
+                }, 2000);
+                
+            } catch (e) {
+                status.textContent = '⚠️ Error: ' + e.message + '\nAún así redirigiendo...';
+                setTimeout(() => {
+                    window.location.replace('/?fresh=true');
+                }, 1500);
+            }
+        }
+        
+        // Ejecutar al cargar
+        window.addEventListener('load', unlock);
+    </script>
+</body>
+</html>

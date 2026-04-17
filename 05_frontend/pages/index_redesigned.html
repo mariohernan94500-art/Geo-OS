@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>GEO CORE | Ultra-Secure AI Workspace</title>
+    
+    <!-- Libraries -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Scripts -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        geo: {
+                            bg: '#05070a',
+                            surface: 'rgba(15, 23, 42, 0.6)',
+                            card: 'rgba(30, 41, 59, 0.8)',
+                            border: 'rgba(255, 255, 255, 0.1)',
+                            accent: '#00ffa3',
+                            cyan: '#00d9ff',
+                            danger: '#ff2d55',
+                            warn: '#ffb300',
+                            text: '#f8fafc'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            --accent: #00ffa3;
+            --accent-glow: rgba(0, 255, 163, 0.3);
+            --danger: #ff2d55;
+            --glass: rgba(15, 23, 42, 0.6);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            background-color: #05070a;
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+        }
+
+        .glass-dark {
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+        /* Animations */
+        @keyframes scan {
+            0% { top: 0; opacity: 0; }
+            50% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+        .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            box-shadow: 0 0 15px var(--accent);
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { box-shadow: 0 0 5px var(--accent-glow); }
+            50% { box-shadow: 0 0 20px var(--accent-glow); }
+            100% { box-shadow: 0 0 5px var(--accent-glow); }
+        }
+        .glow-active { animation: pulse-glow 2s infinite; }
+
+        @keyframes reveal {
+            from { opacity: 0; transform: scale(0.98) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-reveal { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        /* Lock Screen Keypad */
+        .key-pad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+        .key-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+        .key-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: scale(1.05);
+        }
+        .key-btn:active { transform: scale(0.95); opacity: 0.7; }
+
+        /* Sidebar Styling */
+        #sidebar {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .nav-link {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 20%;
+            bottom: 20%;
+            width: 3px;
+            background: var(--accent);
+            border-radius: 0 4px 4px 0;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Tooltip-like effect */
+        .sidebar-expanded .nav-text { opacity: 1; transform: translateX(0); }
+        .sidebar-collapsed .nav-text { opacity: 0; transform: translateX(-10px); pointer-events: none; }
+
+        /* Map Fix */
+        #geoMap { filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(1.2); }
+
+        /* Chat Bubbles */
+        .chat-bubble {
+            max-width: 85%;
+            padding: 1rem 1.25rem;
+            border-radius: 1.5rem;
+            margin-bottom: 1rem;
+            position: relative;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .bubble-geo {
+            background: linear-gradient(135deg, rgba(0, 255, 163, 0.1), rgba(0, 217, 255, 0.05));
+            border: 1px solid rgba(0, 255, 163, 0.2);
+            color: #d1d5db;
+            border-bottom-left-radius: 0.25rem;
+        }
+        .bubble-user {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            align-self: flex-end;
+            border-bottom-right-radius: 0.25rem;
+        }
+    </style>
+</head>
+<body class="font-sans">
+
+    <!-- OVERLAYS: SCANNER GRAPHICS -->
+    <div class="fixed inset-0 pointer-events-none z-[60] opacity-20 bg-[radial-gradient(circle_at_center,transparent_0%,#000_100%)]"></div>
+
+    <!-- LOCK SCREEN -->
+    <section id="lockScreen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-geo-bg overflow-hidden">
+        <div class="absolute inset-0 opacity-5" style="background-image: url('https://www.transparenttextures.com/patterns/carbon-fibre.png');"></div>
+        
+        <!-- Animated Background Grid -->
+        <div class="absolute inset-0 z-0 opacity-10" style="background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px); background-size: 40px 40px;"></div>
+
+        <!-- Biometric Scanner Visual -->
+        <div class="relative z-10 mb-8 w-32 h-32 flex items-center justify-center">
+            <div class="absolute inset-0 border-2 border-geo-accent rounded-full opacity-20 glow-active"></div>
+            <div class="absolute inset-2 border border-geo-cyan rounded-full opacity-10 animate-pulse"></div>
+            <i class="fas fa-fingerprint text-5xl text-geo-accent opacity-80"></i>
+            <div class="scan-line"></div>
+        </div>
+
+        <h1 class="z-10 text-4xl font-extrabold tracking-tighter mb-2 text-white">
+            GEO <span class="text-geo-accent font-light">CORE</span>
+        </h1>
+        <p class="z-10 text-geo-text/40 font-mono text-xs uppercase tracking-[0.4em] mb-12">Security Level: Omega</p>
+
+        <!-- PIN Dots -->
+        <div class="z-10 flex gap-4 mb-10" id="pinDots">
+            <div class="w-3 h-3 rounded-full border border-white/20 transition-all duration-300"></div>
+            <div class="w-3 h-3 rounded-full border border-white/20 transition-all duration-300"></div>
+            <div class="w-3 h-3 rounded-full border border-white/20 transition-all duration-300"></div>
+            <div class="w-3 h-3 rounded-full border border-white/20 transition-all duration-300"></div>
+            <div class="w-3 h-3 rounded-full border border-white/20 transition-all duration-300"></div>
+            <div class="w-3 h-3 rounded-full border border-white/20 transition-all duration-300"></div>
+        </div>
+
+        <!-- Keypad -->
+        <div class="z-10 key-pad" id="keypad">
+            <!-- Buttons dynamically generated -->
+        </div>
+
+        <div class="z-10 mt-12 flex gap-8 items-center">
+            <button onclick="tryBio('face')" class="text-white/40 hover:text-geo-cyan transition-colors flex flex-col items-center gap-2">
+                <i class="fas fa-face-smile text-xl"></i>
+                <span class="text-[10px] uppercase font-bold tracking-widest">Face ID</span>
+            </button>
+            <div class="w-[1px] h-8 bg-white/10"></div>
+            <button onclick="tryBio('voice')" class="text-white/40 hover:text-geo-accent transition-colors flex flex-col items-center gap-2">
+                <i class="fas fa-microphone text-xl"></i>
+                <span class="text-[10px] uppercase font-bold tracking-widest">Voice</span>
+            </button>
+        </div>
+        
+        <p class="z-10 mt-8 text-white/20 text-[10px] font-mono">ENCRYPTED SESSION: AES-256-GCM</p>
+    </section>
+
+    <!-- APP INTERFACE -->
+    <div id="app" class="hidden h-screen flex bg-geo-bg">
+        
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-20 hover:w-64 glass-dark border-r border-geo-border flex flex-col z-40 group sidebar-collapsed overflow-hidden">
+            <div class="p-6 mb-8 flex items-center gap-4 overflow-hidden">
+                <div class="w-8 h-8 min-w-[32px] bg-geo-accent rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(0,255,163,0.4)]">
+                    <span class="text-black font-extrabold text-xs">G</span>
+                </div>
+                <span class="text-xl font-bold tracking-tight whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300">GEO CORE</span>
+            </div>
+
+            <nav class="flex-1 px-4 space-y-2">
+                <button onclick="switchView('workspace')" class="nav-link active w-full p-3 rounded-xl flex items-center gap-4 text-white/50 hover:text-geo-accent hover:bg-white/5">
+                    <i class="fas fa-grid-2 text-lg w-6 text-center"></i>
+                    <span class="font-semibold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Workspace</span>
+                </button>
+                <button onclick="switchView('security')" class="nav-link w-full p-3 rounded-xl flex items-center gap-4 text-white/50 hover:text-geo-accent hover:bg-white/5">
+                    <i class="fas fa-shield-halved text-lg w-6 text-center"></i>
+                    <span class="font-semibold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Security</span>
+                </button>
+                <button onclick="switchView('map')" class="nav-link w-full p-3 rounded-xl flex items-center gap-4 text-white/50 hover:text-geo-accent hover:bg-white/5">
+                    <i class="fas fa-earth-americas text-lg w-6 text-center"></i>
+                    <span class="font-semibold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Geo-Map</span>
+                </button>
+                <button onclick="switchView('settings')" class="nav-link w-full p-3 rounded-xl flex items-center gap-4 text-white/50 hover:text-geo-accent hover:bg-white/5">
+                    <i class="fas fa-sliders text-lg w-6 text-center"></i>
+                    <span class="font-semibold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Settings</span>
+                </button>
+            </nav>
+
+            <div class="p-4 border-t border-geo-border">
+                <button onclick="logout()" class="w-full p-3 rounded-xl flex items-center gap-4 text-geo-danger hover:bg-geo-danger/10 transition-colors">
+                    <i class="fas fa-power-off text-lg w-6 text-center"></i>
+                    <span class="font-semibold text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity">Lock System</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 flex overflow-hidden relative">
+            
+            <!-- WORKSPACE VIEW (3 Columns) -->
+            <div id="view-workspace" class="absolute inset-0 flex divide-x divide-geo-border animate-reveal">
+                
+                <!-- Col 1: Explorer -->
+                <div class="w-72 flex flex-col glass border-r">
+                    <div class="p-5 flex justify-between items-center bg-white/5">
+                        <h2 class="text-xs uppercase font-bold tracking-widest text-geo-cyan">Terminals</h2>
+                        <button onclick="addNewFile()" class="w-6 h-6 rounded bg-geo-cyan/10 text-geo-cyan hover:bg-geo-cyan hover:text-black transition-all flex items-center justify-center">
+                            <i class="fas fa-plus text-[10px]"></i>
+                        </button>
+                    </div>
+                    <div id="file-tree" class="flex-1 overflow-y-auto p-3 space-y-1">
+                        <!-- Injected JS -->
+                    </div>
+                </div>
+
+                <!-- Col 2: Chat Assistant -->
+                <div class="flex-1 flex flex-col bg-geo-bg/40">
+                    <div class="p-5 flex justify-between items-center border-b border-geo-border backdrop-blur-md bg-geo-bg/20">
+                        <div class="flex items-center gap-3">
+                            <div class="w-2 h-2 rounded-full bg-geo-accent animate-pulse"></div>
+                            <h2 class="text-sm font-bold">CORE ORCHESTRATOR</h2>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="w-8 h-8 rounded-full border border-geo-border text-white/40 hover:text-white flex items-center justify-center transition-colors">
+                                <i class="fas fa-history text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="chat-history" class="flex-1 overflow-y-auto p-6 flex flex-col">
+                        <div class="chat-bubble bubble-geo">
+                            <div class="flex items-center gap-2 mb-2 text-geo-accent text-[10px] uppercase font-bold tracking-tighter">
+                                <i class="fas fa-robot"></i>
+                                GEO Intelligence v4.2
+                            </div>
+                            System operational. Monitoring nodes... All protocols active. <br><br>
+                            How can I assist your operations today?
+                        </div>
+                    </div>
+
+                    <div class="p-4 bg-geo-bg/60 border-t border-geo-border backdrop-blur-xl">
+                        <div class="relative group">
+                            <input type="text" id="user-input" 
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-6 pr-16 text-sm focus:outline-none focus:border-geo-accent focus:ring-1 focus:ring-geo-accent transition-all"
+                                placeholder="Issue command or ask question..."
+                                autocomplete="off">
+                            <button onclick="sendMessage()" class="absolute right-2 top-2 bottom-2 w-12 bg-geo-accent text-black rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_15px_rgba(0,255,163,0.3)]">
+                                <i class="fas fa-arrow-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Col 3: Inspector / Preview -->
+                <div class="w-[450px] flex flex-col glass">
+                    <div class="p-5 flex justify-between items-center border-b border-geo-border bg-white/5">
+                        <h2 class="text-xs uppercase font-bold tracking-widest text-geo-warn">Data Inspector</h2>
+                        <div class="flex gap-4">
+                            <i class="fas fa-microchip text-geo-warn/50"></i>
+                            <i class="fas fa-cube text-geo-warn/50"></i>
+                        </div>
+                    </div>
+                    <div id="preview-content" class="flex-1 overflow-y-auto p-0 font-mono text-[13px]">
+                        <div class="h-full flex flex-col items-center justify-center opacity-20 pointer-events-none">
+                            <i class="fas fa-database text-6xl mb-4"></i>
+                            <p class="text-xs tracking-widest uppercase">Select Instance for Analysis</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECURITY VIEW -->
+            <div id="view-security" class="hidden absolute inset-0 p-10 bg-geo-bg animate-reveal overflow-y-auto">
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex items-center justify-between mb-12">
+                        <div>
+                            <h1 class="text-4xl font-extrabold tracking-tighter text-white">Security <span class="text-geo-danger">Protocols</span></h1>
+                            <p class="text-white/40 mt-1 uppercase text-[10px] tracking-[0.3em]">Operational Status: Maximum Defense</p>
+                        </div>
+                        <button onclick="activatePanic()" class="px-8 py-4 bg-geo-danger text-white rounded-2xl font-black tracking-widest shadow-[0_0_40px_rgba(255,45,85,0.4)] hover:scale-105 active:scale-95 transition-all">
+                            ACTIVATE PANIC MODE
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Node Health -->
+                        <div class="glass-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                            <div class="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-30 transition-opacity">
+                                <i class="fas fa-network-wired text-4xl"></i>
+                            </div>
+                            <h3 class="text-geo-cyan font-bold text-sm uppercase tracking-widest mb-4">Node Health</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-white/60">Server-Alpha</span>
+                                    <span class="text-geo-accent font-mono text-xs">STABLE</span>
+                                </div>
+                                <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div class="w-[85%] h-full bg-geo-accent"></div>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-white/60">Edge-Relay-4</span>
+                                    <span class="text-geo-accent font-mono text-xs">ACTIVE</span>
+                                </div>
+                                <div class="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                                    <div class="w-[92%] h-full bg-geo-cyan"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Encryption -->
+                        <div class="glass-dark border border-white/5 rounded-3xl p-6 relative overflow-hidden group">
+                            <h3 class="text-geo-accent font-bold text-sm uppercase tracking-widest mb-4">Encryption Layer</h3>
+                            <div class="p-4 bg-white/5 rounded-2xl mb-4">
+                                <div class="font-mono text-[10px] leading-relaxed break-all text-white/40">
+                                    0x72a5...81bf<br>
+                                    AES-256-CTR / RSA-4096<br>
+                                    Rotating Key in: <span class="text-geo-accent">04:12s</span>
+                                </div>
+                            </div>
+                            <button class="w-full py-2 bg-geo-accent/10 border border-geo-accent/20 text-geo-accent rounded-xl text-xs font-bold hover:bg-geo-accent hover:text-black transition-all">
+                                ROTATE KEYS NOW
+                            </button>
+                        </div>
+
+                        <!-- Biometrics -->
+                        <div class="glass-dark border border-white/5 rounded-3xl p-6">
+                            <h3 class="text-geo-warn font-bold text-sm uppercase tracking-widest mb-4">Biometric Logs</h3>
+                            <div class="space-y-3">
+                                <div class="flex gap-3 items-center">
+                                    <div class="w-8 h-8 rounded-full bg-geo-accent/20 flex items-center justify-center text-geo-accent text-[10px]">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-bold">Face-ID Match</p>
+                                        <p class="text-[9px] text-white/30">Today, 09:21 AM</p>
+                                    </div>
+                                </div>
+                                <div class="flex gap-3 items-center">
+                                    <div class="w-8 h-8 rounded-full bg-geo-accent/20 flex items-center justify-center text-geo-accent text-[10px]">
+                                        <i class="fas fa-check"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-bold">Fingerprint Verified</p>
+                                        <p class="text-[9px] text-white/30">Today, 08:45 AM</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MAP VIEW -->
+            <div id="view-map" class="hidden absolute inset-0 bg-geo-bg animate-reveal">
+                <div id="geoMap" class="w-full h-full"></div>
+                <div class="absolute top-6 left-6 z-[1000] glass p-4 rounded-2xl flex flex-col gap-2">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-geo-accent">Geo-Tracker</h3>
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-geo-accent animate-pulse"></div>
+                        <span class="text-xs">Uplink Stable</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div id="view-settings" class="hidden absolute inset-0 p-10 bg-geo-bg animate-reveal flex items-center justify-center">
+                <div class="max-w-md w-full glass-dark border border-white/10 rounded-[3rem] p-12 text-center">
+                    <div class="w-20 h-20 bg-geo-accent/10 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner border border-geo-accent/20">
+                        <i class="fas fa-cog text-3xl text-geo-accent"></i>
+                    </div>
+                    <h2 class="text-2xl font-bold mb-8">Terminal Settings</h2>
+                    
+                    <div class="space-y-6 text-left">
+                        <div class="space-y-2">
+                            <label class="text-[10px] uppercase tracking-widest text-white/40 font-bold ml-2">Master Access Code</label>
+                            <input type="password" id="newPinInput" 
+                                class="w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-6 text-xl tracking-[0.5em] text-center focus:border-geo-accent outline-none transition-all"
+                                placeholder="******" maxlength="6">
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/5">
+                            <div>
+                                <p class="text-xs font-bold">Automatic Lock</p>
+                                <p class="text-[9px] text-white/30">System locks after 5 mins of inactivity</p>
+                            </div>
+                            <div class="w-10 h-5 bg-geo-accent rounded-full relative">
+                                <div class="absolute right-1 top-1 bottom-1 w-3 bg-black rounded-full"></div>
+                            </div>
+                        </div>
+
+                        <button onclick="updatePin()" class="w-full py-4 bg-geo-accent text-black font-black uppercase tracking-widest rounded-2xl hover:scale-105 active:scale-95 transition-all">
+                            Apply Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" class="fixed bottom-8 right-8 z-[100] flex flex-col gap-3"></div>
+
+    <script>
+        /* ==========================================================================
+           STATE & CONFIG (Now dynamic)
+           ========================================================================== */
+        const S = {
+            pin: localStorage.getItem('g_pin') || '141894',
+            locked: true,
+            files: [], // Will be populated by backend
+            selectedFileId: null,
+            backendUrl: 'http://localhost:8000'
+        };
+
+        const lockScreen = document.getElementById('lockScreen');
+        const app = document.getElementById('app');
+        const pinDotsContainer = document.getElementById('pinDots');
+        let enteredPin = '';
+
+        /* ==========================================================================
+           REAL BACKEND INTEGRATION
+           ========================================================================== */
+        async function loadRealFiles() {
+            try {
+                const res = await fetch(`${S.backendUrl}/scan?folder=Desktop`);
+                const data = await res.json();
+                
+                if (data.error) {
+                    toast(data.error, 'error');
+                    return;
+                }
+
+                S.files = data.files.map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    type: f.type,
+                    size: (f.size / 1024).toFixed(1) + " KB",
+                    date: "SYSTEM",
+                    content: f.path // This is the full path
+                }));
+
+                renderFiles();
+                addMessage(`Sync complete. Detected ${S.files.length} nodes in local workspace.`, 'geo');
+            } catch (err) {
+                console.error(err);
+                toast('BACKEND OFFLINE', 'error');
+                addMessage('Warning: Neural link to backend.py is fractured. Ensure FastAPI is running on port 8000.', 'geo');
+            }
+        }
+
+        async function fetchFileContent(path) {
+            try {
+                const res = await fetch(`${S.backendUrl}/read?path=${encodeURIComponent(path)}`);
+                const data = await res.json();
+                return data.content || data.error;
+            } catch (err) {
+                return "Error connecting to backend.";
+            }
+        }
+
+        /* ==========================================================================
+           UI BUILDERS
+           ========================================================================== */
+        function buildKeypad() {
+            const kp = document.getElementById('keypad');
+            kp.innerHTML = '';
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, '<i class="fas fa-fingerprint opacity-50"></i>', 0, '<i class="fas fa-backspace"></i>'].forEach((k, idx) => {
+                const b = document.createElement('button');
+                b.className = 'key-btn';
+                b.innerHTML = k;
+                if (idx === 9) b.onclick = () => tryBio('fp');
+                else if (idx === 11) b.onclick = () => handleKey('del');
+                else b.onclick = () => handleKey(k);
+                kp.appendChild(b);
+            });
+        }
+
+        function handleKey(k) {
+            if (k === 'del') enteredPin = enteredPin.slice(0, -1);
+            else if (enteredPin.length < 6) enteredPin += k;
+            
+            updateDots();
+            if (enteredPin.length === 6) verifyPin();
+        }
+
+        function updateDots() {
+            const dots = pinDotsContainer.children;
+            for (let i = 0; i < 6; i++) {
+                dots[i].className = 'w-3 h-3 rounded-full border border-white/20 transition-all duration-300';
+                if (i < enteredPin.length) {
+                    dots[i].classList.add('bg-geo-accent', 'border-geo-accent', 'shadow-[0_0_10px_var(--accent)]');
+                }
+            }
+        }
+
+        function verifyPin() {
+            if (enteredPin === S.pin) {
+                toast('ACCESS GRANTED', 'success');
+                unlockApp();
+            } else {
+                toast('INVALID ACCESS CODE', 'error');
+                const dots = pinDotsContainer.children;
+                for (let d of dots) d.classList.add('bg-geo-danger', 'border-geo-danger', 'shadow-[0_0_10px_#ff2d55]');
+                setTimeout(() => {
+                    enteredPin = '';
+                    updateDots();
+                }, 500);
+            }
+        }
+
+        function unlockApp() {
+            S.locked = false;
+            lockScreen.classList.add('opacity-0', 'pointer-events-none');
+            setTimeout(() => lockScreen.style.display = 'none', 500);
+            app.classList.remove('hidden');
+            app.classList.add('flex');
+            loadRealFiles(); // Fetch real data on unlock
+            initMap();
+        }
+
+        function logout() {
+            location.reload(); 
+        }
+
+        /* ==========================================================================
+           WORKSPACE LOGIC
+           ========================================================================== */
+        function renderFiles() {
+            const tree = document.getElementById('file-tree');
+            tree.innerHTML = '';
+            
+            if (S.files.length === 0) {
+                tree.innerHTML = `<div class="p-8 text-center text-[10px] text-white/20 tracking-widest">NO NODES DETECTED</div>`;
+                return;
+            }
+
+            S.files.forEach(file => {
+                const active = S.selectedFileId === file.id;
+                const el = document.createElement('div');
+                el.className = `p-3 rounded-xl border border-transparent cursor-pointer flex items-center gap-3 transition-all ${active ? 'bg-geo-cyan/10 border-geo-cyan/30 text-geo-cyan' : 'hover:bg-white/5 text-white/50 hover:text-white'}`;
+                el.onclick = () => selectFile(file.id);
+                
+                let icon = 'fas fa-file';
+                const type = file.type.toLowerCase();
+                if(['py', 'js', 'html', 'css'].includes(type)) icon = 'fas fa-code';
+                if(['json', 'yml', 'yaml'].includes(type)) icon = 'fas fa-brackets-curly';
+                if(['log', 'txt'].includes(type)) icon = 'fas fa-terminal';
+                if(['jpg', 'png', 'svg'].includes(type)) icon = 'fas fa-image';
+                
+                el.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${active ? 'bg-geo-cyan/20' : 'bg-white/5'} flex items-center justify-center">
+                        <i class="${icon} text-xs"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-[11px] font-bold truncate tracking-tight uppercase">${file.name}</div>
+                        <div class="text-[8px] opacity-40 uppercase tracking-widest">${file.size} • ${type}</div>
+                    </div>
+                    ${active ? '<div class="w-1.5 h-1.5 rounded-full bg-geo-cyan shadow-[0_0_8px_var(--geo-cyan)]"></div>' : ''}
+                `;
+                tree.appendChild(el);
+            });
+        }
+
+        async function selectFile(id) {
+            S.selectedFileId = id;
+            renderFiles();
+            const file = S.files.find(f => f.id === id);
+            if(file) {
+                toast(`READING: ${file.name}`, 'info');
+                const content = await fetchFileContent(file.content); // In reality, file.content holds the path
+                showPreview(file.name, content);
+            }
+        }
+
+        function showPreview(name, content) {
+            const preview = document.getElementById('preview-content');
+            
+            // Minimal syntax for aesthetics
+            let highlighted = content
+                .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+                .replace(/(import|def|class|return|if|else|for|while|from|async|await|const|let|var|function)/g, '<span class="text-geo-danger">$1</span>')
+                .replace(/('.*?'|".*?")/g, '<span class="text-geo-warn">$1</span>')
+                .replace(/(print|len|range|self|__init__|console|log|fetch)/g, '<span class="text-geo-cyan">$1</span>');
+
+            preview.innerHTML = `
+                <div class="p-4 bg-white/5 border-b border-geo-border flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-terminal text-geo-warn text-[10px]"></i>
+                        <span class="text-[10px] uppercase font-bold tracking-widest text-white/50">${name}</span>
+                    </div>
+                    <button onclick="copyToClipboard()" class="text-[10px] text-white/20 hover:text-geo-accent"><i class="fas fa-copy"></i></button>
+                </div>
+                <div class="p-6 h-full font-mono leading-relaxed overflow-x-auto">
+                    <pre class="bg-black/20 p-4 rounded-xl border border-white/5 whitespace-pre">${highlighted}</pre>
+                </div>
+            `;
+        }
+
+        function addNewFile() {
+            const name = prompt("Enter Terminal ID:");
+            if(!name) return;
+            S.files.unshift({
+                id: Date.now(),
+                name: name.toUpperCase(),
+                type: 'txt',
+                date: new Date().toISOString().split('T')[0],
+                size: '0 KB',
+                content: '# SECURE SESSION INITIALIZED\n# NO DATA RECORDED'
+            });
+            renderFiles();
+            toast('NODE CREATED', 'success');
+        }
+
+        /* ==========================================================================
+           CHAT LOGIC
+           ========================================================================== */
+        function sendMessage() {
+            const input = document.getElementById('user-input');
+            const history = document.getElementById('chat-history');
+            const text = input.value.trim();
+            if(!text) return;
+
+            // Add User
+            const uMsg = document.createElement('div');
+            uMsg.className = 'chat-bubble bubble-user';
+            uMsg.innerText = text;
+            history.appendChild(uMsg);
+            input.value = '';
+
+            // Scroll
+            setTimeout(() => {
+                history.scrollTop = history.scrollHeight;
+                
+                // Add Geo Response
+                const gMsg = document.createElement('div');
+                gMsg.className = 'chat-bubble bubble-geo';
+                gMsg.innerHTML = `
+                    <div class="flex items-center gap-2 mb-2 text-geo-accent text-[10px] uppercase font-bold tracking-tighter">
+                        <i class="fas fa-robot"></i>
+                        GEO Intelligence v4.2
+                    </div>
+                    Command received: <span class="text-geo-cyan font-mono">${text.toUpperCase()}</span>. <br>
+                    Processing via neural link... Result: <span class="text-geo-accent">SUCCESS</span>.
+                `;
+                history.appendChild(gMsg);
+                history.scrollTop = history.scrollHeight;
+            }, 600);
+        }
+
+        /* ==========================================================================
+           NAVIGATION & UTILS
+           ========================================================================== */
+        function switchView(view) {
+            // Views
+            ['workspace', 'security', 'map', 'settings'].forEach(v => {
+                document.getElementById(`view-${v}`).classList.add('hidden');
+            });
+            document.getElementById(`view-${view}`).classList.remove('hidden');
+
+            // Nav Links
+            document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active', 'text-geo-accent'));
+            const activeLink = document.querySelector(`[onclick="switchView('${view}')"]`);
+            if(activeLink) activeLink.classList.add('active', 'text-geo-accent');
+            
+            if(view === 'map') setTimeout(() => map.invalidateSize(), 300);
+        }
+
+        function toast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const t = document.createElement('div');
+            t.className = `px-6 py-4 glass border-l-4 rounded-xl flex items-center gap-4 transition-all duration-500 transform translate-y-10 animate-reveal`;
+            t.style.borderLeftColor = type === 'success' ? '#00ffa3' : (type === 'error' ? '#ff2d55' : '#00d9ff');
+            
+            const icon = type === 'success' ? 'fa-check-circle' : (type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle');
+            t.innerHTML = `
+                <i class="fas ${icon} text-lg" style="color: ${t.style.borderLeftColor}"></i>
+                <div class="flex flex-col">
+                    <span class="text-[10px] uppercase font-bold tracking-widest opacity-40">${type}</span>
+                    <span class="text-sm font-bold">${msg}</span>
+                </div>
+            `;
+            container.appendChild(t);
+            setTimeout(() => {
+                t.style.opacity = '0';
+                t.style.transform = 'translateX(50px)';
+                setTimeout(() => t.remove(), 500);
+            }, 3000);
+        }
+
+        function tryBio(type) {
+            toast(`INITIATING ${type.toUpperCase()} SCAN`, 'info');
+            setTimeout(() => {
+                verifyPin(); // Simulate success via PIN verify logic
+            }, 1000);
+        }
+
+        function activatePanic() {
+            if(confirm("ACTIVATE MAXIMUM DEFENSE PROTOCOL?")) {
+                document.body.style.backgroundColor = '#1a0000';
+                toast("PANIC MODE ENGAGED: BROADCASTING GPS...", "error");
+            }
+        }
+
+        function updatePin() {
+            const val = document.getElementById('newPinInput').value;
+            if(val.length === 6) {
+                S.pin = val;
+                localStorage.setItem('g_pin', val);
+                toast('MASTER CODE UPDATED', 'success');
+            } else {
+                toast('CODE MUST BE 6 DIGITS', 'error');
+            }
+        }
+
+        /* ==========================================================================
+           MAPS
+           ========================================================================== */
+        let map;
+        function initMap() {
+            if (map) return;
+            map = L.map('geoMap', { zoomControl: false }).setView([40.7128, -74.0060], 13);
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; CARTO'
+            }).addTo(map);
+        }
+
+        /* ==========================================================================
+           INIT
+           ========================================================================== */
+        document.addEventListener('DOMContentLoaded', () => {
+            buildKeypad();
+            document.getElementById('user-input').onkeypress = (e) => { if(e.key === 'Enter') sendMessage(); };
+        });
+    </script>
+</body>
+</html>

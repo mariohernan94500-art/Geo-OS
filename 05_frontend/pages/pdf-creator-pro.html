@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Creator Pro | Mario's Toolkit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root {
+            --bg-dark: #0f172a; --panel-bg: #1e293b; --accent-purple: #8b5cf6;
+            --accent-cyan: #38bdf8; --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: #334155; --success: #10b981;
+            --a4-width: 210mm; --a4-height: 297mm;
+        }
+        * { box-sizing: border-box; outline: none; }
+        body { margin: 0; font-family: 'Outfit', sans-serif; background-color: var(--bg-dark); color: var(--text-main); height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+        header { height: 60px; background: var(--panel-bg); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; z-index: 10; }
+        .brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; background: linear-gradient(to right, var(--accent-cyan), var(--accent-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .actions { display: flex; gap: 12px; }
+        button { background: var(--panel-bg); border: 1px solid var(--border); color: var(--text-main); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-family: inherit; font-weight: 500; font-size: 0.9rem; transition: all 0.2s ease; display: flex; align-items: center; gap: 8px; }
+        button:hover { background: #2d3e52; border-color: var(--text-muted); }
+        button.primary { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
+        button.primary:hover { background: #7c3aed; box-shadow: 0 0 15px rgba(139,92,246,0.4); }
+        main { display: flex; flex: 1; overflow: hidden; }
+        aside { width: 320px; background: var(--panel-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+        .tabs { display: flex; border-bottom: 1px solid var(--border); }
+        .tab { flex: 1; padding: 12px; text-align: center; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tab:hover { color: var(--text-main); background: rgba(255,255,255,0.02); }
+        .tab.active { color: var(--accent-cyan); border-bottom-color: var(--accent-cyan); background: rgba(56,189,248,0.05); }
+        .control-group { padding: 20px; border-bottom: 1px solid var(--border); }
+        .control-group h3 { margin: 0 0 16px 0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+        label { display: block; font-size: 0.8rem; margin-bottom: 6px; color: var(--text-muted); }
+        input[type="text"], input[type="number"], input[type="color"], select, textarea { width: 100%; background: var(--bg-dark); border: 1px solid var(--border); color: var(--text-main); padding: 8px 12px; border-radius: 4px; font-family: inherit; font-size: 0.9rem; margin-bottom: 12px; transition: border 0.2s; }
+        input:focus, select:focus, textarea:focus { border-color: var(--accent-cyan); }
+        input[type="color"] { height: 40px; padding: 2px; cursor: pointer; }
+        .tool-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .tool-btn { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 8px; padding: 16px 0; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; color: var(--text-muted); transition: 0.2s; }
+        .tool-btn i { font-size: 1.5rem; }
+        .tool-btn span { font-size: 0.75rem; }
+        .tool-btn:hover { border-color: var(--accent-purple); color: var(--text-main); background: #2d3e52; }
+        .workspace { flex: 1; background-color: #0b101f; background-image: radial-gradient(#1e293b 1px, transparent 1px); background-size: 20px 20px; display: flex; justify-content: center; align-items: flex-start; overflow: auto; padding: 40px; position: relative; }
+        #canvas-container { width: var(--a4-width); height: var(--a4-height); background: white; box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative; transform-origin: center top; overflow: hidden; }
+        .pdf-element { position: absolute; cursor: grab; user-select: none; border: 1px dashed transparent; transition: border 0.1s; }
+        .pdf-element:hover { border: 1px dashed var(--accent-cyan); }
+        .pdf-element.selected { border: 1px solid var(--accent-purple); z-index: 100; }
+        .pdf-element .resize-handle { display: none; width: 8px; height: 8px; background: var(--accent-purple); position: absolute; right: -4px; bottom: -4px; cursor: se-resize; }
+        .pdf-element.selected .resize-handle { display: block; }
+        .el-text { white-space: pre-wrap; word-break: break-word; }
+        .el-image img { width: 100%; height: 100%; object-fit: contain; pointer-events: none; }
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--panel-bg); border: 1px solid var(--accent-purple); color: white; padding: 12px 20px; border-radius: 8px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transform: translateY(100px); opacity: 0; transition: all 0.3s cubic-bezier(0.175,0.885,0.32,1.275); z-index: 1000; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        @media print {
+            body * { visibility: hidden; }
+            #canvas-container, #canvas-container * { visibility: visible; }
+            #canvas-container { position: fixed; left: 0; top: 0; margin: 0; padding: 0; box-shadow: none; border: none; width: 210mm; height: 297mm; transform: none !important; overflow: visible; }
+            .pdf-element { border: none !important; }
+            .pdf-element .resize-handle { display: none !important; }
+            @page { margin: 0; size: auto; }
+        }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-dark); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand"><i class="ph ph-file-pdf"></i> PDF Creator Pro</div>
+        <div class="actions">
+            <button onclick="clearCanvas()"><i class="ph ph-trash"></i> Clear</button>
+            <button class="primary" onclick="exportPDF()"><i class="ph ph-download-simple"></i> Download PDF</button>
+        </div>
+    </header>
+    <main>
+        <aside>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('add', event)">Add</div>
+                <div class="tab" onclick="switchTab('edit', event)">Edit</div>
+                <div class="tab" onclick="switchTab('page', event)">Page</div>
+            </div>
+            <div id="tab-add" class="tab-content">
+                <div class="control-group">
+                    <h3>Elements</h3>
+                    <div class="tool-grid">
+                        <div class="tool-btn" onclick="addText()"><i class="ph ph-text-t"></i><span>Text</span></div>
+                        <div class="tool-btn" onclick="triggerImageUpload()"><i class="ph ph-image"></i><span>Image</span></div>
+                        <div class="tool-btn" onclick="addShape('rect')"><i class="ph ph-square"></i><span>Box</span></div>
+                        <div class="tool-btn" onclick="addShape('line')"><i class="ph ph-line-segment"></i><span>Line</span></div>
+                    </div>
+                    <input type="file" id="img-upload" accept="image/*" style="display:none" onchange="handleImageUpload(this)">
+                </div>
+            </div>
+            <div id="tab-edit" class="tab-content" style="display:none">
+                <div id="no-selection" style="padding:20px;text-align:center;color:var(--text-muted);">Select an element to edit.</div>
+                <div id="selection-controls" style="display:none;">
+                    <div class="control-group">
+                        <h3>Layout</h3>
+                        <div class="grid-2">
+                            <div><label>X (mm)</label><input type="number" id="prop-x" oninput="updateSelectedProps()"></div>
+                            <div><label>Y (mm)</label><input type="number" id="prop-y" oninput="updateSelectedProps()"></div>
+                            <div><label>Width (mm)</label><input type="number" id="prop-w" oninput="updateSelectedProps()"></div>
+                            <div><label>Height (mm)</label><input type="number" id="prop-h" oninput="updateSelectedProps()"></div>
+                        </div>
+                    </div>
+                    <div id="text-controls" style="display:none;">
+                        <div class="control-group">
+                            <h3>Typography</h3>
+                            <input type="text" id="prop-content" placeholder="Text content..." oninput="updateSelectedProps()">
+                            <div class="grid-2">
+                                <select id="prop-font" onchange="updateSelectedProps()">
+                                    <option value="Outfit">Outfit</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Courier New">Courier New</option>
+                                    <option value="Georgia">Georgia</option>
+                                </select>
+                                <input type="number" id="prop-size" value="16" oninput="updateSelectedProps()">
+                            </div>
+                            <div class="grid-3">
+                                <button onclick="toggleStyle('fontWeight','bold','normal')"><i class="ph ph-text-b"></i></button>
+                                <button onclick="toggleStyle('fontStyle','italic','normal')"><i class="ph ph-text-italic"></i></button>
+                                <button onclick="toggleStyle('textDecoration','underline','none')"><i class="ph ph-text-underline"></i></button>
+                            </div>
+                            <div class="grid-3" style="margin-top:5px;">
+                                <button onclick="toggleStyle('textAlign','left')"><i class="ph ph-text-align-left"></i></button>
+                                <button onclick="toggleStyle('textAlign','center')"><i class="ph ph-text-align-center"></i></button>
+                                <button onclick="toggleStyle('textAlign','right')"><i class="ph ph-text-align-right"></i></button>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <h3>Color</h3>
+                            <div class="grid-2">
+                                <input type="color" id="prop-color" oninput="updateSelectedProps()">
+                                <input type="color" id="prop-bg" value="#ffffff" oninput="updateSelectedProps()">
+                            </div>
+                            <label style="font-size:0.7rem">Text Color / Background</label>
+                        </div>
+                    </div>
+                    <div id="shape-controls" style="display:none;">
+                        <div class="control-group">
+                            <h3>Style</h3>
+                            <label>Fill Color</label><input type="color" id="prop-fill" oninput="updateSelectedProps()">
+                            <label>Border Color</label><input type="color" id="prop-stroke" oninput="updateSelectedProps()">
+                            <div class="grid-2"><div><label>Border Width</label><input type="number" id="prop-stroke-width" value="1" min="0" oninput="updateSelectedProps()"></div></div>
+                        </div>
+                    </div>
+                    <div class="control-group">
+                        <button onclick="deleteSelected()" style="width:100%;background:#ef4444;border-color:#ef4444;"><i class="ph ph-trash"></i> Delete Element</button>
+                    </div>
+                </div>
+            </div>
+            <div id="tab-page" class="tab-content" style="display:none">
+                <div class="control-group">
+                    <h3>Canvas Settings</h3>
+                    <label>Background Color</label>
+                    <input type="color" id="page-bg" value="#ffffff" oninput="updatePageStyle()">
+                </div>
+            </div>
+        </aside>
+        <section class="workspace" id="workspace" onmousedown="deselectAll(event)">
+            <div id="canvas-container"></div>
+        </section>
+    </main>
+    <div id="toast" class="toast">
+        <i class="ph ph-check-circle" style="font-size:1.5rem;color:var(--success);"></i>
+        <span id="toast-msg">Done</span>
+    </div>
+    <script>
+        let elements = [], selectedId = null, scale = 1;
+        let isDragging = false, isResizing = false;
+        let dragOffset = {x:0,y:0}, initialResize = {w:0,h:0,x:0,y:0};
+        const canvas = document.getElementById('canvas-container');
+        const workspace = document.getElementById('workspace');
+
+        function init() { loadState(); resizeWorkspace(); window.addEventListener('resize', resizeWorkspace); document.addEventListener('keydown', handleKeydown); }
+
+        function resizeWorkspace() {
+            const wsWidth = workspace.clientWidth - 80, wsHeight = workspace.clientHeight - 80;
+            const scaleX = wsWidth / 794, scaleY = wsHeight / 1123;
+            scale = Math.min(scaleX, scaleY, 1);
+            canvas.style.transform = `scale(${scale})`;
+            renderAll();
+        }
+
+        function generateId() { return 'el_' + Math.random().toString(36).substr(2,9); }
+
+        function createDOM(el) {
+            const div = document.createElement('div');
+            div.className = `pdf-element ${el.type==='text'?'el-text':el.type==='image'?'el-image':'el-rect'}`;
+            div.id = el.id;
+            div.style.left = el.x+'mm'; div.style.top = el.y+'mm';
+            div.style.width = el.w+'mm'; div.style.height = el.h+'mm';
+            if(el.type==='text') {
+                div.innerText = el.content;
+                div.style.fontFamily = el.fontFamily||'Outfit';
+                div.style.fontSize = (el.fontSize||12)+'pt';
+                div.style.color = el.color||'#000';
+                div.style.textAlign = el.textAlign||'left';
+                div.style.fontWeight = el.fontWeight||'normal';
+                div.style.fontStyle = el.fontStyle||'normal';
+                div.style.textDecoration = el.textDecoration||'none';
+                div.style.backgroundColor = el.bg||'transparent';
+                div.style.display='flex'; div.style.alignItems='center';
+                div.style.justifyContent = el.textAlign==='center'?'center':el.textAlign==='right'?'flex-end':'flex-start';
+            } else if(el.type==='image') {
+                const img = document.createElement('img'); img.src=el.src; div.appendChild(img);
+            } else {
+                div.style.backgroundColor = el.fill||'transparent';
+                div.style.border = `${el.strokeWidth||0}px solid ${el.stroke||'#000'}`;
+            }
+            const handle = document.createElement('div'); handle.className='resize-handle'; div.appendChild(handle);
+            div.addEventListener('mousedown', e => startDrag(e, el.id));
+            handle.addEventListener('mousedown', e => startResize(e, el.id));
+            return div;
+        }
+
+        function renderAll() {
+            canvas.innerHTML = '';
+            elements.forEach(el => { const dom=createDOM(el); if(el.id===selectedId) dom.classList.add('selected'); canvas.appendChild(dom); });
+            const pg = JSON.parse(localStorage.getItem('pdf_page')||'{"bg":"#ffffff"}');
+            canvas.style.backgroundColor = pg.bg;
+            document.getElementById('page-bg').value = pg.bg;
+        }
+
+        function addText() {
+            const el = {id:generateId(),type:'text',x:20,y:20,w:100,h:20,content:'New Text',fontFamily:'Outfit',fontSize:14,color:'#000000',bg:'transparent',textAlign:'left',fontWeight:'normal',fontStyle:'normal',textDecoration:'none'};
+            elements.push(el); saveState(); renderAll(); selectElement(el.id); showToast('Text added');
+        }
+
+        function addShape(type) {
+            const el = {id:generateId(),type,x:20,y:20,w:50,h:type==='line'?2:50,fill:type==='line'?'transparent':'#38bdf8',stroke:type==='line'?'#38bdf8':'transparent',strokeWidth:type==='line'?2:0};
+            elements.push(el); saveState(); renderAll(); selectElement(el.id); showToast('Shape added');
+        }
+
+        function triggerImageUpload() { document.getElementById('img-upload').click(); }
+
+        function handleImageUpload(input) {
+            const file=input.files[0]; if(!file) return;
+            const reader=new FileReader();
+            reader.onload=e=>{
+                const img=new Image();
+                img.onload=()=>{
+                    let w=100,h=(img.height/img.width)*100;
+                    if(h>100){h=100;w=(img.width/img.height)*100;}
+                    const el={id:generateId(),type:'image',x:20,y:20,w,h,src:e.target.result};
+                    elements.push(el); saveState(); renderAll(); selectElement(el.id); showToast('Image added');
+                };
+                img.src=e.target.result;
+            };
+            reader.readAsDataURL(file); input.value='';
+        }
+
+        function selectElement(id) {
+            selectedId=id; renderAll();
+            const el=elements.find(e=>e.id===id);
+            if(!el){document.getElementById('no-selection').style.display='block';document.getElementById('selection-controls').style.display='none';return;}
+            document.getElementById('no-selection').style.display='none';
+            document.getElementById('selection-controls').style.display='block';
+            document.getElementById('prop-x').value=el.x.toFixed(1);
+            document.getElementById('prop-y').value=el.y.toFixed(1);
+            document.getElementById('prop-w').value=el.w.toFixed(1);
+            document.getElementById('prop-h').value=el.h.toFixed(1);
+            if(el.type==='text'){
+                document.getElementById('text-controls').style.display='block';
+                document.getElementById('shape-controls').style.display='none';
+                document.getElementById('prop-content').value=el.content;
+                document.getElementById('prop-font').value=el.fontFamily;
+                document.getElementById('prop-size').value=el.fontSize;
+                document.getElementById('prop-color').value=el.color;
+                document.getElementById('prop-bg').value=el.bg||'#ffffff';
+            } else {
+                document.getElementById('text-controls').style.display='none';
+                document.getElementById('shape-controls').style.display='block';
+                document.getElementById('prop-fill').value=el.fill||'#000000';
+                document.getElementById('prop-stroke').value=el.stroke||'#000000';
+                document.getElementById('prop-stroke-width').value=el.strokeWidth||0;
+            }
+        }
+
+        function deselectAll(e) {
+            if(e.target.id==='workspace'||e.target.id==='canvas-container'){
+                selectedId=null; renderAll();
+                document.getElementById('no-selection').style.display='block';
+                document.getElementById('selection-controls').style.display='none';
+            }
+        }
+
+        function deleteSelected() {
+            if(!selectedId) return;
+            elements=elements.filter(e=>e.id!==selectedId); selectedId=null; saveState(); renderAll();
+            document.getElementById('no-selection').style.display='block';
+            document.getElementById('selection-controls').style.display='none';
+            showToast('Deleted');
+        }
+
+        function startDrag(e,id) {
+            if(e.target.classList.contains('resize-handle')) return;
+            e.stopPropagation(); selectElement(id); isDragging=true;
+            const el=elements.find(x=>x.id===id);
+            const rect=canvas.getBoundingClientRect();
+            dragOffset.x=(e.clientX-rect.left)/scale-mmToPx(el.x);
+            dragOffset.y=(e.clientY-rect.top)/scale-mmToPx(el.y);
+            document.addEventListener('mousemove',onDrag);
+            document.addEventListener('mouseup',stopDrag);
+        }
+
+        function onDrag(e) {
+            if(!isDragging||!selectedId) return;
+            const el=elements.find(x=>x.id===selectedId);
+            const rect=canvas.getBoundingClientRect();
+            el.x=parseFloat(pxToMm((e.clientX-rect.left)/scale-dragOffset.x).toFixed(1));
+            el.y=parseFloat(pxToMm((e.clientY-rect.top)/scale-dragOffset.y).toFixed(1));
+            const dom=document.getElementById(selectedId);
+            if(dom){dom.style.left=el.x+'mm';dom.style.top=el.y+'mm';}
+            document.getElementById('prop-x').value=el.x.toFixed(1);
+            document.getElementById('prop-y').value=el.y.toFixed(1);
+        }
+
+        function stopDrag() { if(isDragging){isDragging=false;saveState();} document.removeEventListener('mousemove',onDrag); document.removeEventListener('mouseup',stopDrag); }
+
+        function startResize(e,id) {
+            e.stopPropagation(); isResizing=true; selectElement(id);
+            const el=elements.find(x=>x.id===id);
+            initialResize={w:el.w,h:el.h,x:e.clientX,y:e.clientY};
+            document.addEventListener('mousemove',onResize);
+            document.addEventListener('mouseup',stopResize);
+        }
+
+        function onResize(e) {
+            if(!isResizing||!selectedId) return;
+            const el=elements.find(x=>x.id===selectedId);
+            el.w=Math.max(5,parseFloat(pxToMm((initialResize.w*3.7795+(e.clientX-initialResize.x)/scale)).toFixed(1)));
+            el.h=Math.max(5,parseFloat(pxToMm((initialResize.h*3.7795+(e.clientY-initialResize.y)/scale)).toFixed(1)));
+            const dom=document.getElementById(selectedId);
+            if(dom){dom.style.width=el.w+'mm';dom.style.height=el.h+'mm';}
+            document.getElementById('prop-w').value=el.w.toFixed(1);
+            document.getElementById('prop-h').value=el.h.toFixed(1);
+        }
+
+        function stopResize() { if(isResizing){isResizing=false;saveState();} document.removeEventListener('mousemove',onResize); document.removeEventListener('mouseup',stopResize); }
+
+        function mmToPx(mm){return mm*3.7795;}
+        function pxToMm(px){return px/3.7795;}
+
+        function updateSelectedProps() {
+            if(!selectedId) return;
+            const el=elements.find(x=>x.id===selectedId);
+            el.x=parseFloat(document.getElementById('prop-x').value)||0;
+            el.y=parseFloat(document.getElementById('prop-y').value)||0;
+            el.w=parseFloat(document.getElementById('prop-w').value)||10;
+            el.h=parseFloat(document.getElementById('prop-h').value)||10;
+            if(el.type==='text'){
+                el.content=document.getElementById('prop-content').value;
+                el.fontFamily=document.getElementById('prop-font').value;
+                el.fontSize=parseInt(document.getElementById('prop-size').value);
+                el.color=document.getElementById('prop-color').value;
+                el.bg=document.getElementById('prop-bg').value;
+            } else {
+                el.fill=document.getElementById('prop-fill').value;
+                el.stroke=document.getElementById('prop-stroke').value;
+                el.strokeWidth=parseFloat(document.getElementById('prop-stroke-width').value);
+            }
+            renderAll(); saveState();
+        }
+
+        function toggleStyle(prop,val1,val2) {
+            if(!selectedId) return;
+            const el=elements.find(x=>x.id===selectedId);
+            el[prop]=el[prop]===val1?(val2||val1):val1;
+            renderAll(); saveState();
+        }
+
+        function updatePageStyle() {
+            const bg=document.getElementById('page-bg').value;
+            canvas.style.backgroundColor=bg;
+            localStorage.setItem('pdf_page',JSON.stringify({bg}));
+        }
+
+        function clearCanvas() {
+            if(confirm('Clear the entire document?')){elements=[];selectedId=null;saveState();renderAll();showToast('Canvas cleared');}
+        }
+
+        function switchTab(tabName, event) {
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c=>c.style.display='none');
+            event.target.classList.add('active');
+            document.getElementById('tab-'+tabName).style.display='block';
+        }
+
+        function saveState() { localStorage.setItem('pdf_elements',JSON.stringify(elements)); }
+
+        function loadState() {
+            const stored=localStorage.getItem('pdf_elements');
+            if(stored){elements=JSON.parse(stored);}
+            else{
+                elements=[{id:generateId(),type:'text',x:50,y:50,w:110,h:20,content:'Welcome to PDF Creator Pro',fontFamily:'Outfit',fontSize:24,color:'#8b5cf6',bg:'transparent',textAlign:'center',fontWeight:'bold',fontStyle:'normal',textDecoration:'none'}];
+                saveState();
+            }
+        }
+
+        function exportPDF() { selectedId=null; renderAll(); showToast('Generating PDF...'); setTimeout(()=>window.print(),500); }
+
+        function showToast(msg) {
+            const t=document.getElementById('toast');
+            document.getElementById('toast-msg').innerText=msg;
+            t.classList.add('show'); setTimeout(()=>t.classList.remove('show'),3000);
+        }
+
+        function handleKeydown(e) {
+            if((e.key==='Delete'||e.key==='Backspace')&&selectedId){
+                if(['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+                deleteSelected();
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

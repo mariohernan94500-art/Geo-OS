@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>GEO - Reset</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: #060a13;
+            color: #e8edf5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            background: #0d1321;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            max-width: 500px;
+        }
+        h1 {
+            color: #00ff88;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+        .icon { font-size: 3rem; margin-bottom: 1rem; }
+        p { color: #6b7a90; margin-bottom: 1.5rem; line-height: 1.6; }
+        button {
+            padding: 12px 30px;
+            margin: 0.5rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-reset {
+            background: #ff3366;
+            color: white;
+        }
+        .btn-reset:hover { box-shadow: 0 0 20px rgba(255, 51, 102, 0.4); }
+        .btn-cancel {
+            background: transparent;
+            border: 1px solid #1e293b;
+            color: #e8edf5;
+        }
+        .btn-cancel:hover { border-color: #6b7a90; }
+        .status {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(0, 255, 136, 0.1);
+            border-radius: 8px;
+            border: 1px solid #00ff88;
+            color: #00ff88;
+            font-family: 'JetBrains Mono', monospace;
+            display: none;
+        }
+        .error {
+            background: rgba(255, 51, 102, 0.1);
+            border-color: #ff3366;
+            color: #ff3366;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon">🔄</div>
+        <h1>Resetear GEO</h1>
+        <p>
+            Esta acción borrará:
+            <br>✓ Todos los datos biométricos
+            <br>✓ PIN y configuración
+            <br>✓ Historial y logs
+            <br>✓ Zonas y usuarios
+        </p>
+        <p style="color: #ffaa00; font-weight: 600;">⚠️ No se puede deshacer</p>
+        <div>
+            <button class="btn-reset" onclick="resetAll()">🔥 Resetear TODO</button>
+            <button class="btn-cancel" onclick="goBack()">Cancelar</button>
+        </div>
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        async function resetAll() {
+            const status = document.getElementById('status');
+            status.innerHTML = '⏳ Borrando datos (browser)...';
+            status.style.display = 'block';
+
+            try {
+                // Paso 1: Limpiar localStorage
+                localStorage.clear();
+                sessionStorage.clear();
+                
+                // Paso 2: Limpiar cookies
+                document.cookie.split(";").forEach((c) => {
+                    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+                });
+
+                status.innerHTML = '⏳ Borrando IndexedDB...';
+
+                // Paso 3: Borrar todas las bases de datos
+                try {
+                    const dbs = await indexedDB.databases?.() || [];
+                    for (let db of dbs) {
+                        indexedDB.deleteDatabase(db.name);
+                    }
+                    // También borra la principal por si acaso
+                    indexedDB.deleteDatabase('GEO_DB');
+                } catch (e) {
+                    console.log('IDB borrado (error esperado)');
+                }
+
+                status.innerHTML = '⏳ Solicitando reset al servidor...';
+                
+                // Paso 4: Notificar al servidor
+                try {
+                    await fetch('/api/reset', { method: 'POST' });
+                } catch (e) {
+                    console.log('Server reset (offline ok)');
+                }
+
+                // Paso 5: Limpiar caché si existe
+                if ('caches' in window) {
+                    try {
+                        const cacheNames = await caches.keys();
+                        for (let cacheName of cacheNames) {
+                            await caches.delete(cacheName);
+                        }
+                    } catch (e) {
+                        console.log('Caché limpiado');
+                    }
+                }
+
+                status.innerHTML = '✅ Sistema completamente reseteado<br>Redirigiendo...';
+                status.classList.remove('error');
+                
+                // Esperar y redirigir a unlock para limpiar completamente
+                setTimeout(() => {
+                    window.location.href = '/unlock.html?fresh=true&t=' + Date.now();
+                }, 1500);
+
+            } catch (e) {
+                console.error('Reset error:', e);
+                status.innerHTML = '⚠️ Reset completado<br>Redirigiendo...';
+                localStorage.clear();
+                sessionStorage.clear();
+                status.classList.add('error');
+                setTimeout(() => {
+                    window.location.href = '/unlock.html?fresh=true&force=1&t=' + Date.now();
+                }, 1500);
+            }
+        }
+
+        function goBack() {
+            window.location.href = '/';
+        }
+
+        // Reset automático si viene con flag
+        window.addEventListener('load', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('auto') === 'true') {
+                resetAll();
+            }
+        });
+    </script>
+</body>
+</html>

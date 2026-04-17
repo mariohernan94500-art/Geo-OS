@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Playfair+Display:ital,wght@0,600;1,600&display=swap');
+
+:root {
+  --eco-forest: #2B4C3B;
+  --eco-sage: #8A9A86;
+  --eco-leaf: #4F7754;
+  --eco-sand: #F4F1EA;
+  --eco-earth: #C5B094;
+  --eco-dark: #1A1F16;
+  --text-main: #222B24;
+  --text-light: #5A6D5E;
+  
+  --font-sans: 'Outfit', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--eco-sand);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+}
+
+.eco-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.eco-btn {
+  background: var(--eco-forest);
+  color: #fff;
+  padding: 14px 28px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.eco-btn:hover {
+  background: var(--eco-leaf);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(43, 76, 59, 0.2);
+}
+
+.eco-btn-outline {
+  background: transparent;
+  color: var(--eco-forest);
+  border: 2px solid var(--eco-forest);
+}
+.eco-btn-outline:hover {
+  background: var(--eco-forest);
+  color: #fff;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}

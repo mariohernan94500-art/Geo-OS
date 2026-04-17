@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voren – Tu centro de productividad visual</title>
+  <meta name="description" content="Voren es una app de gestión de tareas visual y sorprendente. Visualiza tu progreso, cumple objetivos y siente el avance cada día." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="url(#logoGrad)" stroke-width="2"/>
+            <path d="M8 12l3 3 5-5" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="2" y1="2" x2="22" y2="22" gradientUnits="userSpaceOnUse">
+                <stop stop-color="#8B5CF6"/>
+                <stop offset="1" stop-color="#06B6D4"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">Voren</span>
+      </div>
+
+      <nav class="sidebar-nav">
+          <span class="nav-section-label">Principal</span>
+          <a class="nav-item" data-view="inbox" id="nav-inbox" href="#" onclick="switchView('inbox'); return false;">
+            <span class="nav-icon">📥</span>
+            <span>Bandeja de entrada</span>
+            <span class="nav-badge" id="badge-inbox">0</span>
+          </a>
+          <a class="nav-item active" data-view="today" id="nav-today" href="#" onclick="switchView('today'); return false;">
+            <span class="nav-icon">☀️</span>
+            <span>Hoy</span>
+            <span class="nav-badge" id="badge-today">0</span>
+          </a>
+          <a class="nav-item" data-view="upcoming" id="nav-upcoming" href="#" onclick="switchView('upcoming'); return false;">
+            <span class="nav-icon">📅</span>
+            <span>Próximamente</span>
+            <span class="nav-badge" id="badge-upcoming">0</span>
+          </a>
+          <a class="nav-item" data-view="anytime" id="nav-anytime" href="#" onclick="switchView('anytime'); return false;">
+            <span class="nav-icon">✦</span>
+            <span>En cualquier momento</span>
+            <span class="nav-badge" id="badge-anytime">0</span>
+          </a>
+          <a class="nav-item" data-view="someday" id="nav-someday" href="#" onclick="switchView('someday'); return false;">
+            <span class="nav-icon">💡</span>
+            <span>Algún día</span>
+            <span class="nav-badge" id="badge-someday">0</span>
+          </a>
+          <a class="nav-item" data-view="logbook" id="nav-logbook" href="#" onclick="switchView('logbook'); return false;">
+            <span class="nav-icon">📖</span>
+            <span>Historial</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-label">Análisis</span>
+          <a class="nav-item" data-view="analytics" id="nav-analytics" href="#" onclick="switchView('analytics'); return false;">
+            <span class="nav-icon">📊</span>
+            <span>Dashboard</span>
+          </a>
+          <a class="nav-item" data-view="habits" id="nav-habits" href="#" onclick="switchView('habits'); return false;">
+            <span class="nav-icon">🔥</span>
+            <span>Hábitos</span>
+          </a>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-label">Áreas</span>
+          <div id="areas-list"></div>
+        </div>
+
+        <div class="nav-section">
+          <span class="nav-section-label">Proyectos</span>
+          <div id="projects-list"></div>
+          <button class="btn-add-project" id="btn-add-project" onclick="showAddProjectModal()">
+            <span>+</span> Nuevo proyecto
+          </button>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-avatar" id="user-avatar">J</div>
+        <div class="user-info">
+          <span class="user-name">Juan</span>
+          <span class="user-streak">🔥 14 días seguidos</span>
+          <span style="font-size: 8px; opacity: 0.3; margin-top: 4px; display: block;">Voren Premium v2.1</span>
+        </div>
+        <button class="btn-settings" onclick="switchView('settings')" title="Configuración">⚙️</button>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content" id="main-content">
+      <button class="sidebar-toggle" id="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+      
+      <!-- View: Inbox -->
+      <div class="view hidden" id="view-inbox">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Bandeja de entrada</h1>
+            <span class="view-date">Ideas rápidas y tareas sin procesar</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="showAddTaskModal('inbox')">
+              <span>+</span> Nueva tarea
+            </button>
+          </div>
+        </header>
+        <div class="tasks-list" id="inbox-tasks-list"></div>
+      </div>
+
+      <!-- View: Today -->
+      <div class="view hidden" id="view-today">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Hoy</h1>
+            <span class="view-date" id="today-date"></span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" id="btn-add-task-today" onclick="showAddTaskModal()">
+              <span>+</span> Nueva tarea
+            </button>
+          </div>
+        </header>
+
+        <!-- Progress Ring Summary -->
+        <div class="today-summary">
+          <div class="progress-ring-container">
+            <svg class="progress-ring" width="120" height="120" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50" />
+              <circle class="ring-fill" id="today-ring" cx="60" cy="60" r="50" />
+            </svg>
+            <div class="ring-label">
+              <span class="ring-number" id="ring-done">0</span>
+              <span class="ring-total" id="ring-total">/ 0</span>
+            </div>
+          </div>
+          <div class="today-stats">
+            <div class="stat-card">
+              <span class="stat-value" id="stat-pending">0</span>
+              <span class="stat-label">Pendientes</span>
+            </div>
+            <div class="stat-card accent-violet">
+              <span class="stat-value" id="stat-done">0</span>
+              <span class="stat-label">Completadas</span>
+            </div>
+            <div class="stat-card accent-cyan">
+              <span class="stat-value" id="stat-overdue">0</span>
+              <span class="stat-label">Vencidas</span>
+            </div>
+            <div class="stat-card accent-orange">
+              <span class="stat-value" id="stat-streak">14</span>
+              <span class="stat-label">Días racha</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tasks List -->
+        <div class="tasks-container" id="today-tasks-container">
+          <div class="tasks-group">
+            <h3 class="group-title">Esta mañana</h3>
+            <div class="tasks-list" id="morning-tasks"></div>
+          </div>
+          <div class="tasks-group">
+            <h3 class="group-title">Esta tarde</h3>
+            <div class="tasks-list" id="afternoon-tasks"></div>
+          </div>
+          <div class="tasks-group">
+            <h3 class="group-title">Esta noche</h3>
+            <div class="tasks-list" id="evening-tasks"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Analytics -->
+      <div class="view" id="view-analytics">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Dashboard</h1>
+            <span class="view-date">Tu progreso visual</span>
+          </div>
+          <div class="header-actions">
+            <div class="period-selector">
+              <button class="period-btn active" onclick="setPeriod(this,'week')">Semana</button>
+              <button class="period-btn" onclick="setPeriod(this,'month')">Mes</button>
+              <button class="period-btn" onclick="setPeriod(this,'year')">Año</button>
+            </div>
+          </div>
+        </header>
+
+        <div class="analytics-grid">
+          <!-- KPI Cards -->
+          <div class="kpi-row">
+            <div class="kpi-card kpi-violet">
+              <div class="kpi-icon">✅</div>
+              <div class="kpi-data">
+                <span class="kpi-value" id="kpi-completed">47</span>
+                <span class="kpi-label">Completadas esta semana</span>
+                <span class="kpi-change positive">+12% vs semana anterior</span>
+              </div>
+            </div>
+            <div class="kpi-card kpi-cyan">
+              <div class="kpi-icon">⚡</div>
+              <div class="kpi-data">
+                <span class="kpi-value" id="kpi-streak">14</span>
+                <span class="kpi-label">Días de racha activa</span>
+                <span class="kpi-change positive">¡Récord personal!</span>
+              </div>
+            </div>
+            <div class="kpi-card kpi-orange">
+              <div class="kpi-icon">🎯</div>
+              <div class="kpi-data">
+                <span class="kpi-value" id="kpi-projects">3</span>
+                <span class="kpi-label">Proyectos activos</span>
+                <span class="kpi-change neutral">Sin cambios</span>
+              </div>
+            </div>
+            <div class="kpi-card kpi-green">
+              <div class="kpi-icon">📈</div>
+              <div class="kpi-data">
+                <span class="kpi-value" id="kpi-rate">87%</span>
+                <span class="kpi-label">Tasa de éxito</span>
+                <span class="kpi-change positive">+5% este mes</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weekly Chart -->
+          <div class="chart-card chart-wide">
+            <div class="chart-header">
+              <h3>Actividad semanal</h3>
+              <span class="chart-subtitle">Tareas completadas por día</span>
+            </div>
+            <div class="bar-chart" id="weekly-chart"></div>
+          </div>
+
+          <!-- Areas Donut -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Distribución por área</h3>
+            </div>
+            <div class="donut-wrapper">
+              <canvas id="donut-chart" width="200" height="200"></canvas>
+              <div class="donut-legend" id="donut-legend"></div>
+            </div>
+          </div>
+
+          <!-- Goal Progress -->
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3>Progreso de objetivos</h3>
+            </div>
+            <div class="goals-list" id="goals-list"></div>
+          </div>
+
+          <!-- Heatmap -->
+          <div class="chart-card chart-wide">
+            <div class="chart-header">
+              <h3>Mapa de calor — Actividad anual</h3>
+              <span class="chart-subtitle">Más oscuro = más tareas completadas</span>
+            </div>
+            <div class="heatmap" id="heatmap"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- View: Habits -->
+      <div class="view hidden" id="view-habits">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Hábitos</h1>
+            <span class="view-date">Tu constancia te define</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="showAddHabitModal()">
+              <span>+</span> Nuevo hábito
+            </button>
+          </div>
+        </header>
+        <div class="habits-grid" id="habits-grid"></div>
+      </div>
+
+      <!-- View: Upcoming -->
+      <div class="view hidden" id="view-upcoming">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Próximamente</h1>
+            <span class="view-date">Planificación futura</span>
+          </div>
+        </header>
+        <div class="upcoming-timeline" id="upcoming-timeline"></div>
+      </div>
+
+      <!-- View: Logbook -->
+      <div class="view hidden" id="view-logbook">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Historial</h1>
+            <span class="view-date">Todo lo que has logrado</span>
+          </div>
+        </header>
+        <div class="logbook-container" id="logbook-container"></div>
+      </div>
+
+      <!-- View: Anytime -->
+      <div class="view hidden" id="view-anytime">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">En cualquier momento</h1>
+            <span class="view-date">Tareas listas para ser realizadas</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="showAddTaskModal('anytime')">
+              <span>+</span> Nueva tarea
+            </button>
+          </div>
+        </header>
+        <div class="tasks-list" id="anytime-tasks-list"></div>
+      </div>
+
+      <!-- View: Someday -->
+      <div class="view hidden" id="view-someday">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Algún día</h1>
+            <span class="view-date">Proyectos e ideas para el futuro</span>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="showAddTaskModal('someday')">
+              <span>+</span> Nueva idea
+            </button>
+          </div>
+        </header>
+        <div class="tasks-list" id="someday-tasks-list"></div>
+      </div>
+
+      <!-- View: Settings -->
+      <div class="view hidden" id="view-settings">
+        <header class="view-header">
+          <div class="view-title-group">
+            <h1 class="view-title">Configuración</h1>
+          </div>
+        </header>
+        <div class="settings-container" id="settings-container"></div>
+      </div>
+
+      <!-- View: Project Detail -->
+      <div class="view hidden" id="view-project">
+        <header class="view-header">
+          <div class="view-title-group">
+            <div class="project-color-dot" id="project-color-dot"></div>
+            <h1 class="view-title" id="project-title">Proyecto</h1>
+          </div>
+          <div class="header-actions">
+            <button class="btn-primary" onclick="showAddTaskModal('project')">
+              <span>+</span> Nueva tarea
+            </button>
+          </div>
+        </header>
+        <div class="project-progress-bar-container">
+          <div class="project-progress-bar" id="project-progress-bar"></div>
+          <span class="project-progress-label" id="project-progress-label">0%</span>
+        </div>
+        <div class="tasks-list" id="project-tasks-list"></div>
+      </div>
+    </main>
+
+    <!-- Right Panel: Quick Stats (always visible) -->
+    <aside class="right-panel" id="right-panel">
+      <div class="panel-section">
+        <h4 class="panel-title">Racha actual</h4>
+        <div class="streak-display">
+          <span class="streak-fire">🔥</span>
+          <span class="streak-days" id="panel-streak">14</span>
+          <span class="streak-label">días</span>
+        </div>
+        <div class="streak-weeks" id="streak-weeks"></div>
+      </div>
+      <div class="panel-section">
+        <h4 class="panel-title">Esta semana</h4>
+        <div class="mini-bars" id="mini-bars"></div>
+      </div>
+      <div class="panel-section">
+        <h4 class="panel-title">Enfoque ahora</h4>
+        <div class="focus-timer" id="focus-timer">
+          <div class="timer-display" id="timer-display">25:00</div>
+          <div class="timer-controls">
+            <button class="timer-btn" id="timer-start-btn" onclick="toggleTimer()">▶ Iniciar</button>
+            <button class="timer-btn timer-reset" onclick="resetTimer()">↺ Reset</button>
+          </div>
+          <div class="timer-label">Pomodoro</div>
+        </div>
+      </div>
+      <div class="panel-section">
+        <h4 class="panel-title">Próximas</h4>
+        <div class="upcoming-mini" id="upcoming-mini"></div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-overlay hidden" id="modal-add-task">
+    <div class="modal" id="modal-task-content">
+      <div class="modal-header">
+        <h2 class="modal-title">Nueva tarea</h2>
+        <button class="modal-close" onclick="closeModal('modal-add-task')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="modal-input" id="task-title-input" placeholder="¿Qué hay que hacer?" autofocus />
+        <textarea class="modal-textarea" id="task-notes-input" placeholder="Notas (opcional)..."></textarea>
+        <div class="modal-row">
+          <div class="modal-field">
+            <label>Fecha</label>
+            <input type="date" class="modal-input-sm" id="task-date-input" />
+          </div>
+          <div class="modal-field">
+            <label>Área</label>
+            <select class="modal-input-sm" id="task-area-input">
+              <option value="">Sin área</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Prioridad</label>
+            <select class="modal-input-sm" id="task-priority-input">
+              <option value="normal">Normal</option>
+              <option value="high">Alta</option>
+              <option value="low">Baja</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-row">
+          <div class="modal-field">
+            <label>Etiquetas</label>
+            <input type="text" class="modal-input-sm" id="task-tags-input" placeholder="trabajo, personal..." />
+          </div>
+          <div class="modal-field">
+            <label>Proyecto</label>
+            <select class="modal-input-sm" id="task-project-input">
+              <option value="">Sin proyecto</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal('modal-add-task')">Cancelar</button>
+        <button class="btn-primary" onclick="addTask()">Guardar tarea</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Project Modal -->
+  <div class="modal-overlay hidden" id="modal-add-project">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Nuevo proyecto</h2>
+        <button class="modal-close" onclick="closeModal('modal-add-project')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="modal-input" id="project-name-input" placeholder="Nombre del proyecto" />
+        <div class="modal-row">
+          <div class="modal-field">
+            <label>Área</label>
+            <select class="modal-input-sm" id="project-area-input">
+              <option value="">Sin área</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Color</label>
+            <div class="color-picker" id="project-color-picker"></div>
+          </div>
+        </div>
+        <input type="date" class="modal-input" id="project-deadline-input" placeholder="Fecha límite (opcional)" />
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal('modal-add-project')">Cancelar</button>
+        <button class="btn-primary" onclick="addProject()">Crear proyecto</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Habit Modal -->
+  <div class="modal-overlay hidden" id="modal-add-habit">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 class="modal-title">Nuevo hábito</h2>
+        <button class="modal-close" onclick="closeModal('modal-add-habit')">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="text" class="modal-input" id="habit-name-input" placeholder="Nombre del hábito" />
+        <div class="modal-row">
+          <div class="modal-field">
+            <label>Emoji</label>
+            <input type="text" class="modal-input-sm" id="habit-emoji-input" placeholder="💧" maxlength="2" />
+          </div>
+          <div class="modal-field">
+            <label>Frecuencia</label>
+            <select class="modal-input-sm" id="habit-freq-input">
+              <option value="daily">Diario</option>
+              <option value="weekly">Semanal</option>
+            </select>
+          </div>
+          <div class="modal-field">
+            <label>Color</label>
+            <div class="color-picker" id="habit-color-picker"></div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" onclick="closeModal('modal-add-habit')">Cancelar</button>
+        <button class="btn-primary" onclick="addHabit()">Crear hábito</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast hidden" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

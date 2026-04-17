@@ -1,0 +1,28 @@
+node_modules/
+.env
+service-account.json
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+dist/
+.temp/
+temp_audio/
+diagnose_*.ts
+test-*.ts
+SKILL*.md
+
+# Seguridad
+.env
+service-account.json
+*.db
+*.db-shm
+*.db-wal
+
+# Audio temporal
+temp_audio/*
+!temp_audio/.gitkeep
+
+# Logs
+server_logs.txt
+*.log

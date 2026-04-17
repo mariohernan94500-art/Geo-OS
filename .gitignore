@@ -1,0 +1,222 @@
+# 🔒 GITIGNORE PRIVADO - PROYECTO DE MARIO HERNAN OVALLE REINOSO
+# Solo trackeamos archivos esenciales de código
+# TODO LO DEMÁS se ignora por PRIVACIDAD
+
+# ==========================================
+# ARCHIVOS DEL SISTEMA
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ==========================================
+# APLICACIONES Y EDITORES
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.sublime-workspace
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.elfx
+
+# ==========================================
+# NODE.JS (si lo usas)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ==========================================
+# ARCHIVOS PERSONALES / SENSIBLES
+# ==========================================
+.env
+.env.local
+.env.*.local
+secrets.json
+credentials.json
+api-keys.txt
+config.local.js
+personal-config.js
+
+# ==========================================
+# DATOS PRIVADOS
+# ==========================================
+/backups/
+/exports/
+/temp/
+/private/
+/local-data/
+*.backup
+*.tmp
+*.log
+debug.log
+activity.log
+
+# ==========================================
+# CERTIFICADOS Y CLAVES
+# ==========================================
+*.pem
+*.key
+*.cert
+*.p12
+*.pfx
+
+# ==========================================
+# COMPILADOS Y GENERADOS
+# ==========================================
+dist/
+build/
+out/
+*.min.js
+*.min.css
+*.map
+.parcel-cache/
+.next/
+out/
+
+# ==========================================
+# IDE
+# ==========================================
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+.netbeans/
+.gradle/
+.vscode-test/
+.vscode/settings.json
+
+# ==========================================
+# OS SPECIFIC
+# ==========================================
+# Windows
+Thumbs.db
+ehthumbs.db
+$RECYCLE.BIN/
+*.lnk
+
+# MacOS
+.AppleDouble
+.LSOverride
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+
+# Linux
+.Xauthority
+.Xdefaults
+.xsession-errors
+
+# ==========================================
+# ARCHIVOS LOCALES QUE NO COMPARTIR CON NADIE
+# ==========================================
+local_config.js
+my-notes.md
+personal-data/
+private-files/
+*.local.html
+*.local.js
+test-data/
+my-api-keys.js
+
+# ==========================================
+# CACHE
+# ==========================================
+.cache/
+*.cache
+__pycache__/
+*.pyc
+.pytest_cache/
+.eslintcache
+node_modules/.cache
+
+# ==========================================
+# COMPILADORES Y BUILD TOOLS
+# ==========================================
+.eslintignore
+.prettierignore
+tsconfig.tsbuildinfo
+
+# ==========================================
+# DEPLOYMENT TEMPORAL
+# ==========================================
+.vercel/
+.netlify/
+.now/
+dist/
+build/
+.next/
+.nuxt/
+
+# ==========================================
+# HERRAMIENTAS DE DESARROLLO
+# ==========================================
+.git/
+.gitkeep
+.gitattributes
+
+# ==========================================
+# TESTING TEMPORAL
+# ==========================================
+coverage/
+.nyc_output/
+test-results/
+*.lcov
+test-cache/
+
+# ==========================================
+# DATOS DE USUARIOS (SI APLICABLE)
+# ==========================================
+user-data/
+user-backups/
+*.json (excepto package.json)
+uploads/
+
+# ==========================================
+# ARCHIVOS GRANDES
+# ==========================================
+*.iso
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# ==========================================
+# ARCHIVOS GENERADOS DINAMICAMENTE
+# ==========================================
+*.generated.js
+*.auto.js
+dist/
+build/
+
+# ==========================================
+# SOLO TRACKEAMOS ESTOS ARCHIVOS ESENCIALES
+# ==========================================
+# ✅ index.html
+# ✅ geo.js
+# ✅ geo-sw.js
+# ✅ README.md (y otros .md)
+# ✅ LICENSE
+# ✅ .gitignore
+# ✅ package.json (si existe)
+
+# LA MEJOR PRIVACIDAD = NO SUBIR A GITHUB PÚBLICO
+# Usa un repo PRIVADO si vas a usar Git online
+

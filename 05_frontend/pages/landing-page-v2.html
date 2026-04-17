@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page Generator v2 | Mario's Toolkit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        :root { --bg-dark:#0f172a; --panel-bg:#1e293b; --accent-purple:#8b5cf6; --accent-cyan:#38bdf8; --text-main:#f8fafc; --text-muted:#94a3b8; --border:#334155; --success:#10b981; }
+        *{box-sizing:border-box;outline:none;-webkit-font-smoothing:antialiased;}
+        body{margin:0;font-family:'Outfit',sans-serif;background:var(--bg-dark);color:var(--text-main);height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+        ::-webkit-scrollbar{width:6px;height:6px;} ::-webkit-scrollbar-track{background:var(--bg-dark);} ::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+        header{height:60px;background:var(--panel-bg);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 20px;z-index:50;}
+        .brand{font-weight:800;font-size:1.2rem;display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.5px;}
+        .header-actions{display:flex;gap:10px;}
+        button{background:var(--panel-bg);border:1px solid var(--border);color:var(--text-main);padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:0.85rem;display:flex;align-items:center;gap:8px;transition:all 0.2s;font-family:inherit;}
+        button:hover{background:#2d3e52;border-color:var(--text-muted);}
+        button.primary{background:var(--accent-purple);border-color:var(--accent-purple);color:white;}
+        button.primary:hover{background:#7c3aed;box-shadow:0 0 15px rgba(139,92,246,0.4);}
+        main{display:flex;flex:1;overflow:hidden;}
+        aside{width:400px;background:var(--panel-bg);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+        .sidebar-header{padding:15px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .sidebar-title{font-size:0.9rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;}
+        .tabs{display:flex;background:#0f172a;}
+        .tab{flex:1;text-align:center;padding:12px;font-size:0.8rem;color:var(--text-muted);cursor:pointer;border-bottom:2px solid transparent;transition:0.2s;}
+        .tab:hover{color:white;}
+        .tab.active{color:var(--accent-cyan);border-bottom-color:var(--accent-cyan);background:rgba(56,189,248,0.05);}
+        .sidebar-content{flex:1;overflow-y:auto;padding:20px;}
+        .form-section{margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.05);padding-bottom:20px;}
+        .form-section:last-child{border:none;}
+        .form-section h4{margin:0 0 15px 0;font-size:0.9rem;color:var(--accent-cyan);display:flex;align-items:center;gap:8px;}
+        label{display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:6px;}
+        input[type="text"],input[type="url"],textarea,select{width:100%;background:var(--bg-dark);border:1px solid var(--border);color:var(--text-main);padding:10px;border-radius:6px;font-family:inherit;font-size:0.85rem;margin-bottom:12px;transition:0.2s;}
+        input:focus,textarea:focus,select:focus{border-color:var(--accent-purple);}
+        .row{display:flex;gap:10px;margin-bottom:12px;} .col{flex:1;}
+        .color-picker-row{display:flex;align-items:center;gap:10px;background:var(--bg-dark);padding:8px;border-radius:6px;border:1px solid var(--border);margin-bottom:12px;}
+        input[type="color"]{width:30px;height:30px;border:none;background:none;cursor:pointer;padding:0;}
+        .type-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+        .type-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:8px;padding:15px;cursor:pointer;text-align:center;transition:0.2s;}
+        .type-card:hover{border-color:var(--accent-cyan);background:#1e293b;}
+        .type-card.active{border-color:var(--accent-purple);background:rgba(139,92,246,0.1);}
+        .type-card i{font-size:1.5rem;margin-bottom:8px;color:var(--text-muted);display:block;}
+        .type-card.active i{color:var(--accent-purple);}
+        .type-card span{display:block;font-size:0.8rem;font-weight:600;}
+        .page-list{display:flex;flex-direction:column;gap:8px;}
+        .page-item{background:var(--bg-dark);padding:10px;border-radius:6px;border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:0.2s;}
+        .page-item.active{border-color:var(--accent-cyan);background:rgba(56,189,248,0.1);}
+        .page-item:hover{background:#1e293b;}
+        .dynamic-list-item{background:rgba(0,0,0,0.2);padding:10px;border-radius:6px;margin-bottom:8px;border:1px solid var(--border);position:relative;}
+        .remove-btn{position:absolute;top:5px;right:5px;color:#ef4444;cursor:pointer;padding:4px;background:none;border:none;font-size:1rem;}
+        .icon-select-trigger{display:flex;align-items:center;gap:8px;padding:8px;border:1px dashed var(--border);border-radius:4px;cursor:pointer;font-size:0.85rem;margin-bottom:10px;transition:0.2s;}
+        .icon-select-trigger:hover{border-color:var(--accent-purple);color:var(--accent-purple);}
+        .preview-container{flex:1;background:#000;display:flex;flex-direction:column;position:relative;}
+        .device-bar{height:32px;background:#1e293b;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;}
+        .dot{width:10px;height:10px;border-radius:50%;} .r{background:#ef4444;} .y{background:#eab308;} .g{background:#22c55e;}
+        #preview-frame{flex:1;background:white;overflow-y:auto;overflow-x:hidden;}
+        .modal-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;display:none;align-items:center;justify-content:center;}
+        .modal{background:var(--panel-bg);width:600px;max-width:90%;height:500px;border-radius:12px;border:1px solid var(--border);display:flex;flex-direction:column;}
+        .modal-header{padding:20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .modal-body{flex:1;overflow-y:auto;padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(50px,1fr));gap:10px;}
+        .icon-option{width:50px;height:50px;display:flex;align-items:center;justify-content:center;background:var(--bg-dark);border-radius:6px;cursor:pointer;font-size:1.5rem;transition:0.2s;}
+        .icon-option:hover{background:var(--accent-purple);color:white;}
+        .toast{position:fixed;bottom:30px;right:30px;background:var(--panel-bg);border:1px solid var(--accent-purple);color:white;padding:15px 25px;border-radius:8px;box-shadow:0 10px 30px rgba(0,0,0,0.5);transform:translateY(100px);opacity:0;transition:0.3s;z-index:2000;display:flex;align-items:center;gap:10px;}
+        .toast.show{transform:translateY(0);opacity:1;}
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand"><i class="ph ph-rocket-launch"></i> Landing Page Generator v2</div>
+        <div class="header-actions">
+            <button onclick="resetProject()"><i class="ph ph-arrow-counter-clockwise"></i> Reset</button>
+            <button class="primary" onclick="exportZip()"><i class="ph ph-download-simple"></i> Export ZIP (5 idiomas)</button>
+        </div>
+    </header>
+    <main>
+        <aside>
+            <div class="sidebar-header"><span class="sidebar-title">Builder</span></div>
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('setup',event)">Tipo</div>
+                <div class="tab" onclick="switchTab('pages',event)">Páginas</div>
+                <div class="tab" onclick="switchTab('content',event)">Contenido</div>
+                <div class="tab" onclick="switchTab('style',event)">Estilo</div>
+            </div>
+            <div id="tab-setup" class="sidebar-content">
+                <div class="form-section">
+                    <h4><i class="ph ph-squares-four"></i> Tipo de Sitio</h4>
+                    <div class="type-grid" id="type-selector"></div>
+                </div>
+            </div>
+            <div id="tab-pages" class="sidebar-content" style="display:none">
+                <div class="form-section">
+                    <h4><i class="ph ph-files"></i> Páginas</h4>
+                    <button onclick="addPage()" style="width:100%;margin-bottom:12px;"><i class="ph ph-plus"></i> Agregar Página</button>
+                    <div class="page-list" id="page-list"></div>
+                </div>
+                <div class="form-section">
+                    <h4><i class="ph ph-list"></i> Navegación</h4>
+                    <label>Nombre de la marca</label>
+                    <input type="text" id="global-brand" value="MiMarca" oninput="updateGlobal()">
+                    <label>Logo (imagen opcional)</label>
+                    <input type="file" accept="image/*" onchange="handleLogoUpload(this)">
+                </div>
+            </div>
+            <div id="tab-content" class="sidebar-content" style="display:none">
+                <div id="content-editor"><p style="color:var(--text-muted);text-align:center;padding:40px;">Selecciona una página para editar.</p></div>
+            </div>
+            <div id="tab-style" class="sidebar-content" style="display:none">
+                <div class="form-section">
+                    <h4><i class="ph ph-paint-brush"></i> Diseño Global</h4>
+                    <label>Color Principal</label>
+                    <div class="color-picker-row"><input type="color" id="color-primary" value="#4f46e5" oninput="updateGlobal()"><span id="hex-primary">#4f46e5</span></div>
+                    <label>Color de Acento</label>
+                    <div class="color-picker-row"><input type="color" id="color-accent" value="#8b5cf6" oninput="updateGlobal()"><span id="hex-accent">#8b5cf6</span></div>
+                    <label>Fondo</label>
+                    <div class="color-picker-row"><input type="color" id="color-bg" value="#ffffff" oninput="updateGlobal()"><span id="hex-bg">#ffffff</span></div>
+                    <label>Texto</label>
+                    <div class="color-picker-row"><input type="color" id="color-text" value="#1e293b" oninput="updateGlobal()"><span id="hex-text">#1e293b</span></div>
+                </div>
+                <div class="form-section">
+                    <h4><i class="ph ph-text-t"></i> Tipografía</h4>
+                    <label>Fuente</label>
+                    <select id="font-family" onchange="updateGlobal()">
+                        <option value="Outfit">Outfit (Moderno)</option>
+                        <option value="Inter">Inter (Limpio)</option>
+                        <option value="Playfair Display">Playfair Display (Elegante)</option>
+                        <option value="Roboto">Roboto (Estándar)</option>
+                    </select>
+                </div>
+            </div>
+        </aside>
+        <div class="preview-container">
+            <div class="device-bar">
+                <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+                <div style="font-size:0.7rem;color:#64748b;margin-left:10px;">Vista previa en vivo</div>
+            </div>
+            <div id="preview-frame"></div>
+        </div>
+    </main>
+    <div class="modal-overlay" id="icon-modal" onclick="closeIconModal(event)">
+        <div class="modal">
+            <div class="modal-header"><h3>Seleccionar Icono</h3><button onclick="document.getElementById('icon-modal').style.display='none'"><i class="ph ph-x"></i></button></div>
+            <div class="modal-body" id="icon-grid"></div>
+        </div>
+    </div>
+    <div class="toast" id="toast"><i class="ph ph-check-circle" style="font-size:1.5rem;color:var(--success);"></i><span id="toast-msg">Listo</span></div>
+    <script>
+        const SITE_TYPES = {
+            landing:{name:'Landing Page',icon:'ph-rocket',sections:['hero','features','cta','footer']},
+            ecommerce:{name:'E-commerce',icon:'ph-shopping-cart',sections:['hero','products','about','footer']},
+            blog:{name:'Blog',icon:'ph-article',sections:['hero','posts','newsletter','footer']},
+            portfolio:{name:'Portfolio',icon:'ph-briefcase',sections:['hero','projects','skills','contact','footer']},
+            restaurant:{name:'Restaurante',icon:'ph-fork-knife',sections:['hero','menu','gallery','reservations','footer']},
+            agency:{name:'Agencia',icon:'ph-buildings',sections:['hero','services','team','clients','footer']},
+            event:{name:'Evento',icon:'ph-calendar-check',sections:['hero','speakers','schedule','tickets','footer']},
+            saas:{name:'App / SaaS',icon:'ph-cloud',sections:['hero','features','pricing','faq','footer']}
+        };
+
+        const ICONS = ['ph-rocket','ph-lightning','ph-shield-check','ph-star','ph-heart','ph-globe','ph-chart-line-up','ph-users','ph-code','ph-paint-brush','ph-camera','ph-music-note','ph-coffee','ph-book-open','ph-device-mobile','ph-wifi-high','ph-lock-key','ph-envelope-simple','ph-hand-wave','ph-sparkle','ph-trophy','ph-leaf','ph-sun','ph-moon'];
+
+        const DICT = {
+            en:{home:'Home',about:'About',services:'Services',contact:'Contact',readMore:'Read More',buyNow:'Buy Now',bookTable:'Book Table',getStarted:'Get Started',learnMore:'Learn More'},
+            es:{home:'Inicio',about:'Nosotros',services:'Servicios',contact:'Contacto',readMore:'Leer Más',buyNow:'Comprar Ahora',bookTable:'Reservar',getStarted:'Comenzar',learnMore:'Saber Más'},
+            fr:{home:'Accueil',about:'À propos',services:'Services',contact:'Contact',readMore:'Lire la suite',buyNow:'Acheter',bookTable:'Réserver',getStarted:'Commencer',learnMore:'En savoir plus'},
+            pt:{home:'Início',about:'Sobre',services:'Serviços',contact:'Contato',readMore:'Ler Mais',buyNow:'Comprar',bookTable:'Reservar',getStarted:'Começar',learnMore:'Saiba Mais'},
+            zh:{home:'首页',about:'关于我们',services:'服务',contact:'联系我们',readMore:'阅读更多',buyNow:'立即购买',bookTable:'预订餐桌',getStarted:'开始使用',learnMore:'了解更多'}
+        };
+
+        let state = { type:'landing', brandName:'MiMarca', logoImg:null, styles:{primary:'#4f46e5',accent:'#8b5cf6',bg:'#ffffff',text:'#1e293b',font:'Outfit'}, pages:[] };
+        let currentPageId = null, currentIconTarget = null;
+
+        function init() { renderTypeSelector(); addPage('Inicio','home'); renderPreview(); }
+
+        function renderTypeSelector() {
+            const grid = document.getElementById('type-selector'); grid.innerHTML='';
+            Object.keys(SITE_TYPES).forEach(key=>{
+                const t=SITE_TYPES[key];
+                const card=document.createElement('div');
+                card.className=`type-card ${state.type===key?'active':''}`;
+                card.onclick=()=>setSiteType(key);
+                card.innerHTML=`<i class="ph ${t.icon}"></i><span>${t.name}</span>`;
+                grid.appendChild(card);
+            });
+        }
+
+        function setSiteType(type) { state.type=type; state.pages=[]; addPage('Inicio','home'); renderTypeSelector(); renderPageList(); renderContentEditor(); renderPreview(); }
+
+        function addPage(name='Nueva Página',slug='pagina') {
+            const id='page_'+Date.now();
+            const structure=SITE_TYPES[state.type].sections;
+            const sectionsData={};
+            structure.forEach(s=>{ sectionsData[s]=getDefaultContent(s); });
+            state.pages.push({id,name,slug:slug+state.pages.length,sections:sectionsData});
+            if(!currentPageId) currentPageId=id;
+            renderPageList(); renderContentEditor(); renderPreview();
+        }
+
+        function getDefaultContent(type) {
+            const b=state.brandName||'MiMarca';
+            switch(type) {
+                case 'hero': return {title:'Bienvenido a '+b,subtitle:'Construye algo increíble hoy.',badge:'Nuevo v2.0',bgImg:null,cta:'Comenzar Gratis',ctaLink:'#'};
+                case 'features': return {title:'¿Por qué elegirnos?',items:[{title:'Rápido',desc:'Optimizado para velocidad',icon:'ph-lightning'},{title:'Seguro',desc:'Seguridad de nivel empresarial',icon:'ph-shield-check'},{title:'Flexible',desc:'Adaptable a tus necesidades',icon:'ph-puzzle-piece'}]};
+                case 'products': return {title:'Nuestros Productos',items:[{title:'Producto A',desc:'$29',img:null},{title:'Producto B',desc:'$49',img:null},{title:'Producto C',desc:'$99',img:null}]};
+                case 'projects': return {title:'Nuestros Proyectos',items:[{title:'Proyecto Alpha',desc:'Diseño Web',img:null},{title:'Proyecto Beta',desc:'Branding',img:null}]};
+                case 'team': return {title:'Nuestro Equipo',items:[{title:'Alice',desc:'CEO',img:null},{title:'Bob',desc:'CTO',img:null}]};
+                case 'posts': return {title:'Últimas Noticias',items:[{title:'Tendencias del Mercado',desc:'Oct 12',img:null},{title:'Actualizaciones Tech',desc:'Sep 28',img:null}]};
+                case 'pricing': return {title:'Precios Simples',items:[{title:'Starter',desc:'$0/mes',icon:'ph-star'},{title:'Pro',desc:'$29/mes',icon:'ph-rocket'},{title:'Enterprise',desc:'$99/mes',icon:'ph-buildings'}]};
+                default: return {title:type.charAt(0).toUpperCase()+type.slice(1),text:'Contenido de esta sección...'};
+            }
+        }
+
+        function renderPageList() {
+            const list=document.getElementById('page-list'); list.innerHTML='';
+            state.pages.forEach(p=>{
+                const div=document.createElement('div');
+                div.className=`page-item ${p.id===currentPageId?'active':''}`;
+                div.innerHTML=`<div><div style="font-size:0.85rem;font-weight:500;">${p.name}</div><div style="font-size:0.7rem;color:var(--text-muted)">/${p.slug}</div></div>${state.pages.length>1?`<button onclick="deletePage('${p.id}',event)" style="background:none;border:none;color:#ef4444;cursor:pointer;padding:4px;"><i class="ph ph-trash"></i></button>`:''}`;
+                div.onclick=e=>{ if(e.target.closest('button')) return; currentPageId=p.id; renderPageList(); renderContentEditor(); renderPreview(); };
+                list.appendChild(div);
+            });
+        }
+
+        function deletePage(id,e) { e.stopPropagation(); if(state.pages.length<=1) return; state.pages=state.pages.filter(p=>p.id!==id); if(currentPageId===id) currentPageId=state.pages[0].id; renderPageList(); renderContentEditor(); renderPreview(); }
+
+        function renderContentEditor() {
+            const container=document.getElementById('content-editor'); container.innerHTML='';
+            const page=state.pages.find(p=>p.id===currentPageId); if(!page) return;
+            const nameGroup=document.createElement('div'); nameGroup.className='form-section';
+            nameGroup.innerHTML=`<h4><i class="ph ph-pencil"></i> Detalles de Página</h4><label>Nombre</label><input type="text" value="${page.name}" oninput="updatePageName('${page.id}',this.value)"><label>URL Slug</label><input type="text" value="${page.slug}" oninput="updatePageSlug('${page.id}',this.value)">`;
+            container.appendChild(nameGroup);
+            Object.keys(page.sections).forEach(secKey=>{
+                const data=page.sections[secKey];
+                const secDiv=document.createElement('div'); secDiv.className='form-section';
+                let html=`<h4><i class="ph ph-cube"></i> ${secKey.toUpperCase()}</h4>`;
+                if(data.title!==undefined) html+=`<label>Título</label><input type="text" value="${data.title}" oninput="updateSection('${page.id}','${secKey}','title',this.value)">`;
+                if(data.subtitle!==undefined) html+=`<label>Subtítulo</label><textarea rows="2" oninput="updateSection('${page.id}','${secKey}','subtitle',this.value)">${data.subtitle}</textarea>`;
+                if(data.text!==undefined) html+=`<label>Texto</label><textarea rows="3" oninput="updateSection('${page.id}','${secKey}','text',this.value)">${data.text}</textarea>`;
+                if(data.badge!==undefined) html+=`<label>Badge</label><input type="text" value="${data.badge||''}" oninput="updateSection('${page.id}','${secKey}','badge',this.value)">`;
+                if(data.cta!==undefined) html+=`<div class="row"><div class="col"><label>Botón</label><input type="text" value="${data.cta}" oninput="updateSection('${page.id}','${secKey}','cta',this.value)"></div><div class="col"><label>Link</label><input type="text" value="${data.ctaLink||'#'}" oninput="updateSection('${page.id}','${secKey}','ctaLink',this.value)"></div></div>`;
+                if(data.bgImg!==undefined) html+=`<label>Imagen de fondo</label><input type="file" accept="image/*" onchange="uploadSectionImage('${page.id}','${secKey}','bgImg',this)">`;
+                if(data.items&&Array.isArray(data.items)) {
+                    html+=`<label>Elementos</label>`;
+                    data.items.forEach((item,idx)=>{
+                        html+=`<div class="dynamic-list-item">`;
+                        if(item.title!==undefined) html+=`<input type="text" value="${item.title}" placeholder="Título" oninput="updateItem('${page.id}','${secKey}',${idx},'title',this.value)">`;
+                        if(item.desc!==undefined) html+=`<input type="text" value="${item.desc}" placeholder="Descripción" oninput="updateItem('${page.id}','${secKey}',${idx},'desc',this.value)">`;
+                        if(item.icon!==undefined) html+=`<div class="icon-select-trigger" onclick="openIconModal('${page.id}','${secKey}',${idx})"><i class="ph ${item.icon}"></i> Cambiar icono</div>`;
+                        if(item.img!==undefined) html+=`<input type="file" accept="image/*" onchange="uploadItemImage('${page.id}','${secKey}',${idx},this)">`;
+                        html+=`<button class="remove-btn" onclick="removeItem('${page.id}','${secKey}',${idx})"><i class="ph ph-trash"></i></button></div>`;
+                    });
+                    html+=`<button onclick="addItem('${page.id}','${secKey}')" style="width:100%;margin-top:5px;font-size:0.8rem;">+ Agregar elemento</button>`;
+                }
+                secDiv.innerHTML=html; container.appendChild(secDiv);
+            });
+        }
+
+        function updatePageName(id,val){const p=state.pages.find(x=>x.id===id);if(p){p.name=val;renderPageList();renderPreview();}}
+        function updatePageSlug(id,val){const p=state.pages.find(x=>x.id===id);if(p){p.slug=val.replace(/\s+/g,'-').toLowerCase();renderPreview();}}
+        function updateSection(pid,skey,field,val){const p=state.pages.find(x=>x.id===pid);if(p){p.sections[skey][field]=val;renderPreview();}}
+        function updateItem(pid,skey,idx,field,val){const p=state.pages.find(x=>x.id===pid);if(p){p.sections[skey].items[idx][field]=val;renderPreview();}}
+        function addItem(pid,skey){const p=state.pages.find(x=>x.id===pid);if(p){p.sections[skey].items.push({title:'Nuevo',desc:'Descripción',icon:'ph-star'});renderContentEditor();renderPreview();}}
+        function removeItem(pid,skey,idx){const p=state.pages.find(x=>x.id===pid);if(p){p.sections[skey].items.splice(idx,1);renderContentEditor();renderPreview();}}
+        function updateGlobal(){
+            state.brandName=document.getElementById('global-brand').value;
+            state.styles.primary=document.getElementById('color-primary').value;
+            state.styles.accent=document.getElementById('color-accent').value;
+            state.styles.bg=document.getElementById('color-bg').value;
+            state.styles.text=document.getElementById('color-text').value;
+            state.styles.font=document.getElementById('font-family').value;
+            document.getElementById('hex-primary').innerText=state.styles.primary;
+            document.getElementById('hex-accent').innerText=state.styles.accent;
+            document.getElementById('hex-bg').innerText=state.styles.bg;
+            document.getElementById('hex-text').innerText=state.styles.text;
+            renderPreview();
+        }
+
+        function fileToBase64(file,cb){const r=new FileReader();r.readAsDataURL(file);r.onload=()=>cb(r.result);}
+        function handleLogoUpload(input){if(input.files&&input.files[0])fileToBase64(input.files[0],res=>{state.logoImg=res;renderPreview();});}
+        function uploadSectionImage(pid,skey,field,input){if(input.files&&input.files[0])fileToBase64(input.files[0],res=>{state.pages.find(x=>x.id===pid).sections[skey][field]=res;renderPreview();});}
+        function uploadItemImage(pid,skey,idx,input){if(input.files&&input.files[0])fileToBase64(input.files[0],res=>{state.pages.find(x=>x.id===pid).sections[skey].items[idx].img=res;renderPreview();});}
+
+        function openIconModal(pid,skey,idx){
+            currentIconTarget={pid,skey,idx};
+            const grid=document.getElementById('icon-grid'); grid.innerHTML='';
+            ICONS.forEach(icon=>{const div=document.createElement('div');div.className='icon-option';div.innerHTML=`<i class="ph ${icon}"></i>`;div.onclick=()=>selectIcon(icon);grid.appendChild(div);});
+            document.getElementById('icon-modal').style.display='flex';
+        }
+        function selectIcon(icon){if(currentIconTarget){const{pid,skey,idx}=currentIconTarget;state.pages.find(x=>x.id===pid).sections[skey].items[idx].icon=icon;renderContentEditor();renderPreview();}document.getElementById('icon-modal').style.display='none';}
+        function closeIconModal(e){if(e.target.id==='icon-modal')document.getElementById('icon-modal').style.display='none';}
+
+        function renderPreview(){
+            const frame=document.getElementById('preview-frame');
+            frame.innerHTML=generateHTML('es');
+            setupObserver(frame);
+        }
+
+        function generateHTML(lang) {
+            const t=DICT[lang]||DICT.es;
+            let html=`<style>:root{--p-primary:${state.styles.primary};--p-accent:${state.styles.accent};--p-bg:${state.styles.bg};--p-text:${state.styles.text};--p-font:'${state.styles.font}',sans-serif;}*{box-sizing:border-box;margin:0;padding:0;}body{font-family:var(--p-font);background:var(--p-bg);color:var(--p-text);line-height:1.6;overflow-x:hidden;}a{text-decoration:none;color:inherit;transition:0.3s;}.container{max-width:1200px;margin:0 auto;padding:0 20px;}.btn{display:inline-block;padding:12px 30px;border-radius:50px;font-weight:600;cursor:pointer;transition:all 0.3s;}.btn-primary{background:var(--p-primary);color:white;box-shadow:0 10px 20px -5px var(--p-primary);}.btn-primary:hover{transform:translateY(-3px);}.section{padding:100px 0;position:relative;}nav{position:sticky;top:0;width:100%;z-index:1000;padding:20px 0;transition:0.4s;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);}nav.scrolled{background:rgba(255,255,255,0.95);box-shadow:0 5px 20px rgba(0,0,0,0.05);padding:15px 0;}.nav-inner{display:flex;justify-content:space-between;align-items:center;}.logo{font-size:1.5rem;font-weight:800;color:var(--p-primary);display:flex;align-items:center;gap:10px;}.nav-links a{margin-left:30px;font-weight:500;}.nav-links a:hover{color:var(--p-primary);}.hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;position:relative;overflow:hidden;}.hero-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:0.15;}.hero-content{position:relative;z-index:1;max-width:800px;padding:20px;}.badge{background:var(--p-accent);color:white;padding:5px 15px;border-radius:20px;font-size:0.9rem;font-weight:600;margin-bottom:20px;display:inline-block;}h1{font-size:3.5rem;line-height:1.1;margin-bottom:20px;background:linear-gradient(135deg,var(--p-primary),var(--p-accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}.subtitle{font-size:1.25rem;opacity:0.8;margin-bottom:40px;}.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:30px;}.card{background:white;padding:40px;border-radius:20px;box-shadow:0 20px 40px rgba(0,0,0,0.05);transition:0.4s;border:1px solid rgba(0,0,0,0.05);}.card:hover{transform:translateY(-10px);box-shadow:0 30px 60px rgba(0,0,0,0.1);}.card-icon{width:60px;height:60px;background:rgba(0,0,0,0.05);border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--p-primary);margin-bottom:20px;}.card h3{margin-bottom:10px;}.card p{opacity:0.7;}.img-fluid{width:100%;height:200px;object-fit:cover;border-radius:12px;margin-bottom:20px;}.section-title{font-size:2.5rem;margin-bottom:60px;text-align:center;font-weight:700;}.reveal{opacity:0;transform:translateY(40px);transition:all 0.9s cubic-bezier(0.2,1,0.3,1);}.reveal.active{opacity:1;transform:translateY(0);}footer{background:#0f172a;color:#94a3b8;padding:50px 0;text-align:center;}footer h3{color:white;margin-bottom:10px;}@media(max-width:768px){h1{font-size:2.5rem;}.nav-links{display:none;}}</style>`;
+
+            html+=`<nav id="navbar"><div class="container nav-inner"><div class="logo">${state.logoImg?`<img src="${state.logoImg}" style="height:30px;">`:''}${state.brandName}</div><div class="nav-links">${state.pages.map(p=>`<a href="#${p.slug}">${p.name}</a>`).join('')}</div></div></nav>`;
+
+            state.pages.forEach(page=>{
+                Object.keys(page.sections).forEach(key=>{
+                    const data=page.sections[key];
+                    if(key==='hero'){
+                        html+=`<section id="${page.slug}" class="hero">${data.bgImg?`<img src="${data.bgImg}" class="hero-bg">`:''}${!data.bgImg?`<div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,${state.styles.primary}15,${state.styles.accent}15);z-index:-1;"></div>`:''}
+                        <div class="hero-content">${data.badge?`<div class="badge reveal">${data.badge}</div>`:''}<h1 class="reveal">${data.title}</h1><p class="subtitle reveal">${data.subtitle||''}</p>${data.cta?`<a href="${data.ctaLink||'#'}" class="btn btn-primary reveal">${data.cta}</a>`:''}</div></section>`;
+                    } else if(key==='features'||key==='pricing'){
+                        const items=(data.items||[]).map(item=>`<div class="card reveal"><div class="card-icon"><i class="ph ${item.icon||'ph-star'}"></i></div><h3>${item.title}</h3><p>${item.desc||''}</p></div>`).join('');
+                        html+=`<section class="section"><div class="container"><h2 class="section-title reveal">${data.title}</h2><div class="grid-3">${items}</div></div></section>`;
+                    } else if(['products','projects','team','posts'].includes(key)){
+                        const items=(data.items||[]).map(item=>`<div class="card reveal">${item.img?`<img src="${item.img}" class="img-fluid">`:'<div style="width:100%;height:160px;background:linear-gradient(135deg,'+state.styles.primary+'20,'+state.styles.accent+'20);border-radius:12px;margin-bottom:20px;"></div>'}<h3>${item.title||''}</h3><p style="margin-top:8px;opacity:0.7;">${item.desc||''}</p>${key==='products'?`<a href="#" class="btn btn-primary" style="margin-top:20px;width:100%;text-align:center;">${t.buyNow}</a>`:''}</div>`).join('');
+                        html+=`<section class="section" style="background:rgba(0,0,0,0.02);"><div class="container"><h2 class="section-title reveal">${data.title}</h2><div class="grid-3">${items}</div></div></section>`;
+                    } else {
+                        html+=`<section class="section"><div class="container" style="text-align:center;"><h2 class="section-title reveal">${data.title||''}</h2><p class="reveal" style="max-width:700px;margin:0 auto;font-size:1.1rem;opacity:0.8;">${data.text||''}</p></div></section>`;
+                    }
+                });
+            });
+
+            html+=`<footer><div class="container"><h3>${state.brandName}</h3><p style="margin-top:10px;">&copy; 2026 ${state.brandName}. ${lang==='es'?'Todos los derechos reservados.':lang==='fr'?'Tous droits réservés.':lang==='pt'?'Todos os direitos reservados.':lang==='zh'?'版权所有。':'All rights reserved.'}</p></div></footer>`;
+            html+=`<script>window.addEventListener('scroll',()=>{const n=document.getElementById('navbar');if(n){if(window.scrollY>50)n.classList.add('scrolled');else n.classList.remove('scrolled');}});const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('active');}),{threshold:0.1});document.querySelectorAll('.reveal').forEach(el=>obs.observe(el));<\/script>`;
+            return html;
+        }
+
+        function setupObserver(ctx){
+            const obs=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('active');}),{threshold:0.1});
+            ctx.querySelectorAll('.reveal').forEach(el=>obs.observe(el));
+            ctx.onscroll=()=>{const nav=ctx.querySelector('nav');if(nav){if(ctx.scrollTop>50)nav.classList.add('scrolled');else nav.classList.remove('scrolled');}};
+        }
+
+        async function exportZip(){
+            if(typeof JSZip==='undefined'||typeof saveAs==='undefined'){showToast('Cargando librerías...');return;}
+            const zip=new JSZip();
+            ['es','fr','en','pt','zh'].forEach(lang=>zip.file(`website-${lang}.html`,generateHTML(lang)));
+            const content=await zip.generateAsync({type:'blob'});
+            saveAs(content,`${state.brandName.replace(/\s+/g,'-').toLowerCase()}-website-multilingue.zip`);
+            showToast('ZIP descargado con 5 idiomas');
+        }
+
+        function showToast(msg){const t=document.getElementById('toast');document.getElementById('toast-msg').innerText=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+        function switchTab(tabId,event){
+            document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+            event.target.classList.add('active');
+            document.querySelectorAll('.sidebar-content').forEach(c=>c.style.display='none');
+            document.getElementById('tab-'+tabId).style.display='block';
+        }
+
+        function resetProject(){if(confirm('¿Reiniciar proyecto? Se perderán todos los cambios.')){state={type:'landing',brandName:'MiMarca',logoImg:null,styles:{primary:'#4f46e5',accent:'#8b5cf6',bg:'#ffffff',text:'#1e293b',font:'Outfit'},pages:[]};currentPageId=null;init();showToast('Proyecto reiniciado');}}
+
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,66 @@
+{
+  "name": "geo-biometric-security",
+  "version": "3.0.0",
+  "description": "Sistema de seguridad biométrica multi-capa con geofencing y 2FA",
+  "main": "main.js",
+  "scripts": {
+    "start": "node server.js",
+    "electron": "electron .",
+    "build": "electron-builder",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "biometric",
+    "security",
+    "geofencing",
+    "2fa",
+    "totp",
+    "electron"
+  ],
+  "author": "GEO Security",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "chokidar": "^4.0.1",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "fs-extra": "^11.3.4",
+    "python-shell": "^5.0.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  },
+  "overrides": {
+    "ws": "^8.18.0",
+    "braces": "^3.0.3",
+    "micromatch": "^4.0.8",
+    "send": "^0.19.0",
+    "serve-static": "^1.16.2",
+    "express": "^4.21.2",
+    "body-parser": "^1.20.3"
+  },
+  "build": {
+    "appId": "com.geocore.app",
+    "productName": "GeoCore",
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "mac": {
+      "target": [
+        "dmg"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ]
+    },
+    "directories": {
+      "output": "dist"
+    }
+  }
+}

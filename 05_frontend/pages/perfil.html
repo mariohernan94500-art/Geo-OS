@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>GEO - Mi Perfil</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <style>
+        body { background: #060a13; color: #e8edf5; font-family: 'Space Grotesk', sans-serif; }
+        .container { max-width: 600px; margin: 2rem auto; padding: 2rem; background: #0d1321; border: 1px solid #1e293b; border-radius: 16px; }
+        h1 { color: #00ff88; margin-bottom: 1.5rem; }
+        .info-box { background: #111827; border-left: 3px solid #00d4ff; padding: 1rem; margin: 1rem 0; border-radius: 8px; }
+        .info-box strong { color: #00d4ff; }
+        input, textarea { width: 100%; padding: 10px; margin: 0.5rem 0; background: #1e293b; border: 1px solid #2d3748; border-radius: 8px; color: #e8edf5; font-family: 'Space Grotesk'; }
+        button { padding: 12px 24px; background: #00ff88; color: #000; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; margin: 0.5rem 0; width: 100%; }
+        button:hover { background: #00dd77; }
+        .status { margin-top: 1rem; padding: 1rem; background: rgba(0, 255, 136, 0.1); border: 1px solid #00ff88; border-radius: 8px; color: #00ff88; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-user-circle"></i> Mi Perfil - GEO Creator</h1>
+        
+        <div class="info-box">
+            <strong>🌐 Tu IP:</strong> <span id="userIP">Detectando...</span>
+        </div>
+        
+        <div>
+            <label style="color: #6b7a90;">
+                <strong>👤 Nombre Completo</strong>
+            </label>
+            <input type="text" id="fullName" placeholder="Tu nombre completo">
+            
+            <label style="color: #6b7a90;">
+                <strong>📧 Correo Electrónico</strong>
+            </label>
+            <input type="email" id="email" placeholder="tu@email.com">
+            
+            <label style="color: #6b7a90;">
+                <strong>📱 Teléfono</strong>
+            </label>
+            <input type="tel" id="phone" placeholder="+34 123 456 789">
+            
+            <label style="color: #6b7a90;">
+                <strong>🏠 Dirección</strong>
+            </label>
+            <input type="text" id="address" placeholder="Tu domicilio">
+            
+            <label style="color: #6b7a90;">
+                <strong>🌍 Ciudad/País</strong>
+            </label>
+            <input type="text" id="location" placeholder="Ciudad, País">
+            
+            <label style="color: #6b7a90;">
+                <strong>📝 Biografía</strong>
+            </label>
+            <textarea id="bio" placeholder="Cuéntame sobre ti..." style="height: 100px;"></textarea>
+            
+            <label style="color: #6b7a90;">
+                <strong>🔐 PIN de Acceso (Predeterminado: 1234 - Cámbialo)</strong>
+            </label>
+            <input type="password" id="pinCode" placeholder="1234" maxlength="6">
+        </div>
+        
+        <button onclick="savePerfil()"><i class="fas fa-save"></i> Guardar Perfil</button>
+        <button onclick="detectIP()" style="background: #00d4ff; color: #000;"><i class="fas fa-network-wired"></i> Detectar IP Nuevamente</button>
+        <button onclick="goToGEO()" style="background: #6b7a90; color: #e8edf5;"><i class="fas fa-arrow-left"></i> Volver a GEO</button>
+        
+        <div class="status" id="status"></div>
+    </div>
+
+    <script>
+        // Detectar IP automáticamente
+        async function detectIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                document.getElementById('userIP').textContent = data.ip;
+                
+                // También intentar obtener geolocalización
+                try {
+                    const geoResponse = await fetch(`https://ipapi.co/${data.ip}/json/`);
+                    const geoData = await geoResponse.json();
+                    document.getElementById('location').value = `${geoData.city}, ${geoData.country_name}`;
+                } catch (e) {}
+                
+            } catch (e) {
+                document.getElementById('userIP').textContent = 'No detectada (offline)';
+            }
+        }
+
+        // Cargar datos si existen
+        function loadPerfil() {
+            const stored = localStorage.getItem('geo_creatorProfile');
+            if (stored) {
+                const perfil = JSON.parse(stored);
+                document.getElementById('fullName').value = perfil.fullName || '';
+                document.getElementById('email').value = perfil.email || '';
+                document.getElementById('phone').value = perfil.phone || '';
+                document.getElementById('address').value = perfil.address || '';
+                document.getElementById( 'location').value = perfil.location || '';
+                document.getElementById('bio').value = perfil.bio || '';
+                document.getElementById('pinCode').value = perfil.pinCode || '1234';
+                document.getElementById('userIP').textContent = perfil.ip || '';
+            }
+        }
+
+        // Guardar perfil
+        function savePerfil() {
+            const perfil = {
+                fullName: document.getElementById('fullName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                address: document.getElementById('address').value,
+                location: document.getElementById('location').value,
+                bio: document.getElementById('bio').value,
+                pinCode: document.getElementById('pinCode').value || '1234',
+                ip: document.getElementById('userIP').textContent,
+                createdAt: new Date().toISOString(),
+                role: 'creator'
+            };
+
+            // Guardar en localStorage
+            localStorage.setItem('geo_creatorProfile', JSON.stringify(perfil));
+            localStorage.setItem('g_pin', perfil.pinCode);
+            
+            // Mostrar confirmación
+            const status = document.getElementById('status');
+            status.innerHTML = '✅ <strong>Perfil guardado exitosamente</strong><br>GEO ahora te reconoce como creador';
+            status.style.display = 'block';
+            status.style.background = 'rgba(0, 255, 136, 0.1)';
+            
+            setTimeout(() => {
+                goToGEO();
+            }, 2000);
+        }
+
+        function goToGEO() {
+            window.location.href = '/';
+        }
+
+        // Ejecutar al cargar
+        window.addEventListener('load', () => {
+            detectIP();
+            loadPerfil();
+        });
+    </script>
+</body>
+</html>

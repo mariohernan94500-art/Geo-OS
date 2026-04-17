@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GEO - Configuración Creator</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(0,255,136,0.05);
+            border: 2px solid #00ff88;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .icon {
+            font-size: 64px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        h1 {
+            color: #00ff88;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #00d4ff;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        .info {
+            background: rgba(0,212,255,0.1);
+            border-left: 4px solid #00d4ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,255,136,0.1);
+            border-radius: 8px;
+            font-size: 14px;
+            color: #00ff88;
+            font-weight: 600;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,255,136,0.3);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .complete {
+            color: #00ff88;
+            font-size: 48px;
+            animation: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon" id="icon">👑</div>
+        <h1>GEO Creator</h1>
+        <p class="subtitle">Configurando tu perfil...</p>
+        
+        <div class="info" id="info">
+            <strong>Nombre:</strong> Mario Hernan Ovalle Reinoso<br/>
+            <strong>Email:</strong> mariohernan94500@gmail.com<br/>
+            <strong>Teléfono:</strong> +56964209576<br/>
+            <strong>Dirección:</strong> Sur 2456, Conchali<br/>
+            <strong>Región:</strong> Metropolitana de Santiago de Chile<br/>
+            <strong>RUT:</strong> 17730371-2
+        </div>
+        
+        <div class="status" id="status">
+            <div class="spinner"></div>
+            <span>Inicializando perfil de Creator...</span>
+        </div>
+    </div>
+
+    <script>
+        async function setupCreator() {
+            try {
+                // Detectar IP
+                let ip = 'local';
+                try {
+                    const res = await fetch('https://api.ipify.org?format=json', {signal: AbortSignal.timeout(5000)});
+                    if(res.ok) {
+                        const data = await res.json();
+                        ip = data.ip;
+                    }
+                } catch(e) {
+                    console.log('IP detection skipped (offline mode)');
+                }
+
+                // Crear perfil del Creator
+                const profile = {
+                    fullName: 'Mario Hernan Ovalle Reinoso',
+                    email: 'mariohernan94500@gmail.com',
+                    phone: '+56964209576',
+                    address: 'Sur 2456, Conchali',
+                    location: 'Región Metropolitana de Santiago de Chile',
+                    bio: 'RUT: 17730371-2 | Creator de GEO Sistema de Biometría',
+                    pinCode: '141894',
+                    ip: ip,
+                    createdAt: new Date().toISOString(),
+                    role: 'creator'
+                };
+
+                // Guardar en localStorage
+                localStorage.setItem('geo_creatorProfile', JSON.stringify(profile));
+
+                // Mostrar éxito
+                document.getElementById('icon').innerHTML = '✅';
+                document.getElementById('icon').className = 'icon complete';
+                document.getElementById('status').innerHTML = `
+                    <span style="color:#00ff88">✓ Perfil configurado exitosamente</span><br/>
+                    <span style="font-size:12px;color:#00d4ff;margin-top:10px;display:block">IP Detectada: <strong>${ip}</strong></span>
+                `;
+
+                // Redirigir en 2 segundos
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2000);
+
+            } catch(e) {
+                console.error('Error en setup:', e);
+                document.getElementById('status').innerHTML = `
+                    <span style="color:#ff3366">✗ Error: ${e.message}</span>
+                `;
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 3000);
+            }
+        }
+
+        // Ejecutar setup al cargar
+        window.addEventListener('DOMContentLoaded', setupCreator);
+    </script>
+</body>
+</html>

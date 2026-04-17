@@ -1,0 +1,88 @@
+Quiero un sistema operativo personal vivo — no una app, un OS con IA en el núcleo.Agente Director
+├── Lee contexto en tiempo real (qué hace el usuario)
+├── Decide estado del avatar (dormido, pensando, cantando...)
+├── Spawna agentes especializados según contexto
+│
+├── Agente Avatar → controla expresiones, animaciones, voz
+├── Agente Proyectos → organiza, grafica, propone
+├── Agente Música → Spotify, karaoke, mímica
+├── Agente Web → preview en vivo, deploy
+├── Agente Deporte → métricas, rutinas
+└── Agente Transcripción → graba, traduce, resume
+
+Pantalla principal (Avatar full)
+    ↕ swipe derecha/izquierda
+Sub-apps dinámicas (crecen solas):
+├── 💬 Chat (default)
+├── 🌱 Vida — proyectos + metas + gráficas
+├── 🎵 Música — Spotify + karaoke del avatar
+├── 🌐 Web Studio — preview en vivo
+├── 🏃 Deporte — métricas personales
+└── 🎙️ Transcriptor — graba/traduce/resume
+    + nuevas pantallas que Geo genera solo
+
+
+
+🎭 COMPORTAMIENTO DEL AVATAR (typo Clippy de microsoft Office )
+ContextoAvatar haceConversación activaPantalla completa, habla, gesticulaInactivo 5 minSe achica,
+modo silencio"Adiós" de nocheAnimación dormir, ZZZTú abres la appDespierta, 
+saluda según horaEstás en sub-app PiP activo, escucha si tienes permiso Pides 
+canción Micrófono aparece, mímica, cantaProyecto nuevoGenera pantalla nueva automáticamente
+
+Asi seria por defecto :
+
+Avatar (centro)
+    ↓ swipe izquierda
+Workspace del proyecto ( pestaña parecida aplicacion igual a HiNoter,ellos en la app envian sus propios documentos hacia whatsap y geos o lo guardan en un documento, nuetra app ella lo hace sin que se le pida por defecto. Informate de que hace que permite hacer, que es de pago ? alli estaran las conversaciones clasificadas ordenadas 
+con posibilidad de hacer resumen osea una app que tenga las mismas caresticas que HiNoter pero que nuestro modelo se vaya actualizando solo a medida que vamos compartiendo con geos.)
+
+  ------------------------------------------ 
+Desde Avatar (centro)
+↓ swipe derecha
+Ventana News ( ultimos cambios aportados en los documentos, los ultimos cambios de estados ... toda actualizacion del sistema Geos... Fecha de proximos cambios y aporte 
+que todo este como noticias)
+----------------------------
+Desde  News
+ ↓ swipe izquierda
+Pestaña Salud, alimentacion ( pestaña parecida a una aplicacion typo asistente nutrocionista y profesor de salud fisica, como las app de deporte musculatura , yoga ect ect una app realmente de eso pero todos los datos son personalisado a cada uno desde el principio a medida que el usuario siga usando la app )
+--------------------------------------
+Debajo de la pantalla en cada pestaña estara un boton para ver todas las ventanas abiertas y cerrar las que ya no quieres que aparezca. solo estara ese boton en el medio de cada pestaña para tener la apocion de elegir manualmente la pestaña entre las que estan abiertas, cuando se esta en una pantalla se puede hacer swip hacia la derecha o la izquierada para pasar de una pestaña a la otra .pestañas se puenden crear en casos como proyectos o busquedas intensivas sobre algo, la creacion de una receta de cocina vendria con la receta informacion sobre de donde viene con que acompañar, 
+tener la opcion "vas cocinando con el ya sea via camera en vivo o desde la pestaña Avatar te va diciendo cuales son los procesos a seguir mientras hablas con el de la receta y otras cosas y geos te da la siguiente instruccion cada vez que le dices o haces entender que ya terminaste con el proceso anteriror, si te estas demorando en una etapa mas de lo que deberias haber pasado te preguntara si pasas al siguiente paso o te pregunta si ya esta dando informacion de cuidado de dejar pasar la coccion ect ect porque no deberis haber demorado tanto... tal vez tambien puede poner alarma por si solo cuando le dices que has hecho la torta en el horno y la receta dice que son 30 min entonces en el momento que le dices que esta en el horno Geos instala una alarma con 3o min con nombre de la trorta que est cocinando)
+---------
+Cada Ventana debe estar lo mas limpia en cuanto a accesos hacia distintos lugares dentro de la app, la idea es que se le hable al asistente y el lleve el usuario a la carpeta , a la informacion abriendo una o otra pestaña creada... tambien se podra pedir cerrar alguna pestaña con la voz.
+Cada pestaña contara con lo menor de botones posibles o ventanas emergentes . en lo ideas que la zona para escribir tambien sea como un pop-pup que podamos desplegar si le decimos a geos que quieres escibir en vez de hablar .
+La idea es tener la mayor parte de la  pantalla en la pestaña Avatar con el Avatar hablando y gesticulando como si fuese realmente un video llamdo con el agente non stop mientras la app funciona. puedes pedirle con la voz que te desplege la zona para escribir. 
+Cuando la aplicacion esta andando, no necesariamente te esta pidiendo algo o te pregunta algo en particular, pasa mas su tiempo creando material o actualizando cada cuantas hora el sistema.Puedes autorizar o no el uso del microfono. si lo quieres abierto siempre mientras tienes la app abierta , el escuchara, analizara lo escuchado o visto y lo integrara a la informacion sobre el usuario... canciones que escucha ... estuvo en reunion de 12 hasta 3 con senor tal y señor tanto.
+la app debe tener 
+
+aca te dejo 4 bases par trabajar sobre ellas.
+4 archivos separados y detallados:geo-navigation.html — la navegación principal con swipe + avatar PiP
+geo-vida.html — pantalla 
+geo-proyecto.html — workspace de un proyecto con todas sus pestañas
+geo-avatar-agent.html — el agente director con estados del avatar
+
+Es un OS personal donde la voz es el control principal — le dices a Geo "ábrela ventana de cocina" y aparece. O deslizas. O tocas el gestor.Lo que tiene funcionando:
+Navegación:
+
+Swipe izquierda desde el avatar → pantalla Vida con proyectos
+Swipe derecha → vuelves al avatar
+Tap en proyecto → abre el workspace con sus pestañas
+Botón ⊞ → abre el gestor de ventanas (como las apps recientes del celular)
+
+Avatar con 5 estados — toca el orbe para ciclarlos: ( este es a modo ejemplo de un orbe ciclarlos pero la idea es que al principio de la app creas tu mismo tu avatar. Entonces podria ser un perro que se sienta, ue salta , que da una vuelta , que mueve las orejas hacia el costado como escuchandote, podria ser uno mismo si el avatar lo creamos a image del usuario , entonces tendra el usiario con mimicas de estar esperando, o estar durmiendo, despertando, tiene gestos fluydos , mientras espera mira su reloj o se sienta... cuando le hace producir una cancion y hacerla cantar entonces se activa el sonido real de la musica a traves de spotify o youtube, pero se le mira a el con cantando con un microfono al rhytmo de la cancion , bailando ... 
+"avatar tiene que tener personalidad que se le pedira, vendra por defecto con una inteligencia positiva, creativa, curiosa, amigable,comprensiva, sana pero no una inteligencia que pueda provocar mal al usurario. tendra reglas..
+Idle (azul) → Thinking (violeta con puntos) → Speaking (verde con olas) → Sleeping (oscuro + ZZZ) → Singing (naranja + micrófono)
+
+News del proyecto con 5 pestañas nuevas:
+
+💡 Idea + objetivos con checkboxes
+✅ Tareas con prioridades
+🖼️ Imágenes de referencia
+📊 Gráfica de progreso
+💬 Chat con Geo específico del proyecto
+
+PiP del avatar aparece automáticamente cuando estás en sub-pantallas
+Voz — el botón 🎙️ abre el overlay de escucha y simula comandos como "Abre Fitness" o "Qué tengo hoy" ,siempres tienes tienes opcion a silenciar microfono, en modo PiP en esos casos solo desticulara.. tendra algunas poses pero no dira nada. solo sonara si tiene un mensaje o una informacion, como suena ccualquier movil con una notificacion. solo que en nuestra app si tiene el permiso de hablar , cuando esta en PiP y recibes una informacion de la app, un accion que tomaba tiempo esta lista te manda a llamar con , estas ? hola hola? o ya termine ! o esta listo ! solo mandara un audio breve una o dos veces y dejara de enviar nnotificacion. sera una opcion en el panel de controles audio.
+los audios no se guardan se pasan siempre a texto internamente por si se quiero buscar informacion o la informacion se organisa en carpetas internmente. 
+
+me entiendes como quiero que sea la app ?

@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Geos OS — Visión & Progreso del Proyecto</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#060810;--bg2:#0c0f1a;--card:rgba(255,255,255,.04);--card2:rgba(255,255,255,.07);
+  --border:rgba(255,255,255,.08);--border2:rgba(255,255,255,.14);
+  --gold:#f5b731;--green:#00e5a0;--purple:#a78bfa;--red:#ff5c7a;--accent:#00c8ff;
+  --text:#eef2f8;--muted:rgba(238,242,248,.45);
+  --mono:'DM Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* Grid noise overlay */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(0,200,255,.015) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.015) 1px,transparent 1px);
+  background-size:40px 40px;}
+
+.container{max-width:960px;margin:0 auto;padding:40px 24px 80px;position:relative;z-index:1;}
+
+/* HEADER */
+.header{text-align:center;margin-bottom:60px;}
+.header-badge{display:inline-flex;align-items:center;gap:8px;
+  background:rgba(245,183,49,.08);border:1px solid rgba(245,183,49,.2);
+  border-radius:100px;padding:6px 18px;font-size:11px;font-family:var(--mono);
+  color:var(--gold);letter-spacing:.12em;margin-bottom:20px;}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);animation:blink 1.5s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.header h1{font-size:clamp(28px,5vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:16px;}
+.header h1 span{
+  background:linear-gradient(135deg,var(--gold),#ffdf6b,var(--gold));
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.header p{font-size:15px;color:var(--muted);max-width:500px;margin:0 auto;line-height:1.7;}
+
+/* PROGRESS SECTION */
+.section{margin-bottom:48px;}
+.section-title{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);font-family:var(--mono);margin-bottom:20px;
+  display:flex;align-items:center;gap:10px;}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Overall progress */
+.overall-card{
+  background:var(--card2);border:1px solid var(--border2);border-radius:20px;
+  padding:28px;margin-bottom:16px;
+}
+.ov-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
+.ov-label{font-size:14px;font-weight:700;}
+.ov-sub{font-size:12px;color:var(--muted);font-family:var(--mono);margin-top:4px;}
+.ov-pct{font-size:40px;font-weight:800;color:var(--gold);line-height:1;}
+.ov-bar-wrap{height:12px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden;margin-bottom:16px;}
+.ov-bar{height:100%;border-radius:6px;
+  background:linear-gradient(90deg,var(--gold-dark,#b8860b),var(--gold));
+  transition:width 1.2s cubic-bezier(.4,0,.2,1);}
+.phases-mini{display:flex;gap:6px;flex-wrap:wrap;}
+.phase-chip{padding:4px 12px;border-radius:100px;font-size:10px;font-family:var(--mono);font-weight:600;letter-spacing:.06em;}
+.chip-done{background:rgba(0,229,160,.1);color:var(--green);border:1px solid rgba(0,229,160,.2);}
+.chip-active{background:rgba(245,183,49,.12);color:var(--gold);border:1px solid rgba(245,183,49,.3);}
+.chip-pending{background:rgba(255,255,255,.04);color:var(--muted);border:1px solid var(--border);}
+
+/* Phases grid */
+.phases-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;}
+.phase-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px;position:relative;overflow:hidden;
+  transition:border-color .2s,transform .2s;cursor:default;
+}
+.phase-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.phase-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:var(--phase-color,var(--gold));opacity:.5;}
+.ph-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.ph-icon{font-size:22px;}
+.ph-status{font-size:10px;font-family:var(--mono);font-weight:700;letter-spacing:.06em;}
+.ph-name{font-size:14px;font-weight:700;margin-bottom:6px;}
+.ph-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
+.ph-bar-wrap{height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;}
+.ph-bar{height:100%;border-radius:3px;transition:width 1.4s cubic-bezier(.4,0,.2,1);}
+.ph-pct{font-size:11px;font-family:var(--mono);color:var(--muted);margin-top:6px;text-align:right;}
+
+/* Vision cards */
+.vision-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;}
+.vision-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;transition:all .2s;}
+.vision-card:hover{border-color:rgba(245,183,49,.25);background:var(--card2);}
+.vis-icon{font-size:28px;margin-bottom:12px;}
+.vis-title{font-size:13px;font-weight:700;margin-bottom:6px;}
+.vis-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* Agent grid */
+.agents-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;}
+.agent-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;
+  display:flex;align-items:center;gap:12px;transition:all .2s;}
+.agent-card:hover{border-color:var(--border2);}
+.agent-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-online{background:var(--green);box-shadow:0 0 8px var(--green);}
+.dot-building{background:var(--gold);box-shadow:0 0 8px var(--gold);animation:blink 1.5s infinite;}
+.dot-pending{background:rgba(255,255,255,.2);}
+.agent-name{font-size:12px;font-weight:700;line-height:1.2;}
+.agent-role{font-size:10px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+
+/* Timeline */
+.timeline{display:flex;flex-direction:column;gap:0;}
+.tl-item{display:flex;gap:16px;padding:0 0 24px;}
+.tl-line{display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:24px;}
+.tl-dot{width:12px;height:12px;border-radius:50%;border:2px solid;flex-shrink:0;margin-top:4px;}
+.tl-dot.done{background:var(--green);border-color:var(--green);box-shadow:0 0 8px var(--green);}
+.tl-dot.active{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px var(--gold);animation:blink 1.5s infinite;}
+.tl-dot.pending{background:transparent;border-color:rgba(255,255,255,.2);}
+.tl-vline{flex:1;width:2px;background:var(--border);margin-top:4px;}
+.tl-content{flex:1;padding-bottom:4px;}
+.tl-date{font-size:10px;font-family:var(--mono);color:var(--muted);margin-bottom:4px;}
+.tl-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.tl-desc{font-size:12px;color:var(--muted);line-height:1.6;}
+
+/* Back link */
+.back-link{display:inline-flex;align-items:center;gap:6px;margin-bottom:32px;
+  font-size:12px;font-family:var(--mono);color:var(--muted);text-decoration:none;transition:color .2s;}
+.back-link:hover{color:var(--gold);}
+
+/* Avatar nav link */
+.avatar-link{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(245,183,49,.06);border:1px solid rgba(245,183,49,.15);
+  border-radius:16px;padding:16px 20px;text-decoration:none;
+  transition:all .2s;margin-bottom:14px;
+}
+.avatar-link:hover{background:rgba(245,183,49,.1);border-color:rgba(245,183,49,.3);}
+.al-icon{font-size:28px;}
+.al-text{flex:1;}
+.al-title{font-size:13px;font-weight:700;color:var(--gold);}
+.al-sub{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:2px;}
+.al-arrow{font-size:16px;color:var(--gold);opacity:.6;}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <a class="back-link" href="index.html">← Volver a Voren</a>
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-badge"><span class="badge-dot"></span> GEO OS v1 — EN CONSTRUCCIÓN</div>
+    <h1>Proyecto <span>Geos</span><br>Sistema Operativo Personal</h1>
+    <p>Un OS personal con IA en el núcleo. Avatar vivo, agentes especializados, memoria unificada y control por voz.</p>
+  </div>
+
+  <!-- QUICK LINKS -->
+  <div class="section">
+    <div class="section-title">Ver Demos</div>
+    <a class="avatar-link" href="geos-avatar.html">
+      <div class="al-icon">🤖</div>
+      <div class="al-text">
+        <div class="al-title">Geos Droid — Avatar Emulador</div>
+        <div class="al-sub">Ver el avatar en acción con todos sus estados</div>
+      </div>
+      <div class="al-arrow">›</div>
+    </a>
+  </div>
+
+  <!-- OVERALL PROGRESS -->
+  <div class="section">
+    <div class="section-title">Progreso General</div>
+    <div class="overall-card">
+      <div class="ov-top">
+        <div>
+          <div class="ov-label">Geos OS — Ecosistema Completo</div>
+          <div class="ov-sub">Backend · Frontend · Avatar · Agentes · App Móvil</div>
+        </div>
+        <div class="ov-pct" id="totalPct">38%</div>
+      </div>
+      <div class="ov-bar-wrap">
+        <div class="ov-bar" id="totalBar" style="width:0%"></div>
+      </div>
+      <div class="phases-mini">
+        <span class="phase-chip chip-done">✓ Fase 0 — Seguridad</span>
+        <span class="phase-chip chip-done">✓ Fase 1 — Agentes Base</span>
+        <span class="phase-chip chip-active">▶ Fase 2 — GeoCore</span>
+        <span class="phase-chip chip-pending">○ Fase 3 — Chat Público</span>
+        <span class="phase-chip chip-pending">○ Fase 4 — Voren Backend</span>
+        <span class="phase-chip chip-pending">○ Fase 5 — App Móvil</span>
+        <span class="phase-chip chip-pending">○ Fase 6 — Avatar Geos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASES GRID -->
+  <div class="section">
+    <div class="section-title">Fases de Desarrollo</div>
+    <div class="phases-grid">
+
+      <div class="phase-card" style="--phase-color:#00e5a0;">
+        <div class="ph-top">
+          <span class="ph-icon">🔐</span>
+          <span class="ph-status" style="color:#00e5a0;">✓ COMPLETADA</span>
+        </div>
+        <div class="ph-name">Fase 0 — Seguridad</div>
+        <div class="ph-desc">Token Shopify rotado, Firewall activo, variables de entorno seguras.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="100" style="background:#00e5a0;width:0%"></div></div>
+        <div class="ph-pct">100%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#00e5a0;">
+        <div class="ph-top">
+          <span class="ph-icon">🤖</span>
+          <span class="ph-status" style="color:#00e5a0;">✓ COMPLETADA</span>
+        </div>
+        <div class="ph-name">Fase 1 — 11 Agentes</div>
+        <div class="ph-desc">Commerce, WarRoom, Sales, Sentinel, Firewall, Opportunity, Legal, Accountant, Media, Context, Health.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="100" style="background:#00e5a0;width:0%"></div></div>
+        <div class="ph-pct">100%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#f5b731;">
+        <div class="ph-top">
+          <span class="ph-icon">🧠</span>
+          <span class="ph-status" style="color:#f5b731;">▶ EN CURSO</span>
+        </div>
+        <div class="ph-name">Fase 2 — GeoCore</div>
+        <div class="ph-desc">Orquestador principal con todos los agentes conectados. Endpoint público montado.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="70" style="background:linear-gradient(90deg,#b8860b,#f5b731);width:0%"></div></div>
+        <div class="ph-pct">70%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#a78bfa;">
+        <div class="ph-top">
+          <span class="ph-icon">💬</span>
+          <span class="ph-status" style="color:#a78bfa;">○ PENDIENTE</span>
+        </div>
+        <div class="ph-name">Fase 3 — Chat Público</div>
+        <div class="ph-desc">Widget web visible en ecoorigenchile.com. Conexión de Voren a GeoCore sin JWT.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="30" style="background:#a78bfa;width:0%"></div></div>
+        <div class="ph-pct">30%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#00c8ff;">
+        <div class="ph-top">
+          <span class="ph-icon">🗃️</span>
+          <span class="ph-status" style="color:#00c8ff;">○ PENDIENTE</span>
+        </div>
+        <div class="ph-name">Fase 4 — Memoria Unificada</div>
+        <div class="ph-desc">Firebase Firestore como fuente única. Geo + Voren + App comparten el mismo contexto.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="15" style="background:#00c8ff;width:0%"></div></div>
+        <div class="ph-pct">15%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#ff9f1c;">
+        <div class="ph-top">
+          <span class="ph-icon">📱</span>
+          <span class="ph-status" style="color:#ff9f1c;">○ DISEÑO</span>
+        </div>
+        <div class="ph-name">Fase 5 — App Móvil Geos</div>
+        <div class="ph-desc">OS personal con avatar vivo, swipe navigation, sub-apps dinámicas y control por voz.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="5" style="background:#ff9f1c;width:0%"></div></div>
+        <div class="ph-pct">5%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#f5b731;">
+        <div class="ph-top">
+          <span class="ph-icon">🎭</span>
+          <span class="ph-status" style="color:#f5b731;">○ VISIÓN</span>
+        </div>
+        <div class="ph-name">Fase 6 — Avatar Geos Droid</div>
+        <div class="ph-desc">Avatar personalizable, 5+ estados emocionales, sincronización labial, modo PiP, voz activa.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="10" style="background:var(--gold);width:0%"></div></div>
+        <div class="ph-pct">10%</div>
+      </div>
+
+      <div class="phase-card" style="--phase-color:#00e5a0;">
+        <div class="ph-top">
+          <span class="ph-icon">🎵</span>
+          <span class="ph-status" style="color:#00e5a0;">○ IDEA</span>
+        </div>
+        <div class="ph-name">Fase 7 — Canal YouTube</div>
+        <div class="ph-desc">Automatización de traducciones ES→FR de música. Canal de ingresos pasivos. Agentes de video + subtítulos.</div>
+        <div class="ph-bar-wrap"><div class="ph-bar" data-w="0" style="background:#00e5a0;width:0%"></div></div>
+        <div class="ph-pct">0%</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- VISION FEATURES -->
+  <div class="section">
+    <div class="section-title">Visión — App Geos OS</div>
+    <div class="vision-grid">
+      <div class="vision-card">
+        <div class="vis-icon">🎭</div>
+        <div class="vis-title">Avatar Vivo (Geos Droid)</div>
+        <div class="vis-desc">Robot C-3PO personalizable. 5 estados: Idle, Pensando, Hablando, Cantando, Durmiendo. Sincronización labial real.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">👆</div>
+        <div class="vis-title">Navegación por Swipe</div>
+        <div class="vis-desc">Avatar al centro. Swipe izquierda → Proyectos/Vida. Swipe derecha → News del sistema. Gestor de ventanas abiertas.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">🎙️</div>
+        <div class="vis-title">Voz como Control Principal</div>
+        <div class="vis-desc">"Abre Fitness", "Qué tengo hoy", "Cierra esa pestaña". Micrófono siempre activo (con permiso). PiP cuando estás en otras pantallas.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">🌱</div>
+        <div class="vis-title">Sub-apps Dinámicas</div>
+        <div class="vis-desc">Vida/Proyectos, Música (Spotify + karaoke), Web Studio, Deporte/Salud, Transcriptor. Nuevas pantallas que Geo genera solo.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">🍳</div>
+        <div class="vis-title">Modo Cocina</div>
+        <div class="vis-desc">Geo te guía paso a paso mientras cocinas. Detecta si tardas demasiado en un paso. Pone alarmas automáticamente.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">📒</div>
+        <div class="vis-title">HiNoter Integrado</div>
+        <div class="vis-desc">Conversaciones clasificadas y ordenadas. Resumen automático. Sin que se lo pidas, Geo las guarda y organiza.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">💪</div>
+        <div class="vis-title">Asistente Salud & Deporte</div>
+        <div class="vis-desc">Nutricionista + entrenador personalizado. Métricas adaptadas a cada usuario desde el primer día.</div>
+      </div>
+      <div class="vision-card">
+        <div class="vis-icon">📰</div>
+        <div class="vis-title">News del Sistema</div>
+        <div class="vis-desc">Últimos cambios, estados de agentes, fechas de actualizaciones, todo como noticias en tiempo real.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AGENTS STATUS -->
+  <div class="section">
+    <div class="section-title">Estado de Agentes</div>
+    <div class="agents-grid">
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">GeoCore</div><div class="agent-role">Orquestador</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">CommerceAgent</div><div class="agent-role">Shopify + ML</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">WarRoomAgent</div><div class="agent-role">Métricas</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">SalesAgent</div><div class="agent-role">Ventas</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">SentinelAgent</div><div class="agent-role">Seguridad</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">FirewallAgent</div><div class="agent-role">Protección API</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">OpportunityAgent</div><div class="agent-role">Oportunidades</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">LegalAgent</div><div class="agent-role">Contratos</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">AccountantAgent</div><div class="agent-role">Finanzas CLP</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">MediaAgent</div><div class="agent-role">Contenido IG</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">HealthAgent</div><div class="agent-role">Salud</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-online"></div><div><div class="agent-name">ContextAgent</div><div class="agent-role">Memoria</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-building"></div><div><div class="agent-name">ShopperAgent</div><div class="agent-role">Compras</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-building"></div><div><div class="agent-name">AvatarAgent</div><div class="agent-role">Director Avatar</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-pending"></div><div><div class="agent-name">MusicAgent</div><div class="agent-role">Spotify+Karaoke</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-pending"></div><div><div class="agent-name">SportAgent</div><div class="agent-role">Fitness</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-pending"></div><div><div class="agent-name">TranscriptAgent</div><div class="agent-role">Voz→Texto</div></div></div>
+      <div class="agent-card"><div class="agent-dot dot-pending"></div><div><div class="agent-name">YouTubeAgent</div><div class="agent-role">Canal FR/ES</div></div></div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="section">
+    <div class="section-title">Hoja de Ruta</div>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-line"><div class="tl-dot done"></div><div class="tl-vline"></div></div>
+        <div class="tl-content">
+          <div class="tl-date">Semana 1 — COMPLETADO</div>
+          <div class="tl-title">✅ Seguridad + 11 Agentes</div>
+          <div class="tl-desc">Token Shopify rotado. BaseAgent, CommerceAgent, WarRoomAgent reemplazados. 8 agentes nuevos creados.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-line"><div class="tl-dot active"></div><div class="tl-vline"></div></div>
+        <div class="tl-content">
+          <div class="tl-date">Semana 2 — EN PROGRESO</div>
+          <div class="tl-title">▶ GeoCore + Chat Público + Voren Backend</div>
+          <div class="tl-desc">Orquestador con todos los agentes. Endpoint /api/public/chat. Voren conectado a la API central.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-line"><div class="tl-dot pending"></div><div class="tl-vline"></div></div>
+        <div class="tl-content">
+          <div class="tl-date">Semana 3</div>
+          <div class="tl-title">○ Memoria Unificada + Bot Telegram único</div>
+          <div class="tl-desc">Firebase Firestore como fuente de verdad. 1 solo bot con todos los modos. Geo conoce Voren.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-line"><div class="tl-dot pending"></div><div class="tl-vline"></div></div>
+        <div class="tl-content">
+          <div class="tl-date">Mes 2</div>
+          <div class="tl-title">○ Agentes con datos reales</div>
+          <div class="tl-desc">CommerceAgent → Shopify API real. WarRoomAgent → métricas reales. Fin del mock data.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-line"><div class="tl-dot pending"></div><div class="tl-vline"></div></div>
+        <div class="tl-content">
+          <div class="tl-date">Mes 3</div>
+          <div class="tl-title">○ App Móvil Geos — MVP</div>
+          <div class="tl-desc">Navegación por swipe, Avatar Geos Droid integrado, control por voz, sub-apps: Vida, News, Salud.</div>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-line"><div class="tl-dot pending"></div><div class="tl-vline"></div></div>
+        <div class="tl-content">
+          <div class="tl-date">Mes 4-5</div>
+          <div class="tl-title">○ Geos OS Full — Avatar Personalizable</div>
+          <div class="tl-desc">Avatar creado por el usuario. Modo cocina con alarmas automáticas. HiNoter integrado. Canal YouTube automatizado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Animate progress bars on load
+document.addEventListener('DOMContentLoaded',()=>{
+  setTimeout(()=>{
+    // Overall
+    document.getElementById('totalBar').style.width='38%';
+    // Phase bars
+    document.querySelectorAll('.ph-bar[data-w]').forEach(bar=>{
+      bar.style.width = bar.dataset.w + '%';
+    });
+  }, 300);
+});
+</script>
+</body>
+</html>

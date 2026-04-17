@@ -1,0 +1,955 @@
+/* ═══════════════════════════════════════════════════════════════
+   VITRA — Design System
+   Fondo: #F6F3EE | Verde: #0F3D2E | Acento dorado: #B8956A
+   Tipografía: Playfair Display (títulos) + Inter (cuerpo)
+═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --vitra-green: #0F3D2E;
+  --vitra-green-mid: #1A5C44;
+  --vitra-green-light: #E8F0EB;
+  --vitra-warm: #F6F3EE;
+  --vitra-gold: #B8956A;
+  --vitra-gold-light: #F0E8DB;
+  --vitra-text: #1C1C1A;
+  --vitra-text-muted: #6B6860;
+  --vitra-white: #FFFFFF;
+  --vitra-border: rgba(15, 61, 46, 0.12);
+  --vitra-shadow: 0 8px 40px rgba(15, 61, 46, 0.10);
+  --vitra-shadow-lg: 0 20px 60px rgba(15, 61, 46, 0.15);
+  --vitra-radius: 2px;
+  --vitra-radius-lg: 6px;
+  --vitra-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ─── Base ─────────────────────────────────────────────────── */
+.vitra-page {
+  font-family: 'Inter', -apple-system, sans-serif;
+  background: var(--vitra-warm);
+  color: var(--vitra-text);
+  min-height: 100vh;
+}
+
+.vitra-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ─── Header ───────────────────────────────────────────────── */
+.vitra-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(246, 243, 238, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--vitra-border);
+}
+
+.vitra-header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 68px;
+  gap: 24px;
+}
+
+.vitra-logo {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  text-decoration: none;
+}
+
+.vitra-logo-main {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--vitra-green);
+  text-transform: uppercase;
+}
+
+.vitra-logo-sub {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--vitra-gold);
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.vitra-nav {
+  display: flex;
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.vitra-nav a {
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--vitra-text-muted);
+  text-transform: uppercase;
+  transition: color var(--vitra-transition);
+}
+
+.vitra-nav a:hover,
+.vitra-nav a.active {
+  color: var(--vitra-green);
+}
+
+.vitra-header-cta {
+  background: var(--vitra-green);
+  color: var(--vitra-warm);
+  border: none;
+  padding: 10px 22px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background var(--vitra-transition), transform var(--vitra-transition);
+  border-radius: var(--vitra-radius);
+  font-family: 'Inter', sans-serif;
+}
+
+.vitra-header-cta:hover {
+  background: var(--vitra-green-mid);
+  transform: translateY(-1px);
+}
+
+/* ─── Botones ──────────────────────────────────────────────── */
+.vitra-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--vitra-green);
+  color: var(--vitra-warm);
+  border: none;
+  padding: 14px 32px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all var(--vitra-transition);
+  border-radius: var(--vitra-radius);
+  font-family: 'Inter', sans-serif;
+  text-decoration: none;
+}
+
+.vitra-btn:hover {
+  background: var(--vitra-green-mid);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(15, 61, 46, 0.25);
+}
+
+.vitra-btn-outline {
+  background: transparent;
+  color: var(--vitra-green);
+  border: 1.5px solid var(--vitra-green);
+}
+
+.vitra-btn-outline:hover {
+  background: var(--vitra-green);
+  color: var(--vitra-warm);
+}
+
+.vitra-btn-gold {
+  background: var(--vitra-gold);
+  color: var(--vitra-white);
+}
+
+.vitra-btn-gold:hover {
+  background: #A07850;
+}
+
+/* ─── Hero ─────────────────────────────────────────────────── */
+.vitra-hero {
+  position: relative;
+  background: var(--vitra-green);
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.vitra-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 70% 50%, rgba(184, 149, 106, 0.15) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.vitra-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+  width: 100%;
+  padding: 80px 0;
+}
+
+.vitra-hero-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--vitra-gold);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vitra-hero-label::before {
+  content: '';
+  display: block;
+  width: 32px;
+  height: 1px;
+  background: var(--vitra-gold);
+}
+
+.vitra-hero-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(48px, 6vw, 80px);
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--vitra-warm);
+  margin: 0 0 12px;
+}
+
+.vitra-hero-title em {
+  font-style: italic;
+  color: var(--vitra-gold);
+}
+
+.vitra-hero-tagline {
+  font-size: 18px;
+  color: rgba(246, 243, 238, 0.7);
+  margin: 0 0 36px;
+  font-style: italic;
+  font-family: 'Playfair Display', serif;
+}
+
+.vitra-hero-actions {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.vitra-hero-img {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vitra-hero-img img {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 4px;
+  object-fit: cover;
+  aspect-ratio: 4/5;
+  display: block;
+}
+
+.vitra-hero-badge {
+  position: absolute;
+  bottom: 32px;
+  left: -20px;
+  background: var(--vitra-warm);
+  border-radius: var(--vitra-radius-lg);
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  box-shadow: var(--vitra-shadow);
+  animation: floatBadge 3s ease-in-out infinite;
+}
+
+@keyframes floatBadge {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.vitra-hero-badge-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--vitra-green);
+  line-height: 1;
+}
+
+.vitra-hero-badge-text {
+  font-size: 11px;
+  color: var(--vitra-text-muted);
+  letter-spacing: 0.05em;
+}
+
+/* ─── Sección genérica ─────────────────────────────────────── */
+.vitra-section {
+  padding: 100px 0;
+}
+
+.vitra-section-sm {
+  padding: 60px 0;
+}
+
+.vitra-section-dark {
+  background: var(--vitra-green);
+  color: var(--vitra-warm);
+}
+
+.vitra-section-cream {
+  background: var(--vitra-gold-light);
+}
+
+.vitra-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--vitra-gold);
+  margin-bottom: 16px;
+}
+
+.vitra-section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 4vw, 52px);
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--vitra-green);
+  margin: 0 0 20px;
+}
+
+.vitra-section-dark .vitra-section-title {
+  color: var(--vitra-warm);
+}
+
+.vitra-section-lead {
+  font-size: 17px;
+  color: var(--vitra-text-muted);
+  max-width: 540px;
+  line-height: 1.7;
+  margin: 0 0 48px;
+}
+
+.vitra-section-dark .vitra-section-lead {
+  color: rgba(246, 243, 238, 0.72);
+}
+
+/* ─── Collections Grid ─────────────────────────────────────── */
+.vitra-collections-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 48px;
+}
+
+.vitra-collection-card {
+  background: var(--vitra-white);
+  border: 1px solid var(--vitra-border);
+  border-radius: var(--vitra-radius-lg);
+  overflow: hidden;
+  transition: all var(--vitra-transition);
+  cursor: pointer;
+  text-decoration: none;
+  display: block;
+  color: inherit;
+}
+
+.vitra-collection-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--vitra-shadow-lg);
+  border-color: var(--vitra-green);
+}
+
+.vitra-collection-thumb {
+  width: 100%;
+  aspect-ratio: 3/4;
+  object-fit: cover;
+  display: block;
+  background: var(--vitra-green-light);
+}
+
+.vitra-collection-thumb-placeholder {
+  width: 100%;
+  aspect-ratio: 3/4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--vitra-green-light), var(--vitra-gold-light));
+  font-size: 48px;
+}
+
+.vitra-collection-info {
+  padding: 20px;
+}
+
+.vitra-collection-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vitra-green);
+  margin-bottom: 6px;
+}
+
+.vitra-collection-desc {
+  font-size: 13px;
+  color: var(--vitra-text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.vitra-collection-link {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--vitra-green);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap var(--vitra-transition);
+}
+
+.vitra-collection-card:hover .vitra-collection-link {
+  gap: 10px;
+}
+
+/* ─── Products Grid ────────────────────────────────────────── */
+.vitra-products-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-top: 48px;
+}
+
+.vitra-product-card {
+  background: var(--vitra-white);
+  border: 1px solid var(--vitra-border);
+  border-radius: var(--vitra-radius-lg);
+  overflow: hidden;
+  transition: all var(--vitra-transition);
+}
+
+.vitra-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--vitra-shadow-lg);
+}
+
+.vitra-product-img-wrap {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--vitra-green-light);
+}
+
+.vitra-product-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.vitra-product-card:hover .vitra-product-img {
+  transform: scale(1.05);
+}
+
+.vitra-product-body {
+  padding: 20px;
+}
+
+.vitra-product-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--vitra-text);
+  margin-bottom: 4px;
+}
+
+.vitra-product-price {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--vitra-green);
+  margin-bottom: 16px;
+}
+
+/* ─── Process Steps ────────────────────────────────────────── */
+.vitra-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 32px;
+  margin-top: 60px;
+}
+
+.vitra-step {
+  text-align: center;
+  position: relative;
+}
+
+.vitra-step:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  top: 28px;
+  right: -20px;
+  font-size: 20px;
+  color: var(--vitra-gold);
+}
+
+.vitra-step-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--vitra-green-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  margin: 0 auto 20px;
+  border: 2px solid var(--vitra-border);
+}
+
+.vitra-step-num {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: var(--vitra-gold);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.vitra-step-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vitra-green);
+  margin-bottom: 8px;
+}
+
+.vitra-step-desc {
+  font-size: 13px;
+  color: var(--vitra-text-muted);
+  line-height: 1.6;
+}
+
+/* ─── Stats ────────────────────────────────────────────────── */
+.vitra-stats {
+  display: flex;
+  gap: 60px;
+  justify-content: center;
+  flex-wrap: wrap;
+  padding: 60px 0;
+}
+
+.vitra-stat {
+  text-align: center;
+}
+
+.vitra-stat-num {
+  font-family: 'Playfair Display', serif;
+  font-size: 52px;
+  font-weight: 700;
+  color: var(--vitra-warm);
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.vitra-stat-label {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(246, 243, 238, 0.65);
+}
+
+/* ─── CTA Banner ───────────────────────────────────────────── */
+.vitra-cta-banner {
+  background: linear-gradient(135deg, var(--vitra-green) 0%, var(--vitra-green-mid) 100%);
+  border-radius: 12px;
+  padding: 80px 60px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.vitra-cta-banner::before {
+  content: '';
+  position: absolute;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(184, 149, 106, 0.1);
+  top: -100px;
+  right: -100px;
+  pointer-events: none;
+}
+
+/* ─── Filter pills ─────────────────────────────────────────── */
+.vitra-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 40px;
+}
+
+.vitra-filter-pill {
+  padding: 8px 20px;
+  border: 1.5px solid var(--vitra-border);
+  background: transparent;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--vitra-text-muted);
+  cursor: pointer;
+  transition: all var(--vitra-transition);
+  font-family: 'Inter', sans-serif;
+}
+
+.vitra-filter-pill:hover,
+.vitra-filter-pill.active {
+  background: var(--vitra-green);
+  border-color: var(--vitra-green);
+  color: var(--vitra-warm);
+}
+
+/* ─── Footer ───────────────────────────────────────────────── */
+.vitra-footer {
+  background: var(--vitra-text);
+  color: rgba(246, 243, 238, 0.7);
+  padding: 60px 0 32px;
+}
+
+.vitra-footer-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 48px;
+  margin-bottom: 48px;
+}
+
+.vitra-footer-brand {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--vitra-warm);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.vitra-footer-tagline {
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+  font-style: italic;
+  color: rgba(246, 243, 238, 0.55);
+}
+
+.vitra-footer-col-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--vitra-gold);
+  margin-bottom: 16px;
+}
+
+.vitra-footer-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vitra-footer-links a {
+  text-decoration: none;
+  font-size: 14px;
+  color: rgba(246, 243, 238, 0.6);
+  transition: color var(--vitra-transition);
+}
+
+.vitra-footer-links a:hover {
+  color: var(--vitra-warm);
+}
+
+.vitra-footer-bottom {
+  border-top: 1px solid rgba(246, 243, 238, 0.1);
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(246, 243, 238, 0.4);
+}
+
+/* ─── WhatsApp Flotante ────────────────────────────────────── */
+.vitra-whatsapp-float {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 999;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #25D366;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 26px;
+  box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+  transition: transform var(--vitra-transition), box-shadow var(--vitra-transition);
+  animation: pulse-wa 2.5s ease-in-out infinite;
+}
+
+.vitra-whatsapp-float:hover {
+  transform: scale(1.1);
+  box-shadow: 0 8px 32px rgba(37, 211, 102, 0.5);
+}
+
+@keyframes pulse-wa {
+  0%, 100% { box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4); }
+  50% { box-shadow: 0 4px 32px rgba(37, 211, 102, 0.7); }
+}
+
+/* ─── Form ─────────────────────────────────────────────────── */
+.vitra-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 600px;
+}
+
+.vitra-input,
+.vitra-textarea {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1.5px solid var(--vitra-border);
+  border-radius: var(--vitra-radius);
+  background: var(--vitra-white);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  color: var(--vitra-text);
+  transition: border-color var(--vitra-transition);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vitra-input:focus,
+.vitra-textarea:focus {
+  border-color: var(--vitra-green);
+}
+
+.vitra-textarea {
+  min-height: 140px;
+  resize: vertical;
+}
+
+.vitra-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ─── Breadcrumb ───────────────────────────────────────────── */
+.vitra-breadcrumb {
+  padding: 16px 0;
+  font-size: 12px;
+  color: var(--vitra-text-muted);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vitra-breadcrumb a {
+  text-decoration: none;
+  color: var(--vitra-text-muted);
+  transition: color var(--vitra-transition);
+}
+
+.vitra-breadcrumb a:hover {
+  color: var(--vitra-green);
+}
+
+/* ─── Page header interno ──────────────────────────────────── */
+.vitra-page-header {
+  background: var(--vitra-green);
+  padding: 80px 0;
+  text-align: center;
+}
+
+.vitra-page-header-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 5vw, 64px);
+  font-weight: 700;
+  color: var(--vitra-warm);
+  margin: 0 0 12px;
+}
+
+.vitra-page-header-sub {
+  font-size: 17px;
+  color: rgba(246, 243, 238, 0.7);
+  font-style: italic;
+  font-family: 'Playfair Display', serif;
+}
+
+/* ─── About grid ───────────────────────────────────────────── */
+.vitra-about-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+
+.vitra-about-img {
+  width: 100%;
+  border-radius: var(--vitra-radius-lg);
+  object-fit: cover;
+  aspect-ratio: 4/5;
+}
+
+/* ─── Values ───────────────────────────────────────────────── */
+.vitra-values {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  margin-top: 60px;
+}
+
+.vitra-value-card {
+  border: 1px solid var(--vitra-border);
+  border-radius: var(--vitra-radius-lg);
+  padding: 36px 28px;
+  background: var(--vitra-white);
+  transition: all var(--vitra-transition);
+}
+
+.vitra-value-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--vitra-shadow);
+  border-color: var(--vitra-green);
+}
+
+.vitra-value-icon {
+  font-size: 36px;
+  margin-bottom: 16px;
+}
+
+.vitra-value-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--vitra-green);
+  margin-bottom: 10px;
+}
+
+.vitra-value-text {
+  font-size: 14px;
+  color: var(--vitra-text-muted);
+  line-height: 1.7;
+}
+
+/* ─── Contact ──────────────────────────────────────────────── */
+.vitra-contact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: start;
+}
+
+.vitra-contact-info {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.vitra-contact-item {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.vitra-contact-icon {
+  width: 44px;
+  height: 44px;
+  background: var(--vitra-green-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.vitra-contact-item-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--vitra-gold);
+  margin-bottom: 4px;
+}
+
+.vitra-contact-item-text {
+  font-size: 15px;
+  color: var(--vitra-text);
+}
+
+/* ─── Animations ───────────────────────────────────────────── */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.vitra-fade-in {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+/* ─── Loading spinner ──────────────────────────────────────── */
+.vitra-loading {
+  text-align: center;
+  padding: 80px 0;
+  font-family: 'Playfair Display', serif;
+  font-size: 20px;
+  color: var(--vitra-text-muted);
+  font-style: italic;
+}
+
+/* ─── Divider ──────────────────────────────────────────────── */
+.vitra-divider {
+  height: 1px;
+  background: var(--vitra-border);
+  margin: 0;
+}
+
+/* ─── Responsive ───────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .vitra-hero-grid { grid-template-columns: 1fr; }
+  .vitra-hero-img { display: none; }
+  .vitra-collections-grid { grid-template-columns: repeat(2, 1fr); }
+  .vitra-products-grid { grid-template-columns: repeat(2, 1fr); }
+  .vitra-steps { grid-template-columns: repeat(2, 1fr); }
+  .vitra-step::after { display: none; }
+  .vitra-footer-grid { grid-template-columns: 1fr 1fr; }
+  .vitra-about-grid { grid-template-columns: 1fr; }
+  .vitra-contact-grid { grid-template-columns: 1fr; }
+  .vitra-values { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .vitra-nav { display: none; }
+  .vitra-collections-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .vitra-products-grid { grid-template-columns: 1fr; }
+  .vitra-steps { grid-template-columns: 1fr; }
+  .vitra-stats { gap: 32px; }
+  .vitra-cta-banner { padding: 48px 28px; }
+  .vitra-footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .vitra-form-row { grid-template-columns: 1fr; }
+}

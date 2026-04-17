@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animated Presentation Builder | Mario's Toolkit</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root { --bg-dark:#0f172a; --panel-bg:#1e293b; --accent-purple:#8b5cf6; --accent-cyan:#38bdf8; --text-main:#f8fafc; --text-muted:#94a3b8; --border:#334155; --success:#10b981; }
+        * { box-sizing:border-box; outline:none; -webkit-font-smoothing:antialiased; }
+        body { margin:0; font-family:'Outfit',sans-serif; background:var(--bg-dark); color:var(--text-main); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+        header { height:60px; background:var(--panel-bg); border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:20; }
+        .brand { font-weight:700; font-size:1.2rem; display:flex; align-items:center; gap:10px; background:linear-gradient(to right,var(--accent-cyan),var(--accent-purple)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .header-controls { display:flex; gap:10px; }
+        button { background:var(--panel-bg); border:1px solid var(--border); color:var(--text-main); padding:8px 16px; border-radius:6px; cursor:pointer; font-family:inherit; font-weight:500; font-size:0.9rem; display:flex; align-items:center; gap:8px; transition:all 0.2s; }
+        button:hover { background:#2d3e52; border-color:var(--text-muted); }
+        button:active { transform:scale(0.98); }
+        button.primary { background:var(--accent-purple); border-color:var(--accent-purple); color:white; }
+        button.primary:hover { background:#7c3aed; box-shadow:0 0 15px rgba(139,92,246,0.4); }
+        button.danger { color:#ef4444; border-color:#7f1d1d; }
+        button.danger:hover { background:#7f1d1d; color:white; }
+        main { display:flex; flex:1; overflow:hidden; }
+        aside { width:260px; background:#162032; border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+        .slides-header { padding:15px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+        .slide-list { flex:1; overflow-y:auto; padding:15px; display:flex; flex-direction:column; gap:15px; }
+        .slide-thumb { aspect-ratio:16/9; background:white; border:2px solid transparent; border-radius:6px; cursor:pointer; position:relative; overflow:hidden; transition:all 0.2s; flex-shrink:0; }
+        .slide-thumb:hover { border-color:var(--accent-cyan); transform:translateY(-2px); }
+        .slide-thumb.active { border-color:var(--accent-purple); box-shadow:0 0 0 2px rgba(139,92,246,0.3); }
+        .slide-num { position:absolute; top:4px; left:4px; background:rgba(0,0,0,0.5); color:white; font-size:10px; padding:2px 6px; border-radius:4px; z-index:2; }
+        .editor-container { flex:1; background:#0b101f; display:flex; flex-direction:column; position:relative; }
+        .canvas-wrapper { flex:1; display:flex; align-items:center; justify-content:center; padding:40px; overflow:auto; }
+        #current-slide { width:960px; height:540px; background:white; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.5); overflow:hidden; transform-origin:center center; }
+        .slide-element { position:absolute; cursor:grab; user-select:none; border:1px solid transparent; }
+        .slide-element:hover { border:1px dashed var(--accent-cyan); }
+        .slide-element.selected { border:1px solid var(--accent-purple); z-index:100; }
+        .slide-element .resize-handle { display:none; width:10px; height:10px; background:var(--accent-purple); position:absolute; right:-5px; bottom:-5px; cursor:se-resize; border-radius:2px; }
+        .slide-element.selected .resize-handle { display:block; }
+        .toolbar { height:60px; background:var(--panel-bg); border-top:1px solid var(--border); display:flex; align-items:center; padding:0 20px; gap:20px; }
+        .tool-group { display:flex; gap:8px; padding-right:20px; border-right:1px solid var(--border); }
+        .tool-group:last-child { border:none; }
+        .tool-btn { width:40px; height:40px; border-radius:6px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--bg-dark); color:var(--text-muted); cursor:pointer; font-size:1.2rem; transition:0.2s; }
+        .tool-btn:hover { color:var(--text-main); background:#2d3e52; border-color:var(--text-muted); }
+        .properties-panel { width:280px; background:var(--panel-bg); border-left:1px solid var(--border); padding:20px; display:flex; flex-direction:column; gap:20px; overflow-y:auto; }
+        .prop-section h4 { margin:0 0 10px 0; font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); letter-spacing:1px; }
+        .prop-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px; }
+        label { display:block; font-size:0.75rem; color:var(--text-muted); margin-bottom:4px; }
+        input[type="text"], input[type="number"], select, textarea { width:100%; background:var(--bg-dark); border:1px solid var(--border); color:var(--text-main); padding:8px; border-radius:4px; font-family:inherit; font-size:0.85rem; }
+        input:focus, select:focus { border-color:var(--accent-cyan); }
+        input[type="color"] { width:40px; height:40px; padding:2px; border:1px solid var(--border); background:var(--bg-dark); cursor:pointer; border-radius:4px; }
+        #fullscreen-player { position:fixed; top:0; left:0; width:100vw; height:100vh; background:black; z-index:1000; display:none; align-items:center; justify-content:center; }
+        #player-slide { width:100%; height:100%; background:white; position:relative; overflow:hidden; }
+        .player-controls { position:absolute; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:20px; z-index:1001; opacity:0; transition:opacity 0.3s; }
+        #fullscreen-player:hover .player-controls { opacity:1; }
+        .player-btn { background:rgba(0,0,0,0.6); color:white; border:none; width:50px; height:50px; border-radius:50%; cursor:pointer; font-size:1.2rem; display:flex; align-items:center; justify-content:center; }
+        .player-btn:hover { background:var(--accent-purple); }
+        .toast { position:fixed; bottom:30px; right:30px; background:var(--panel-bg); border:1px solid var(--accent-purple); color:white; padding:12px 24px; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,0.5); transform:translateY(100px); opacity:0; transition:0.3s; z-index:2000; }
+        .toast.show { transform:translateY(0); opacity:1; }
+        @keyframes slideInRight { from{transform:translateX(100%)} to{transform:translateX(0)} }
+        @keyframes slideOutLeft { from{transform:translateX(0)} to{transform:translateX(-100%)} }
+        @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+        @keyframes fadeOut { from{opacity:1} to{opacity:0} }
+        @keyframes zoomIn { from{transform:scale(0.8);opacity:0} to{transform:scale(1);opacity:1} }
+        @keyframes zoomOut { from{transform:scale(1);opacity:1} to{transform:scale(1.2);opacity:0} }
+        .trans-slide .anim-in { animation:slideInRight 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .trans-fade .anim-in { animation:fadeIn 0.8s ease forwards; }
+        .trans-zoom .anim-in { animation:zoomIn 0.6s cubic-bezier(0.16,1,0.3,1) forwards; }
+        .slide-anim { position:absolute; top:0; left:0; width:100%; height:100%; }
+        ::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:var(--bg-dark); } ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="brand"><i class="ph ph-presentation-chart"></i> Presentation Builder</div>
+        <div class="header-controls">
+            <button onclick="addSlide()"><i class="ph ph-plus"></i> New Slide</button>
+            <button onclick="deleteSlide()" class="danger"><i class="ph ph-trash"></i> Delete</button>
+            <button class="primary" onclick="exportProject()"><i class="ph ph-download-simple"></i> Export HTML</button>
+            <button onclick="startPresentation()" style="background:var(--success);border-color:var(--success);color:#fff;"><i class="ph ph-play"></i> Present</button>
+        </div>
+    </header>
+    <main>
+        <aside>
+            <div class="slides-header"><span style="font-weight:500;">Slides</span><span id="slide-count" style="color:var(--text-muted);font-size:0.85rem;"></span></div>
+            <div class="slide-list" id="slide-list"></div>
+        </aside>
+        <div class="editor-container">
+            <div class="canvas-wrapper">
+                <div id="current-slide" onclick="deselectAll(event)"></div>
+            </div>
+            <div class="toolbar">
+                <div class="tool-group">
+                    <div class="tool-btn" onclick="addText()" title="Text"><i class="ph ph-text-t"></i></div>
+                    <div class="tool-btn" onclick="triggerImage()" title="Image"><i class="ph ph-image"></i></div>
+                    <div class="tool-btn" onclick="addShape('rect')" title="Rectangle"><i class="ph ph-square"></i></div>
+                    <div class="tool-btn" onclick="addShape('circle')" title="Circle"><i class="ph ph-circle"></i></div>
+                    <input type="file" id="img-uploader" style="display:none" accept="image/*" onchange="handleImageUpload(this)">
+                </div>
+                <div class="tool-group">
+                    <div class="tool-btn" onclick="changeBg('#ffffff')" title="White"><div style="width:16px;height:16px;background:#fff;border:1px solid #666;border-radius:2px;"></div></div>
+                    <div class="tool-btn" onclick="changeBg('#0f172a')" title="Dark"><div style="width:16px;height:16px;background:#0f172a;border-radius:2px;"></div></div>
+                    <div class="tool-btn" onclick="changeBg('#8b5cf6')" title="Purple"><div style="width:16px;height:16px;background:#8b5cf6;border-radius:2px;"></div></div>
+                    <div class="tool-btn" onclick="changeBg('#38bdf8')" title="Cyan"><div style="width:16px;height:16px;background:#38bdf8;border-radius:2px;"></div></div>
+                    <div class="tool-btn" title="Custom BG"><input type="color" id="custom-bg" value="#ffffff" onchange="changeBg(this.value)" style="width:30px;height:30px;padding:0;border:none;"></div>
+                </div>
+                <div class="tool-group" style="flex:1;justify-content:flex-end;border:none;">
+                    <label style="color:var(--text-muted);font-size:0.8rem;margin:0 8px 0 0;">Transition:</label>
+                    <select id="transition-select" onchange="setTransition(this.value)" style="width:120px;">
+                        <option value="none">None</option>
+                        <option value="fade">Fade</option>
+                        <option value="slide">Slide</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="properties-panel">
+            <div id="no-props" style="text-align:center;color:var(--text-muted);padding-top:50px;">
+                <i class="ph ph-cursor-click" style="font-size:2rem;display:block;margin-bottom:10px;"></i>
+                <p style="margin:0;">Select an element<br>to edit properties</p>
+            </div>
+            <div id="props-content" style="display:none;">
+                <div class="prop-section">
+                    <h4>Layout</h4>
+                    <div class="prop-row">
+                        <div><label>X</label><input type="number" id="p-x" oninput="updateEl()"></div>
+                        <div><label>Y</label><input type="number" id="p-y" oninput="updateEl()"></div>
+                    </div>
+                    <div class="prop-row">
+                        <div><label>Width</label><input type="number" id="p-w" oninput="updateEl()"></div>
+                        <div><label>Height</label><input type="number" id="p-h" oninput="updateEl()"></div>
+                    </div>
+                    <div style="display:flex;gap:8px;margin-bottom:10px;">
+                        <button class="tool-btn" style="flex:1;height:32px;font-size:0.75rem;" onclick="moveLayer(1)"><i class="ph ph-arrow-up"></i> Up</button>
+                        <button class="tool-btn" style="flex:1;height:32px;font-size:0.75rem;" onclick="moveLayer(-1)"><i class="ph ph-arrow-down"></i> Down</button>
+                    </div>
+                </div>
+                <div class="prop-section" id="text-props" style="display:none;">
+                    <h4>Typography</h4>
+                    <textarea id="p-text" rows="3" oninput="updateEl()" style="margin-bottom:10px;"></textarea>
+                    <div class="prop-row">
+                        <select id="p-font" onchange="updateEl()">
+                            <option value="Outfit">Outfit</option>
+                            <option value="Arial">Arial</option>
+                            <option value="Times New Roman">Times New Roman</option>
+                            <option value="Courier New">Courier New</option>
+                            <option value="Georgia">Georgia</option>
+                        </select>
+                        <input type="number" id="p-size" oninput="updateEl()" placeholder="Size">
+                    </div>
+                    <div class="prop-row">
+                        <div><label>Text Color</label><input type="color" id="p-color" oninput="updateEl()"></div>
+                        <div><label>Background</label><input type="color" id="p-bg" oninput="updateEl()"></div>
+                    </div>
+                    <div style="display:flex;gap:6px;">
+                        <button class="tool-btn" style="flex:1;height:32px;" onclick="toggleStyle('bold',true)"><i class="ph ph-text-b"></i></button>
+                        <button class="tool-btn" style="flex:1;height:32px;" onclick="toggleStyle('italic',true)"><i class="ph ph-text-italic"></i></button>
+                        <button class="tool-btn" style="flex:1;height:32px;" onclick="toggleStyle('align','center')"><i class="ph ph-text-align-center"></i></button>
+                        <button class="tool-btn" style="flex:1;height:32px;" onclick="toggleStyle('align','left')"><i class="ph ph-text-align-left"></i></button>
+                    </div>
+                </div>
+                <div class="prop-section" id="shape-props" style="display:none;">
+                    <h4>Shape Style</h4>
+                    <div class="prop-row">
+                        <div><label>Fill</label><input type="color" id="p-fill" oninput="updateEl()"></div>
+                        <div><label>Border</label><input type="color" id="p-stroke" oninput="updateEl()"></div>
+                    </div>
+                    <div><label>Border Width</label><input type="number" id="p-stroke-w" value="0" min="0" oninput="updateEl()"></div>
+                </div>
+                <button class="danger" onclick="deleteSelected()" style="width:100%;margin-top:10px;justify-content:center;">
+                    <i class="ph ph-trash"></i> Delete Element
+                </button>
+            </div>
+        </div>
+    </main>
+    <div id="fullscreen-player">
+        <div id="player-slide"></div>
+        <div class="player-controls">
+            <button class="player-btn" onclick="prevSlide()"><i class="ph ph-caret-left"></i></button>
+            <button class="player-btn" onclick="exitPresentation()"><i class="ph ph-x"></i></button>
+            <button class="player-btn" onclick="nextSlide()"><i class="ph ph-caret-right"></i></button>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <script>
+        let slides=[], currentSlideIndex=0, selectedElId=null;
+        let isDragging=false, isResizing=false;
+        let dragOffset={x:0,y:0}, resizeStart={w:0,h:0,x:0,y:0};
+
+        function init() {
+            const saved=localStorage.getItem('pres_v2');
+            if(saved) slides=JSON.parse(saved);
+            else createDefaults();
+            renderThumbnails(); loadSlide(0);
+            setupDragDrop();
+        }
+
+        function createDefaults() {
+            slides=[
+                {id:'s1',bg:'#0f172a',transition:'fade',elements:[
+                    {id:'e1',type:'text',x:80,y:180,w:800,h:80,text:'Welcome to Presentation Builder',font:'Outfit',size:54,color:'#ffffff',bold:true,align:'center'},
+                    {id:'e2',type:'text',x:180,y:290,w:600,h:40,text:'Create beautiful slides in your browser',font:'Outfit',size:24,color:'#94a3b8',align:'center'},
+                    {id:'e3',type:'shape',shape:'rect',x:380,y:370,w:200,h:4,fill:'#8b5cf6'}
+                ]},
+                {id:'s2',bg:'#ffffff',transition:'slide',elements:[
+                    {id:'e4',type:'text',x:80,y:60,w:800,h:60,text:'Your Second Slide',font:'Outfit',size:48,color:'#0f172a',bold:true},
+                    {id:'e5',type:'shape',shape:'rect',x:80,y:140,w:800,h:4,fill:'#8b5cf6'},
+                    {id:'e6',type:'text',x:80,y:180,w:760,h:120,text:'Add your content here.\nDrag, resize, and customize everything.',font:'Outfit',size:28,color:'#334155'}
+                ]}
+            ];
+        }
+
+        function renderThumbnails() {
+            const list=document.getElementById('slide-list');
+            list.innerHTML='';
+            document.getElementById('slide-count').textContent=slides.length+' slides';
+            slides.forEach((s,idx)=>{
+                const thumb=document.createElement('div');
+                thumb.className=`slide-thumb ${idx===currentSlideIndex?'active':''}`;
+                thumb.onclick=()=>loadSlide(idx);
+                thumb.innerHTML=`<span class="slide-num">${idx+1}</span>`;
+                const mini=document.createElement('div');
+                mini.style.cssText=`width:400%;height:400%;position:absolute;top:0;left:0;transform:scale(0.25);transform-origin:top left;background:${s.bg};pointer-events:none;`;
+                s.elements.forEach(el=>{
+                    const d=document.createElement('div');
+                    d.style.cssText=`position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;`;
+                    if(el.type==='text'){d.innerText=el.text;d.style.color=el.color;d.style.fontSize=el.size+'px';d.style.fontFamily=el.font;d.style.fontWeight=el.bold?'bold':'normal';d.style.whiteSpace='pre-wrap';}
+                    else if(el.type==='shape'){d.style.backgroundColor=el.fill;d.style.borderRadius=el.shape==='circle'?'50%':'0';if(el.stroke&&el.strokeW)d.style.border=`${el.strokeW}px solid ${el.stroke}`;}
+                    else if(el.type==='image'){const img=document.createElement('img');img.src=el.src;img.style.cssText='width:100%;height:100%;object-fit:cover;';d.appendChild(img);}
+                    mini.appendChild(d);
+                });
+                thumb.appendChild(mini);
+                list.appendChild(thumb);
+            });
+        }
+
+        function loadSlide(index) {
+            save();
+            currentSlideIndex=Math.max(0,Math.min(index,slides.length-1));
+            const slide=slides[currentSlideIndex];
+            const canvas=document.getElementById('current-slide');
+            canvas.style.background=slide.bg;
+            document.getElementById('transition-select').value=slide.transition||'none';
+            canvas.innerHTML='';
+            slide.elements.forEach(el=>canvas.appendChild(createDOM(el)));
+            renderThumbnails(); deselectAll();
+        }
+
+        function createDOM(el) {
+            const div=document.createElement('div');
+            div.className='slide-element'; div.id=el.id;
+            div.style.cssText=`left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;`;
+            if(el.type==='text'){
+                div.innerText=el.text; div.style.fontFamily=el.font; div.style.fontSize=el.size+'px';
+                div.style.color=el.color; div.style.fontWeight=el.bold?'bold':'normal';
+                div.style.fontStyle=el.italic?'italic':'normal'; div.style.whiteSpace='pre-wrap';
+                div.style.display='flex'; div.style.alignItems='center';
+                div.style.justifyContent=el.align==='center'?'center':el.align==='right'?'flex-end':'flex-start';
+                if(el.bg&&el.bg!=='#ffffff') div.style.backgroundColor=el.bg;
+            } else if(el.type==='shape'){
+                div.style.backgroundColor=el.fill||'#8b5cf6';
+                div.style.borderRadius=el.shape==='circle'?'50%':'0';
+                if(el.stroke&&el.strokeW) div.style.border=`${el.strokeW}px solid ${el.stroke}`;
+            } else if(el.type==='image'){
+                const img=document.createElement('img'); img.src=el.src;
+                img.style.cssText='width:100%;height:100%;object-fit:cover;pointer-events:none;';
+                div.appendChild(img);
+            }
+            const h=document.createElement('div'); h.className='resize-handle'; div.appendChild(h);
+            div.addEventListener('mousedown',e=>{if(e.target.classList.contains('resize-handle'))return;selectEl(el.id);startDrag(e,el.id);});
+            h.addEventListener('mousedown',e=>{e.stopPropagation();selectEl(el.id);startResize(e,el.id);});
+            return div;
+        }
+
+        function addText(){const el={id:'el_'+Date.now(),type:'text',x:100,y:100,w:400,h:60,text:'New Text',font:'Outfit',size:36,color:'#333333',align:'left',bold:false,italic:false};slides[currentSlideIndex].elements.push(el);reload();selectEl(el.id);}
+        function addShape(shape){const el={id:'el_'+Date.now(),type:'shape',shape,x:300,y:200,w:150,h:150,fill:'#8b5cf6',stroke:'#000000',strokeW:0};slides[currentSlideIndex].elements.push(el);reload();selectEl(el.id);}
+        function triggerImage(){document.getElementById('img-uploader').click();}
+        function handleImageUpload(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{const el={id:'el_'+Date.now(),type:'image',x:200,y:150,w:300,h:200,src:e.target.result};slides[currentSlideIndex].elements.push(el);reload();selectEl(el.id);input.value='';};reader.readAsDataURL(file);}
+        function changeBg(color){slides[currentSlideIndex].bg=color;document.getElementById('current-slide').style.background=color;save();renderThumbnails();}
+        function setTransition(val){slides[currentSlideIndex].transition=val;save();}
+        function reload(){loadSlide(currentSlideIndex);}
+
+        function selectEl(id) {
+            selectedElId=id;
+            document.querySelectorAll('.slide-element').forEach(e=>e.classList.remove('selected'));
+            const dom=document.getElementById(id); if(dom) dom.classList.add('selected');
+            const el=slides[currentSlideIndex].elements.find(e=>e.id===id); if(!el) return;
+            document.getElementById('no-props').style.display='none';
+            document.getElementById('props-content').style.display='block';
+            document.getElementById('p-x').value=Math.round(el.x);
+            document.getElementById('p-y').value=Math.round(el.y);
+            document.getElementById('p-w').value=Math.round(el.w);
+            document.getElementById('p-h').value=Math.round(el.h);
+            if(el.type==='text'){
+                document.getElementById('text-props').style.display='block';
+                document.getElementById('shape-props').style.display='none';
+                document.getElementById('p-text').value=el.text;
+                document.getElementById('p-font').value=el.font;
+                document.getElementById('p-size').value=el.size;
+                document.getElementById('p-color').value=el.color;
+                document.getElementById('p-bg').value=el.bg||'#ffffff';
+            } else if(el.type==='shape'){
+                document.getElementById('text-props').style.display='none';
+                document.getElementById('shape-props').style.display='block';
+                document.getElementById('p-fill').value=el.fill||'#8b5cf6';
+                document.getElementById('p-stroke').value=el.stroke||'#000000';
+                document.getElementById('p-stroke-w').value=el.strokeW||0;
+            } else {
+                document.getElementById('text-props').style.display='none';
+                document.getElementById('shape-props').style.display='none';
+            }
+        }
+
+        function deselectAll(e){
+            if(e&&e.target.id!=='current-slide') return;
+            selectedElId=null;
+            document.querySelectorAll('.slide-element').forEach(el=>el.classList.remove('selected'));
+            document.getElementById('no-props').style.display='block';
+            document.getElementById('props-content').style.display='none';
+        }
+
+        function updateEl(){
+            if(!selectedElId) return;
+            const el=slides[currentSlideIndex].elements.find(e=>e.id===selectedElId);
+            el.x=parseFloat(document.getElementById('p-x').value)||0;
+            el.y=parseFloat(document.getElementById('p-y').value)||0;
+            el.w=parseFloat(document.getElementById('p-w').value)||50;
+            el.h=parseFloat(document.getElementById('p-h').value)||50;
+            if(el.type==='text'){el.text=document.getElementById('p-text').value;el.font=document.getElementById('p-font').value;el.size=parseInt(document.getElementById('p-size').value);el.color=document.getElementById('p-color').value;el.bg=document.getElementById('p-bg').value;}
+            else if(el.type==='shape'){el.fill=document.getElementById('p-fill').value;el.stroke=document.getElementById('p-stroke').value;el.strokeW=parseInt(document.getElementById('p-stroke-w').value)||0;}
+            save(); reload(); setTimeout(()=>selectEl(selectedElId),0);
+        }
+
+        function toggleStyle(prop,val){
+            if(!selectedElId) return;
+            const el=slides[currentSlideIndex].elements.find(e=>e.id===selectedElId);
+            if(prop==='align') el.align=val;
+            else el[prop]=!el[prop];
+            save(); reload(); setTimeout(()=>selectEl(selectedElId),0);
+        }
+
+        function moveLayer(dir){
+            if(!selectedElId) return;
+            const arr=slides[currentSlideIndex].elements;
+            const idx=arr.findIndex(e=>e.id===selectedElId);
+            if(dir===1&&idx<arr.length-1)[arr[idx],arr[idx+1]]=[arr[idx+1],arr[idx]];
+            else if(dir===-1&&idx>0)[arr[idx],arr[idx-1]]=[arr[idx-1],arr[idx]];
+            save(); reload(); setTimeout(()=>selectEl(selectedElId),0);
+        }
+
+        function deleteSelected(){
+            if(!selectedElId) return;
+            slides[currentSlideIndex].elements=slides[currentSlideIndex].elements.filter(e=>e.id!==selectedElId);
+            selectedElId=null; save(); reload();
+            document.getElementById('no-props').style.display='block';
+            document.getElementById('props-content').style.display='none';
+        }
+
+        function addSlide(){save();slides.push({id:'s'+Date.now(),bg:'#ffffff',transition:'fade',elements:[]});loadSlide(slides.length-1);showToast('Slide added');}
+
+        function deleteSlide(){
+            if(slides.length<=1){showToast('Cannot delete last slide');return;}
+            if(confirm('Delete this slide?')){slides.splice(currentSlideIndex,1);loadSlide(Math.max(0,currentSlideIndex-1));showToast('Slide deleted');}
+        }
+
+        function startDrag(e,id){
+            e.stopPropagation(); isDragging=true;
+            const el=slides[currentSlideIndex].elements.find(x=>x.id===id);
+            const rect=document.getElementById('current-slide').getBoundingClientRect();
+            dragOffset.x=e.clientX-rect.left-el.x;
+            dragOffset.y=e.clientY-rect.top-el.y;
+            document.addEventListener('mousemove',onDrag);
+            document.addEventListener('mouseup',stopDrag);
+        }
+
+        function onDrag(e){
+            if(!isDragging||!selectedElId) return;
+            const rect=document.getElementById('current-slide').getBoundingClientRect();
+            const el=slides[currentSlideIndex].elements.find(x=>x.id===selectedElId);
+            el.x=e.clientX-rect.left-dragOffset.x;
+            el.y=e.clientY-rect.top-dragOffset.y;
+            const dom=document.getElementById(selectedElId);
+            if(dom){dom.style.left=el.x+'px';dom.style.top=el.y+'px';}
+            document.getElementById('p-x').value=Math.round(el.x);
+            document.getElementById('p-y').value=Math.round(el.y);
+        }
+
+        function stopDrag(){if(isDragging)save();isDragging=false;document.removeEventListener('mousemove',onDrag);document.removeEventListener('mouseup',stopDrag);}
+
+        function startResize(e,id){
+            e.stopPropagation(); isResizing=true;
+            const el=slides[currentSlideIndex].elements.find(x=>x.id===id);
+            resizeStart={w:el.w,h:el.h,x:e.clientX,y:e.clientY};
+            document.addEventListener('mousemove',onResize);
+            document.addEventListener('mouseup',stopResize);
+        }
+
+        function onResize(e){
+            if(!isResizing||!selectedElId) return;
+            const el=slides[currentSlideIndex].elements.find(x=>x.id===selectedElId);
+            el.w=Math.max(20,resizeStart.w+(e.clientX-resizeStart.x));
+            el.h=Math.max(20,resizeStart.h+(e.clientY-resizeStart.y));
+            const dom=document.getElementById(selectedElId);
+            if(dom){dom.style.width=el.w+'px';dom.style.height=el.h+'px';}
+            document.getElementById('p-w').value=Math.round(el.w);
+            document.getElementById('p-h').value=Math.round(el.h);
+        }
+
+        function stopResize(){if(isResizing)save();isResizing=false;document.removeEventListener('mousemove',onResize);document.removeEventListener('mouseup',stopResize);}
+
+        function setupDragDrop(){
+            document.body.addEventListener('dragover',e=>e.preventDefault());
+            document.body.addEventListener('drop',e=>{
+                e.preventDefault();
+                if(e.dataTransfer.files&&e.dataTransfer.files[0]){
+                    const file=e.dataTransfer.files[0];
+                    if(file.type.startsWith('image/')){
+                        const reader=new FileReader();
+                        reader.onload=evt=>{
+                            const rect=document.getElementById('current-slide').getBoundingClientRect();
+                            const el={id:'el_'+Date.now(),type:'image',x:e.clientX-rect.left-100,y:e.clientY-rect.top-75,w:200,h:150,src:evt.target.result};
+                            slides[currentSlideIndex].elements.push(el);reload();selectEl(el.id);
+                        };
+                        reader.readAsDataURL(file);
+                    }
+                }
+            });
+        }
+
+        function save(){localStorage.setItem('pres_v2',JSON.stringify(slides));if(window.tT)clearTimeout(window.tT);window.tT=setTimeout(renderThumbnails,400);}
+
+        let playerIdx=0;
+
+        function startPresentation(){
+            playerIdx=currentSlideIndex;
+            document.getElementById('fullscreen-player').style.display='flex';
+            if(document.documentElement.requestFullscreen) document.documentElement.requestFullscreen();
+            renderPlayer();
+            document.addEventListener('keydown',playerKeys);
+        }
+
+        function exitPresentation(){
+            document.getElementById('fullscreen-player').style.display='none';
+            if(document.exitFullscreen) document.exitFullscreen();
+            document.removeEventListener('keydown',playerKeys);
+        }
+
+        function playerKeys(e){if(e.key==='ArrowRight'||e.key===' ')nextSlide();if(e.key==='ArrowLeft')prevSlide();if(e.key==='Escape')exitPresentation();}
+        function nextSlide(){if(playerIdx<slides.length-1){playerIdx++;renderPlayer();}}
+        function prevSlide(){if(playerIdx>0){playerIdx--;renderPlayer();}}
+
+        function renderPlayer(){
+            const container=document.getElementById('player-slide');
+            const slide=slides[playerIdx];
+            container.className='slide-anim trans-'+slide.transition;
+            const content=document.createElement('div');
+            content.className='anim-in';
+            content.style.cssText=`width:100%;height:100%;background:${slide.bg};position:relative;`;
+            slide.elements.forEach(el=>{
+                const d=document.createElement('div');
+                d.style.cssText=`position:absolute;left:${el.x}px;top:${el.y}px;width:${el.w}px;height:${el.h}px;`;
+                if(el.type==='text'){d.innerText=el.text;d.style.color=el.color;d.style.fontSize=el.size+'px';d.style.fontFamily=el.font;d.style.fontWeight=el.bold?'bold':'normal';d.style.whiteSpace='pre-wrap';d.style.display='flex';d.style.alignItems='center';if(el.align==='center')d.style.justifyContent='center';}
+                else if(el.type==='shape'){d.style.backgroundColor=el.fill;d.style.borderRadius=el.shape==='circle'?'50%':'0';if(el.stroke&&el.strokeW)d.style.border=`${el.strokeW}px solid ${el.stroke}`;}
+                else if(el.type==='image'){const img=document.createElement('img');img.src=el.src;img.style.cssText='width:100%;height:100%;object-fit:cover;';d.appendChild(img);}
+                content.appendChild(d);
+            });
+            container.innerHTML=''; container.appendChild(content);
+        }
+
+        function exportProject(){
+            const htmlContent=`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Presentation</title><link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet"><style>body{margin:0;background:#000;font-family:'Outfit',sans-serif;overflow:hidden}#stage{width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}#slide{width:960px;height:540px;position:relative;overflow:hidden}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}@keyframes zoomIn{from{transform:scale(0.8);opacity:0}to{transform:scale(1);opacity:1}}.fade{animation:fadeIn 0.8s}.slide{animation:slideIn 0.6s}.zoom{animation:zoomIn 0.6s}#controls{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:100;display:flex;gap:20px;opacity:0;transition:opacity 0.3s}body:hover #controls{opacity:1}button{background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.3);color:white;padding:10px 20px;cursor:pointer;border-radius:20px;font-family:inherit}button:hover{background:rgba(255,255,255,0.3)}#counter{position:fixed;bottom:20px;right:20px;color:rgba(255,255,255,0.5);font-size:0.9rem}</style></head><body><div id="stage"><div id="slide"></div></div><div id="controls"><button onclick="prev()">← Prev</button><button onclick="next()">Next →</button></div><div id="counter"></div><script>const slides=${JSON.stringify(slides)};let idx=0;const s=document.getElementById('slide');const counter=document.getElementById('counter');function render(){const sl=slides[idx];s.style.background=sl.bg;s.innerHTML='';s.className=sl.transition||'';sl.elements.forEach(el=>{const d=document.createElement('div');d.style.cssText='position:absolute;left:'+el.x+'px;top:'+el.y+'px;width:'+el.w+'px;height:'+el.h+'px;';if(el.type==='text'){d.innerText=el.text;d.style.color=el.color;d.style.fontSize=el.size+'px';d.style.fontFamily=el.font;d.style.fontWeight=el.bold?'bold':'normal';d.style.whiteSpace='pre-wrap';d.style.display='flex';d.style.alignItems='center';if(el.align==='center')d.style.justifyContent='center';}else if(el.type==='shape'){d.style.backgroundColor=el.fill;d.style.borderRadius=el.shape==='circle'?'50%':'0';if(el.stroke&&el.strokeW)d.style.border=el.strokeW+'px solid '+el.stroke;}else if(el.type==='image'){const img=document.createElement('img');img.src=el.src;img.style.cssText='width:100%;height:100%;object-fit:cover;';d.appendChild(img);}s.appendChild(d);});counter.textContent=(idx+1)+' / '+slides.length;}function next(){if(idx<slides.length-1){idx++;render();}}function prev(){if(idx>0){idx--;render();}}document.addEventListener('keydown',e=>{if(e.key==='ArrowRight'||e.key===' ')next();if(e.key==='ArrowLeft')prev();});render();<\/script></body></html>`;
+            const a=document.createElement('a');
+            a.href=URL.createObjectURL(new Blob([htmlContent],{type:'text/html'}));
+            a.download='presentation.html'; a.click();
+            showToast('Presentation exported');
+        }
+
+        function showToast(msg){const t=document.getElementById('toast');t.innerText=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+
+        init();
+    </script>
+</body>
+</html>
