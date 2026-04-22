@@ -86,9 +86,22 @@ export async function transcribirAudio(filePath: string): Promise<string> {
  */
 export async function sintetizarVoz(texto: string): Promise<string> {
     const seguro = texto.length > 4500 ? texto.substring(0, 4500) + '...' : texto;
+    const provider = appConfig.llm.ttsProvider;
 
-    // 1. Google Cloud TTS
-    if (ttsClient) {
+    // 1. ElevenLabs (primero si está configurado como proveedor activo)
+    if (provider === 'elevenlabs' && appConfig.llm.elevenlabsKey) {
+        try {
+            console.log('[TTS] Intentando ElevenLabs (proveedor activo)...');
+            const path = await conTimeout(ttsElevenLabs(seguro), TTS_TIMEOUT_MS, 'ElevenLabs');
+            console.log('[TTS] ✅ ElevenLabs OK');
+            return path;
+        } catch (e: any) {
+            console.warn('[TTS] ⚠️  ElevenLabs falló:', e.message);
+        }
+    }
+
+    // 2. Google Cloud TTS (solo si es el proveedor activo o como fallback)
+    if (provider !== 'elevenlabs' && ttsClient) {
         try {
             console.log('[TTS] Intentando Google Cloud...');
             const path = await conTimeout(ttsGoogle(seguro), TTS_TIMEOUT_MS, 'Google TTS');
@@ -99,10 +112,10 @@ export async function sintetizarVoz(texto: string): Promise<string> {
         }
     }
 
-    // 2. ElevenLabs (fallback)
-    if (appConfig.llm.elevenlabsKey) {
+    // 3. ElevenLabs como fallback universal (si no fue el proveedor activo)
+    if (provider !== 'elevenlabs' && appConfig.llm.elevenlabsKey) {
         try {
-            console.log('[TTS] Intentando ElevenLabs...');
+            console.log('[TTS] Intentando ElevenLabs (fallback)...');
             const path = await conTimeout(ttsElevenLabs(seguro), TTS_TIMEOUT_MS, 'ElevenLabs');
             console.log('[TTS] ✅ ElevenLabs OK');
             return path;

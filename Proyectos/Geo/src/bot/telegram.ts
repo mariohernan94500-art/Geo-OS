@@ -145,7 +145,9 @@ botServidor.on('message:text', async (ctx: Context) => {
 
 // ─── Voz ───────────────────────────────────────────────────────────────────────
 botServidor.on('message:voice', async (ctx: Context) => {
-    const userId   = ctx.from!.id.toString();
+    const userId = ctx.from!.id.toString();
+    if (procesandoUsuarios.has(userId)) { await ctx.reply('⏳ Procesando tu mensaje anterior...'); return; }
+    procesandoUsuarios.add(userId);
     const tempPath = join(TEMP_DOWNLOADS, `voice_${userId}_${Date.now()}.ogg`);
     try {
         await ctx.replyWithChatAction('record_voice');
@@ -154,6 +156,7 @@ botServidor.on('message:voice', async (ctx: Context) => {
     } catch (err: any) {
         await ctx.reply(`⚠️ Error en voz: ${err.message}`);
     } finally {
+        procesandoUsuarios.delete(userId);
         await limpiarArchivo(tempPath);
     }
 });

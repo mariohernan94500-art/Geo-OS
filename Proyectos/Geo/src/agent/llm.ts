@@ -1,7 +1,7 @@
 /**
  * Motor LLM de Geo OS v2 - Con selección dinámica de modelos
- * Proveedores: Groq, Gemini, Together AI, Fireworks AI, OpenRouter (dinámico), Claude (pago opcional)
- * Fallback automático + selección inteligente de modelo según tarea
+ * Proveedores: Gemini, DeepSeek, Groq, Together AI, Fireworks AI, OpenRouter, Claude
+ * Fallback automático + timeout por proveedor + selección inteligente de modelo
  */
 
 import Anthropic from '@anthropic-ai/sdk';
@@ -10,9 +10,20 @@ import OpenAI from 'openai';
 import { appConfig } from '../config.js';
 import { registrarTokens, verificarPresupuestoYAlertar } from '../security/tokenTracker.js';
 
+// Timeout por proveedor (ms) — evita que un proveedor colgado bloquee el fallback
+const LLM_TIMEOUT_MS = 12_000;
+
+function conTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+    return Promise.race([
+        promise,
+        new Promise<T>((_, reject) =>
+            setTimeout(() => reject(new Error(`Timeout ${label} (${ms}ms)`)), ms)
+        ),
+    ]);
+}
+
 // ─── Clientes ─────────────────────────────────────────────────────────────
 
-// Groq
 const groq = new Groq({ apiKey: appConfig.llm.groqKey });
 
 // Gemini (OpenAI-compatible)
@@ -21,6 +32,15 @@ if (appConfig.llm.geminiKey) {
     geminiClient = new OpenAI({
         baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
         apiKey: appConfig.llm.geminiKey,
+    });
+}
+
+// DeepSeek (OpenAI-compatible)
+let deepseekClient: OpenAI | null = null;
+if (appConfig.llm.deepseekKey) {
+    deepseekClient = new OpenAI({
+        baseURL: 'https://api.deepseek.com/v1',
+        apiKey: appConfig.llm.deepseekKey,
     });
 }
 
@@ -87,13 +107,12 @@ function detectTaskType(messages: any[]): TaskType {
 
 function getOpenRouterModel(task: TaskType): string {
     const models = {
-        code:    'qwen/qwen-2.5-coder-32b-instruct:free',
+        code:    'meta-llama/llama-3.1-8b-instruct:free',
         math:    'google/gemma-2-9b-it:free',
         tools:   'mistralai/mistral-7b-instruct:free',
-        summary: 'qwen/qwen-2.5-72b-instruct:free',
-        chat:    'meta/llama-3.3-70b-instruct:free',
+        summary: 'meta-llama/llama-3.3-70b-instruct:free',
+        chat:    'meta-llama/llama-3.3-70b-instruct:free',
     };
-
     return models[task];
 }
 
@@ -160,14 +179,14 @@ async function callOpenAICompatible(
     if (!msg || (!msg.content && !msg.tool_calls)) {
         throw new Error(`Respuesta vacía o inválida de ${model}`);
     }
-    return msg;
+    return { msg, usage: res.usage };
 }
 
-// ─── Generador principal con cadena de fallback + selección dinámica ───────
+// ─── Generador principal con cadena de fallback + timeout por proveedor ──────
 
 export async function generarRespuesta(
     mensajes: any[],
-    modelo: string = 'llama-3.3-70b-versatile', // solo usado por Groq
+    modelo: string = 'llama-3.3-70b-versatile',
     herramientas: any[] | null = null,
     userId: string = 'system',
     operation: string = 'chat'
@@ -175,79 +194,108 @@ export async function generarRespuesta(
     const task = detectTaskType(mensajes);
     console.log(`[LLM] Tarea detectada: ${task}`);
 
-    // ── 1. Groq (principal) ──────────────────────────────────────────────
-    try {
-        console.log(`[LLM] ⚡ Groq (${modelo})...`);
-        const res = await groq.chat.completions.create({
-            model: modelo,
-            messages: mensajes,
-            tools: herramientas || undefined,
-            tool_choice: herramientas ? 'auto' : undefined,
-            temperature: 0.5,
-            max_tokens: 2000,
-        });
-        trackUsage(userId, modelo, operation, res.usage);
-        const msg = res.choices?.[0]?.message;
-        if (msg && (msg.content || msg.tool_calls)) return msg;
-        throw new Error("Respuesta vacía de Groq");
-    } catch (err: any) {
-        console.warn(`[LLM] Groq falló: ${err.message}`);
-    }
-
-    // ── 2. Gemini (contexto largo) ───────────────────────────────────────
+    // ── 1. Gemini (principal — más estable, contexto largo) ───────────────
     if (geminiClient) {
         try {
-            console.log(`[LLM] 🧠 Gemini 1.5 Flash...`);
-            const msg = await callOpenAICompatible(geminiClient, 'gemini-1.5-flash', mensajes, herramientas);
-            trackUsage(userId, 'gemini-1.5-flash', operation, { prompt_tokens: 0, completion_tokens: 0 });
-
+            console.log('[LLM] 🧠 Gemini 1.5 Flash...');
+            const { msg, usage } = await conTimeout(
+                callOpenAICompatible(geminiClient, 'gemini-1.5-flash', mensajes, herramientas),
+                LLM_TIMEOUT_MS, 'Gemini'
+            );
+            trackUsage(userId, 'gemini-1.5-flash', operation, usage ?? {});
             return msg;
         } catch (err: any) {
             console.warn(`[LLM] Gemini falló: ${err.message}`);
         }
     }
 
-    // ── 3. Together AI ───────────────────────────────────────────────────
+    // ── 2. DeepSeek (pago, alta calidad) ─────────────────────────────────
+    if (deepseekClient) {
+        try {
+            console.log(`[LLM] 🔵 DeepSeek (${appConfig.llm.deepseekModel})...`);
+            const { msg, usage } = await conTimeout(
+                callOpenAICompatible(deepseekClient, appConfig.llm.deepseekModel, mensajes, herramientas),
+                LLM_TIMEOUT_MS, 'DeepSeek'
+            );
+            trackUsage(userId, appConfig.llm.deepseekModel, operation, usage ?? {});
+            return msg;
+        } catch (err: any) {
+            console.warn(`[LLM] DeepSeek falló: ${err.message}`);
+        }
+    }
+
+    // ── 3. Groq (rápido cuando responde) ─────────────────────────────────
+    try {
+        console.log(`[LLM] ⚡ Groq (${modelo})...`);
+        const res = await conTimeout(
+            groq.chat.completions.create({
+                model: modelo,
+                messages: mensajes,
+                tools: herramientas || undefined,
+                tool_choice: herramientas ? 'auto' : undefined,
+                temperature: 0.5,
+                max_tokens: 2000,
+            }),
+            LLM_TIMEOUT_MS, 'Groq'
+        );
+        trackUsage(userId, modelo, operation, res.usage);
+        const msg = res.choices?.[0]?.message;
+        if (msg && (msg.content || msg.tool_calls)) return msg;
+        throw new Error('Respuesta vacía de Groq');
+    } catch (err: any) {
+        console.warn(`[LLM] Groq falló: ${err.message}`);
+    }
+
+    // ── 4. Together AI ───────────────────────────────────────────────────
     if (togetherClient) {
         try {
-            console.log(`[LLM] 🤝 Together AI (Llama 3.3 70B)...`);
-            const msg = await callOpenAICompatible(togetherClient, 'meta-llama/Llama-3.3-70B-Instruct-Turbo', mensajes, herramientas);
-            trackUsage(userId, 'together-llama-3.3-70b', operation, {});
+            console.log('[LLM] 🤝 Together AI (Llama 3.3 70B)...');
+            const { msg, usage } = await conTimeout(
+                callOpenAICompatible(togetherClient, 'meta-llama/Llama-3.3-70B-Instruct-Turbo', mensajes, herramientas),
+                LLM_TIMEOUT_MS, 'Together'
+            );
+            trackUsage(userId, 'together-llama-3.3-70b', operation, usage ?? {});
             return msg;
         } catch (err: any) {
             console.warn(`[LLM] Together falló: ${err.message}`);
         }
     }
 
-    // ── 4. Fireworks AI ──────────────────────────────────────────────────
+    // ── 5. Fireworks AI ──────────────────────────────────────────────────
     if (fireworksClient) {
         try {
-            console.log(`[LLM] 🔥 Fireworks AI (Llama 3.3 70B)...`);
-            const msg = await callOpenAICompatible(fireworksClient, 'accounts/fireworks/models/llama-v3p3-70b-instruct', mensajes, herramientas);
-            trackUsage(userId, 'fireworks-llama-3.3-70b', operation, {});
+            console.log('[LLM] 🔥 Fireworks AI (Llama 3.3 70B)...');
+            const { msg, usage } = await conTimeout(
+                callOpenAICompatible(fireworksClient, 'accounts/fireworks/models/llama-v3p3-70b-instruct', mensajes, herramientas),
+                LLM_TIMEOUT_MS, 'Fireworks'
+            );
+            trackUsage(userId, 'fireworks-llama-3.3-70b', operation, usage ?? {});
             return msg;
         } catch (err: any) {
             console.warn(`[LLM] Fireworks falló: ${err.message}`);
         }
     }
 
-    // ── 5. OpenRouter con selección dinámica ──────────────────────────────
+    // ── 6. OpenRouter con selección dinámica ──────────────────────────────
     if (openrouterClient) {
         const openrouterModel = getOpenRouterModel(task);
         console.log(`[LLM] 🔄 OpenRouter (${openrouterModel}) para tarea: ${task}`);
         try {
-            const msg = await callOpenAICompatible(openrouterClient, openrouterModel, mensajes, herramientas);
-            trackUsage(userId, `openrouter-${openrouterModel}`, operation, {});
+            const { msg, usage } = await conTimeout(
+                callOpenAICompatible(openrouterClient, openrouterModel, mensajes, herramientas),
+                LLM_TIMEOUT_MS, 'OpenRouter'
+            );
+            trackUsage(userId, `openrouter-${openrouterModel}`, operation, usage ?? {});
             return msg;
         } catch (err: any) {
             console.warn(`[LLM] OpenRouter falló: ${err.message}`);
         }
     }
 
-    // ── 6. Claude (solo si es de pago y está configurado) ─────────────────
+    // ── 7. Claude (solo si es de pago y está configurado) ─────────────────
     if (claudeClient && appConfig.llm.claudePaid) {
         try {
-            console.log(`[LLM] 🧬 Claude (pago) - calidad extrema...`);
+            console.log('[LLM] 🧬 Claude (pago) - calidad extrema...');
             const systemMsg = mensajes.find(m => m.role === 'system');
             const otrosMsgs = mensajes.filter(m => m.role !== 'system').map(m => {
                 if (m.role === 'tool') {
@@ -259,7 +307,7 @@ export async function generarRespuesta(
                 return { role: m.role as 'user' | 'assistant', content: m.content };
             });
             const params: Anthropic.MessageCreateParams = {
-                model: appConfig.llm.claudeModel || 'claude-3-opus-20240229',
+                model: appConfig.llm.claudeModel || 'claude-sonnet-4-6',
                 max_tokens: 2048,
                 system: systemMsg?.content,
                 messages: otrosMsgs as Anthropic.MessageParam[],
@@ -267,19 +315,22 @@ export async function generarRespuesta(
             if (herramientas && herramientas.length > 0) {
                 params.tools = toAnthropicTools(herramientas);
             }
-            const res = await claudeClient.messages.create(params);
-            trackUsage(userId, appConfig.llm.claudeModel || 'claude-3-opus', operation, res.usage);
+            const res = await conTimeout(
+                claudeClient.messages.create(params),
+                LLM_TIMEOUT_MS, 'Claude'
+            );
+            trackUsage(userId, appConfig.llm.claudeModel || 'claude-sonnet-4-6', operation, res.usage);
             return normalizarRespuestaClaude(res);
         } catch (err: any) {
             console.warn(`[LLM] Claude falló: ${err.message}`);
         }
     }
 
-    // ── 7. Último recurso (nunca silencio) ────────────────────────────────
+    // ── 8. Último recurso (nunca silencio) ────────────────────────────────
     console.error('[LLM] Todos los modelos fallaron');
     return {
         role: 'assistant',
-        content: "⚠️ Lo siento, todos los sistemas de IA están temporalmente agotados. Por favor, repite tu mensaje en unos segundos.",
+        content: '⚠️ Lo siento, todos los sistemas de IA están temporalmente agotados. Por favor, repite tu mensaje en unos segundos.',
         tool_calls: undefined
     };
 }

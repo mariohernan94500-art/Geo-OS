@@ -35,6 +35,8 @@ export const appConfig = {
         elevenlabsKey: obtenerVar('ELEVENLABS_API_KEY', false),
         openrouterKey: obtenerVar('OPENROUTER_API_KEY', false),
         openrouterModel: obtenerVar('OPENROUTER_MODEL', false, 'openrouter/free'),
+        deepseekKey: obtenerVar('DEEPSEEK_API_KEY', false),
+        deepseekModel: obtenerVar('DEEPSEEK_MODEL', false, 'deepseek-chat'),
         // Motor TTS activo: 'google' | 'elevenlabs' | 'none'
         ttsProvider: obtenerVar('TTS_PROVIDER', false, 'google'),
     },

@@ -47,6 +47,8 @@ yarn.lock
 .env.local
 .env.*.local
 *.env
+*.env.REAL
+*.REAL
 secrets.json
 credentials.json
 service-account.json
@@ -54,6 +56,7 @@ firebase-credentials.json
 api-keys.txt
 config.local.js
 personal-config.js
+.claude/settings.local.json
 
 # ==========================================
 # DATOS PRIVADOS
