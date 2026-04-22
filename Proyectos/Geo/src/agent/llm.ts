@@ -165,7 +165,8 @@ async function callOpenAICompatible(
     client: OpenAI,
     model: string,
     messages: any[],
-    tools: any[] | null = null
+    tools: any[] | null = null,
+    maxTokens: number = 700
 ): Promise<any> {
     const res = await client.chat.completions.create({
         model,
@@ -173,7 +174,7 @@ async function callOpenAICompatible(
         tools: tools || undefined,
         tool_choice: tools ? 'auto' : undefined,
         temperature: 0.5,
-        max_tokens: 2000,
+        max_tokens: maxTokens,
     });
     const msg = res.choices?.[0]?.message;
     if (!msg || (!msg.content && !msg.tool_calls)) {
@@ -234,7 +235,7 @@ export async function generarRespuesta(
                 tools: herramientas || undefined,
                 tool_choice: herramientas ? 'auto' : undefined,
                 temperature: 0.5,
-                max_tokens: 2000,
+                max_tokens: 700,
             }),
             LLM_TIMEOUT_MS, 'Groq'
         );
@@ -308,7 +309,7 @@ export async function generarRespuesta(
             });
             const params: Anthropic.MessageCreateParams = {
                 model: appConfig.llm.claudeModel || 'claude-sonnet-4-6',
-                max_tokens: 2048,
+                max_tokens: 700,
                 system: systemMsg?.content,
                 messages: otrosMsgs as Anthropic.MessageParam[],
             };

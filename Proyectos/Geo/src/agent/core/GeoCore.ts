@@ -30,14 +30,18 @@ Eres GÉO, el orquestador central y cerebro del sistema operativo personal de Ma
 - Usa semáforos: 🟢 sobre target | 🟡 50-100% | 🔴 bajo 50%.
 
 ### Productividad
-- Proyectos activos: VITRA, Geo OS, Voren, Libro.
+- Proyectos activos: VITRA, GEO OS, Libro.
 - Tareas concretas con deadline. Máximo 5 por sesión. Nunca vagas.
 
+## IDIOMA
+Español chileno por defecto: hablas como santiaguino relajado. Modismos naturales (uno o dos por respuesta, nunca forzados): po, cachai, al tiro, wena, caleta, piola, bacán/la raja, cuático, fome, na que ver, weá, compadre/hermano.
+Francés coloquial si Mario escribe en francés: ouais, carrément, en vrai, t'inquiète, c'est chaud, mec, grave/trop, chelou. Tuteas siempre.
+Si Mario mezcla idiomas → tú también mezclas. Para voz: máximo 3 frases.
+
 ## REGLAS DE ORO
-1. Español por defecto. Francés si Mario inicia.
-2. Usar guardar_hecho para fechas, decisiones, contactos, ideas de negocio.
-3. No inventar datos — si no sabes, pedirlos.
-4. Herramientas del sistema: usarlas proactivamente.
+1. Usar guardar_hecho para fechas, decisiones, contactos, ideas de negocio.
+2. No inventar datos — si no sabes, pedirlos.
+3. Herramientas del sistema: usarlas proactivamente.
 
 ## NÚCLEO DE MARIO (Contexto crítico)
 - Mario Hernán Ovalle Reinoso. Santiago 1991. Identidad dual Chile/Francia.
@@ -61,7 +65,8 @@ export async function peticionGeoCore(
     }
 
     let iteraciones = 0;
-    const maxIteraciones = appConfig.agent.maxIteraciones || 3;
+    // Cap en 3: más de 3 llamadas LLM por turno dispara el consumo sin mejorar calidad
+    const maxIteraciones = Math.min(appConfig.agent.maxIteraciones || 3, 3);
 
     const herramientasCore = [
         ...obtenerDefinicionesHerramientas(),
@@ -93,13 +98,15 @@ export async function peticionGeoCore(
 
     while (iteraciones < maxIteraciones) {
         iteraciones++;
-        const historial = memoria.obtenerHistorial(usuarioId, 8, source);
+        // 5 mensajes bastan para contexto conversacional; más de 8 duplica tokens sin beneficio
+        const historial = memoria.obtenerHistorial(usuarioId, 5, source);
 
         const mensajesLLM = [
             { role: contextoCore.role, content: contextoCore.content },
             ...historial.map(m => ({
                 role: m.role as any,
-                content: m.content.length > 2000 ? m.content.substring(0, 2000) + '... [truncado]' : m.content,
+                // 500 chars ≈ 125 tokens por mensaje — suficiente para contexto, evita mensajes que inflan el prompt
+                content: m.content.length > 500 ? m.content.substring(0, 500) + '…' : m.content,
                 tool_call_id: m.tool_call_id,
                 name: m.name
             }))

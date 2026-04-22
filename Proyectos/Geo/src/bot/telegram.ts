@@ -1,7 +1,6 @@
 /**
- * FASE 3 — Bot de Telegram Unificado
- * Un solo bot con modos: /modo_geo | /modo_comercio | /modo_warroom | /modo_productividad
- * + comando /tokens para ver consumo
+ * GEO OS — Bot de Telegram
+ * Modos: /modo_geo | /modo_comercio | /modo_warroom | /modo_productividad
  */
 import { Bot, Context, NextFunction, InputFile } from 'grammy';
 import { limit } from '@grammyjs/ratelimiter';
@@ -25,7 +24,7 @@ const procesandoUsuarios = new Set<string>();
 
 function getMode(userId: string): BotMode { return userModes.get(userId) ?? 'geo'; }
 function getSource(mode: BotMode): MemorySource {
-    return ({ geo: 'geo', comercio: 'ecoorigen', warroom: 'geo', productividad: 'voren' } as const)[mode];
+    return ({ geo: 'geo', comercio: 'ecoorigen', warroom: 'geo', productividad: 'productividad' } as const)[mode];
 }
 
 // ─── Rate limit ────────────────────────────────────────────────────────────────
@@ -51,13 +50,13 @@ botServidor.command('start', async (ctx: Context) => {
     const userId = ctx.from!.id.toString();
     const modo = getMode(userId);
     await ctx.reply(
-        `🦾 *Géo OS v1 — En Línea*\n\n` +
+        `🦾 *GEO OS v2 — En Línea*\n\n` +
         `Modo actual: *${modo.toUpperCase()}*\n\n` +
         `*Comandos:*\n` +
         `/modo_geo — Asistente general\n` +
         `/modo_comercio — EcoOrigen / Shopify\n` +
         `/modo_warroom — Métricas y análisis\n` +
-        `/modo_productividad — Tareas / Voren\n` +
+        `/modo_productividad — Tareas / Proyectos\n` +
         `/modo_seguridad — Escaneo y protección\n` +
         `/modo_salud — Ejercicio y bienestar\n` +
         `/modo_compras — Precios y listas\n` +

@@ -5,7 +5,7 @@ import { arrancarServidorApi } from './api/server.js';
 
 async function inicioMundial() {
     console.log('─────────────────────────────────────────');
-    console.log('🦾 Geo OS v1 — Iniciando ecosistema...');
+    console.log('🦾 GEO OS v2 — Iniciando ecosistema...');
     console.log('─────────────────────────────────────────');
 
     try {
@@ -15,7 +15,6 @@ async function inicioMundial() {
         console.log(`✅ Groq    [${appConfig.llm.groqKey ? 'ACTIVO' : 'INACTIVO'}]`);
         console.log(`✅ OpenRouter [${appConfig.llm.openrouterKey ? 'RESPALDO' : 'SIN RESPALDO'}]`);
 
-        // API REST (Voren + App mobile)
         arrancarServidorApi();
 
         // Bot de Telegram (modos: geo | comercio | warroom | productividad)

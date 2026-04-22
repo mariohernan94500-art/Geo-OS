@@ -1,7 +1,7 @@
 {
-  "name": "geo-touvetout",
-  "version": "1.0.0",
-  "description": "Géo Touvetout - Agente Personal de IA (Telegram)",
+  "name": "geo-os",
+  "version": "2.0.0",
+  "description": "GEO OS - Agente Personal de IA (Telegram + API)",
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
@@ -9,11 +9,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "diagnostic": "powershell -ExecutionPolicy Bypass -File scripts/run_diagnostics.ps1",
-    "tokens": "tsx ../maester-app/scripts/token-monitor.ts",
-    "sync": "tsx ../maester-app/scripts/vps-sync.ts",
-    "unify-db": "tsx ../maester-app/scripts/sqlite-unify.ts",
-    "cleanup": "tsx scripts/cleanup-audio.ts",
-    "gen-token": "node ../maester-app/scripts/gen-token.js"
+    "cleanup": "tsx scripts/cleanup-audio.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.27.0",
