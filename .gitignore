@@ -46,8 +46,11 @@ yarn.lock
 .env
 .env.local
 .env.*.local
+*.env
 secrets.json
 credentials.json
+service-account.json
+firebase-credentials.json
 api-keys.txt
 config.local.js
 personal-config.js
@@ -65,6 +68,13 @@ personal-config.js
 *.log
 debug.log
 activity.log
+# Bases de datos
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+*.sqlite
+*.sqlite3
 
 # ==========================================
 # CERTIFICADOS Y CLAVES
@@ -186,7 +196,6 @@ test-cache/
 # ==========================================
 user-data/
 user-backups/
-*.json (excepto package.json)
 uploads/
 
 # ==========================================
