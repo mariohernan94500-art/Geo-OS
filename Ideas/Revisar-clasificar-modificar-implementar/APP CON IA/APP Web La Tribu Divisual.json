@@ -1,0 +1,504 @@
+{
+  "name": "APP Web La Tribu Divisual",
+  "nodes": [
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "data.downloadUrl"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        480
+      ],
+      "id": "1ce639d3-6369-4c44-97ed-c77650fb6656",
+      "name": "Aggregate1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gemini-youtube",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1040,
+        80
+      ],
+      "id": "f62921c7-1e7c-450a-9ac1-43b5cd8c9dfd",
+      "name": "Webhook1",
+      "webhookId": "9109dec4-5368-4630-a875-fc86df541031"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Webhook1').item.json.body.email }}",
+        "subject": "🚀 Tú foto con IA está Lista !",
+        "message": "=<div style=\"font-family: 'Montserrat', 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 20px auto; border: 1px solid #e0e0e0; padding: 40px; border-radius: 12px; background-color: #ffffff;\">\n  <div style=\"text-align: center; margin-bottom: 30px;\">\n    <img src=\"https://divisualproject.com/wp-content/uploads/2025/03/Logotipo-Divisual-Project-Tarjetas-de-Visita-scaled-1.webp\" alt=\"Divisual Project\" style=\"height: 40px; width: auto;\">\n  </div>\n  <h2 style=\"color: #1a1a1a; margin-top: 0; font-weight: 700; font-size: 24px; text-align: left;\">\n    Tu preview con IA está listo 🚀\n  </h2>\n  <p style=\"color: #555; font-size: 16px; text-align: left; margin-bottom: 30px;\">\n    ¡Buenas noticias! Hemos terminado de procesar tu solicitud creativa. Tu imagen generada está lista para revisar.\n  </p>\n  <a href=\"{{ JSON.parse($json.data.resultJson).resultUrls[0] }}\" target=\"_blank\" style=\"text-decoration: none; display: block; margin: 0 auto 30px auto; text-align: center;\">\n    <img src=\"{{ JSON.parse($json.data.resultJson).resultUrls[0] }}\" alt=\"Preview\" style=\"width: 100%; max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);\">\n  </a>\n  <div style=\"text-align: center; margin-bottom: 40px;\">\n    <a href=\"{{ JSON.parse($json.data.resultJson).resultUrls[0] }}\" target=\"_blank\" style=\"display: inline-block; padding: 14px 28px; background-color: #d4a853; color: #09090b; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px; box-shadow: 0 2px 5px rgba(212,168,83,0.3);\">\n      Ver Imagen Completa\n    </a>\n  </div>\n  <div style=\"border-top: 1px solid #eeeeee; padding-top: 30px; text-align: left; color: #999; font-size: 13px;\">\n    <p style=\"margin: 0 0 10px 0; font-weight: 500; color: #555;\">El equipo de Tribu Divisual</p>\n    <p style=\"margin: 0;\">&copy; {{ new Date().getFullYear() }} Divisual Project. Todos los derechos reservados.</p>\n    <p style=\"margin: 5px 0 0 0;\"><a href=\"#\" style=\"color: #999; text-decoration: underline;\">Cancelar suscripción</a> | <a href=\"#\" style=\"color: #999; text-decoration: underline;\">Política de Privacidad</a></p>\n  </div>\n</div>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        416,
+        320
+      ],
+      "id": "fed014a5-33af-457f-97e6-b61057807cba",
+      "name": "Send a message",
+      "webhookId": "fdea08ba-4c9c-44b7-8473-774acbfbc45a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IokBtq93nPyyaQsm",
+          "name": "Gmail divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://kieai.redpandaai.co/api/file-base64-upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "base64Data",
+              "value": "={{ $json.data }}"
+            },
+            {
+              "name": "uploadPath",
+              "value": "documents/uploads"
+            },
+            {
+              "name": "fileName",
+              "value": "={{ $now }}.jpg"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "id": "31f6aef1-7539-44e3-a2b6-1af09becd20a",
+      "name": "Image URLs1",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [
+        -64,
+        192
+      ],
+      "typeVersion": 4,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q27aDmNYjjA8bhRc",
+          "name": "Header Auth account - Kie AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "image_target",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        176
+      ],
+      "id": "d232e6f1-f719-4f1b-863b-1e0510022453",
+      "name": "Image4"
+    },
+    {
+      "parameters": {
+        "operation": "binaryToPropery",
+        "binaryPropertyName": "image_source",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        -32
+      ],
+      "id": "faca70e1-4920-448d-b8b7-e07085610029",
+      "name": "Image"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -304,
+        80
+      ],
+      "id": "fc5eff32-035d-40a8-8136-fc5c9865e179",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=\n\n{\n  \"model\": \"nano-banana-pro\",\n\"callBackUrl\": \"{{ $execution.resumeUrl }}\",\n  \"input\": {\n    \"prompt\":  \"{{ $('Webhook1').item.json.body.prompt }}\",\n  \"aspect_ratio\": \"2:3\",\n  \"resolution\": \"2K\",\n  \"output_format\": \"png\",\n     \"image_input\": [\"{{ $json.downloadUrl[0] }}\",\"{{ $json.downloadUrl[1] }}\"]\n\n  }\n}\n\n",
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -720,
+        480
+      ],
+      "id": "f3c440f3-e584-4153-be25-54ed23600673",
+      "name": "Create Image",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q27aDmNYjjA8bhRc",
+          "name": "Header Auth account - Kie AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/jobs/recordInfo",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $('Create Image').item.json.data.taskId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -208,
+        480
+      ],
+      "id": "4b599370-f1db-4fdb-8cdd-2be1a5065058",
+      "name": "Get Image",
+      "alwaysOutputData": false,
+      "retryOnFail": true,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Q27aDmNYjjA8bhRc",
+          "name": "Header Auth account - Kie AI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -464,
+        480
+      ],
+      "id": "df309f96-b43b-4cea-b398-40d873e61c7d",
+      "name": "Wait1",
+      "webhookId": "67e326b5-b6ce-427f-92f3-865aae07d405"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.state }}",
+                    "rightValue": "success",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "bf05a398-eb00-4e25-8de6-3ae7d10e69dd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "success"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4686d0f8-4428-4d81-9c40-c9d56b69ab02",
+                    "leftValue": "={{ $json.data.state }}",
+                    "rightValue": "ing",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "in progress"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        112,
+        512
+      ],
+      "id": "29793b68-dc00-4387-acb2-6a08698f10a7",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "errorMessage": "An error occured"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        400,
+        688
+      ],
+      "id": "dba5a53a-b154-4e70-922f-b12f604ef68c",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 La Tribu Divisual\n\n## Este sistema tiene un valor en el mercado de **$5000.**\n\n\n## Accede a **La Tribu Divisual** para aprender a crear agentes más avanzados y a generar altos ingresos con ellos de forma real y segura.\n\n# 👉 [Click aquí para unirte a la Lista de espera](https://divisualproject.academy/)\n",
+        "height": 360,
+        "width": 952,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        544
+      ],
+      "id": "635bce7a-9680-4ecd-bc14-1dab84fefa1f",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "@[youtube](MsWd3NkvADE)",
+        "height": 1152,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        656,
+        -240
+      ],
+      "id": "0a41d203-dc1e-4be5-837b-81d713762b01",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Vídeo obligatorio de ver\n\n\n\n\n# 👉 [Click aquí para verlo en Youtube](https://youtu.be/MsWd3NkvADE?si=FoQ7MxwRsukKO87X)\n",
+        "height": 216,
+        "width": 952,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        672,
+        320
+      ],
+      "id": "aea34d99-3abf-41e9-bc1b-33759ad418be",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Image4",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate1": {
+      "main": [
+        [
+          {
+            "node": "Create Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image URLs1": {
+      "main": [
+        [
+          {
+            "node": "Aggregate1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Image4": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Image URLs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Image": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Get Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Image": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "f71d4b6e-0cba-4698-b66a-1e432d0ef764",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "jtiiS71vgiRxrd0v",
+  "tags": []
+}

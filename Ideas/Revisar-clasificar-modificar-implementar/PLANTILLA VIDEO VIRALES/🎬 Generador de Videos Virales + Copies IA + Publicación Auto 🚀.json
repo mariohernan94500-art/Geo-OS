@@ -1,0 +1,1214 @@
+{
+  "name": "🎬 Generador de Videos Virales + Copies IA + Publicación Auto 🚀",
+  "nodes": [
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "gpt-4-turbo"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Eres un experto en copywriting viral para redes sociales. Tu misión es crear copies que generen engagement masivo.\n\nINFORMACIÓN DEL VIDEO:\n- Tema: {{ $('Nueva Idea (Google Sheets)').first().json.idea_video }}\n- Guion: {{ $('GPT-4: Generar Guion').first().json.output[0].content[0].text }}\n\nGENERA COPIES OPTIMIZADOS PARA CADA PLATAFORMA:\n\nINSTAGRAM (max 2200 caracteres):\n- Hook en primera línea\n- Emojis estratégicos\n- 20-30 hashtags relevantes al final\n- CTA claro\n\nTIKTOK (max 300 caracteres):\n- Tono Gen Z casual\n- 3-5 hashtags trending\n- Emojis divertidos\n\nYOUTUBE SHORTS:\n- Título clickbait (max 100 chars)\n- Descripción con keywords SEO\n\nTWITTER/X (max 280 chars):\n- Directo y provocador\n- 2-3 hashtags\n\nFORMATO OBLIGATORIO - Responde SOLO con este JSON válido:\n```json\n{\n  \"instagram\": \"[copy completo aquí]\",\n  \"tiktok\": \"[copy aquí]\",\n  \"youtube_titulo\": \"[título aquí]\",\n  \"youtube_descripcion\": \"[descripción aquí]\",\n  \"twitter\": \"[copy aquí]\"\n}\n```"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 2000,
+          "temperature": 0.9
+        }
+      },
+      "id": "gpt4-copies",
+      "name": "1️⃣4️⃣ 🎯 GPT-4: Generar Copies Virales",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        9504,
+        1088
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "openAiApi": {
+          "id": "kORUBkYfjkvBOnwb",
+          "name": "OpenAi account Agente La Tribu"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "🎯 Genera copies virales\nespecíficos para cada plataforma\n\n💰 Costo: $0.01\n⏱️ Tiempo: ~5 segundos\n\n✅ Optimizado por algoritmo\n✅ Hashtags específicos\n✅ Tono apropiado\n✅ CTA potente"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "mediaUrl": "={{ $('📊 JSON2Video: Obtener Status').item.json.movie.url }}"
+      },
+      "id": "blotato-upload",
+      "name": "1️⃣6️⃣ Blotato: Upload Media",
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        10144,
+        1088
+      ],
+      "credentials": {
+        "blotatoApi": {
+          "id": "oCk3oHU1JFvbBOlI",
+          "name": "Blotato account 2"
+        }
+      },
+      "notes": "📤 Sube video a Blotato\n\n⚠️ CONFIGURAR:\n✅ Credencial Blotato API"
+    },
+    {
+      "parameters": {
+        "accountId": {
+          "__rl": true,
+          "value": "1630",
+          "mode": "list",
+          "cachedResultName": "curiosopov",
+          "cachedResultUrl": "https://backend.blotato.com/v2/accounts/1630"
+        },
+        "postContentText": "={{ $('Ordenar los copies').item.json.instagram }}",
+        "postContentMediaUrls": "={{ $json.url }}",
+        "options": {}
+      },
+      "id": "blotato-instagram",
+      "name": "1️⃣7️⃣ 📸 Instagram Reels",
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        10496,
+        1088
+      ],
+      "credentials": {
+        "blotatoApi": {
+          "id": "oCk3oHU1JFvbBOlI",
+          "name": "Blotato account 2"
+        }
+      },
+      "notes": "📸 Instagram Reels\n\n✅ Copy viral IA\n✅ Hashtags optimizados\n\n⚠️ CONFIGURAR:\n✅ Selecciona cuenta Instagram"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1Yk3z6NnT9_qu-Ameh81EkEz4r8tEyihIBWgEhFmTCZ0",
+          "mode": "list",
+          "cachedResultName": "Video Virales - Control",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Yk3z6NnT9_qu-Ameh81EkEz4r8tEyihIBWgEhFmTCZ0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Yk3z6NnT9_qu-Ameh81EkEz4r8tEyihIBWgEhFmTCZ0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "idea_video": "={{ $('Nueva Idea (Google Sheets)').first().json.idea_video }}",
+            "status": "SUBIDO",
+            "video_url": "={{ $('1️⃣6️⃣ Blotato: Upload Media').item.json.url }}",
+            "fecha": "=📅 Día: {{ $now.format('yyyy-MM-dd') }}\n🕐 Hora: {{ $now.format('HH:mm:ss') }}"
+          },
+          "matchingColumns": [
+            "idea_video"
+          ],
+          "schema": [
+            {
+              "id": "idea_video",
+              "displayName": "idea_video",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "video_url",
+              "displayName": "video_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "fecha",
+              "displayName": "fecha",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "google-sheets-update",
+      "name": "2️⃣6️⃣ Actualizar Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        10864,
+        1088
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i8uAjlC8WiPjtIsA",
+          "name": "Google Sheets divisual@divisualproject.com"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "📝 Actualiza Sheet\n\n⚠️ CONFIGURAR:\n✅ Selecciona tu Google Sheet"
+    },
+    {
+      "parameters": {
+        "url": "https://api.pexels.com/videos/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $json.search_query }}"
+            },
+            {
+              "name": "orientation",
+              "value": "portrait"
+            },
+            {
+              "name": "per_page",
+              "value": "3"
+            },
+            {
+              "name": "size",
+              "value": "medium"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "PON AQUI TU API KEY DE PEXELS"
+            }
+          ]
+        },
+        "options": {
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 300
+            }
+          }
+        }
+      },
+      "id": "pexels-search",
+      "name": "🎥 Pexels: Buscar B-Roll",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        7488,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.json2video.com/v2/movies",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "PON AQUÍ TU API KEY DE JSON2VIDEO"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.json2video_payload) }}",
+        "options": {}
+      },
+      "id": "json2video-create",
+      "name": "🌟 JSON2Video: Crear Video Viral",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8144,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "id": "wait-json2video",
+      "name": "⏳ Wait: Renderizado JSON2Video",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        8416,
+        1104
+      ],
+      "webhookId": "984b1ecf-0fda-42f8-b5cc-f74a0acb9cca"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.json2video.com/v2/movies?id={{ $('\\ud83c\\udf1f JSON2Video: Crear Video Viral').first().json.project }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "PON AQUÍ TU API KEY DE JSON2VIDEO"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "json2video-status",
+      "name": "📊 JSON2Video: Obtener Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        8672,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "condition-video-done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "leftValue": "={{ $json.movie.status }}",
+              "rightValue": "done"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "if-json2video-ready",
+      "name": "✅ IF: Video Viral Listo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        8976,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer URL del video viral final de JSON2Video\nconst json2videoResponse = $input.first().json;\nconst staticData = $getWorkflowStaticData('global');\n\n// Extraer URL del video final\nconst finalVideoUrl = json2videoResponse.movie?.url || json2videoResponse.url;\n\nif (!finalVideoUrl) {\n  throw new Error('JSON2Video no retorno URL del video final. Status: ' + (json2videoResponse.movie?.status || json2videoResponse.status || 'unknown'));\n}\n\nconsole.log('=== VIDEO VIRAL FINAL ===');\nconsole.log('Video viral URL: ' + finalVideoUrl);\n\n// Obtener datos del static data\nconst idea = staticData.idea || '';\nconst audioUrl = staticData.audio_url || '';\nconst escenas = staticData.escenas || [];\n\nconsole.log('Datos del workflow:');\nconsole.log('- Idea: ' + (idea ? idea.substring(0, 50) + '...' : 'VACIO'));\nconsole.log('- Audio URL: ' + (audioUrl ? 'OK' : 'VACIO'));\nconsole.log('- Escenas: ' + escenas.length);\n\nreturn [{\n  json: {\n    // Datos del video viral final\n    video_viral_url: finalVideoUrl,\n    json2video_duration: json2videoResponse.movie?.duration || 0,\n    json2video_size: json2videoResponse.movie?.size || 0,\n    rendering_time: json2videoResponse.movie?.rendering_time || 0,\n    json2video_status: json2videoResponse.movie?.status || json2videoResponse.status || 'completed',\n    \n    // Datos originales del workflow\n    idea: idea,\n    audio_url: audioUrl,\n    escenas_count: escenas.length,\n    \n    // Para compatibilidad con nodos siguientes\n    video_url: finalVideoUrl,\n    webViewLink: finalVideoUrl\n  }\n}];"
+      },
+      "id": "code-final-video-url",
+      "name": "🎉 Extraer Video Viral Final",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9248,
+        1088
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Eres un experto guionista de videos virales para redes sociales. Tu objetivo es crear guiones para VOZ EN OFF que generen engagement masivo.\n\nCrea un guion de VOZ EN OFF de 35-40 segundos sobre: {{ $json.idea_video }}\n\nREGLAS OBLIGATORIAS:\n1. Hook potente en los primeros 3 segundos (pregunta impactante, dato sorprendente o afirmación controversial)\n2. Estructura clara: Hook → Problema → Solución/Contenido → CTA\n3. Lenguaje conversacional y directo, como si hablaras con un amigo\n4. Dividir en 5-6 SEGMENTOS TEMÁTICOS claros (cada uno de 5-8 segundos)\n5. Cada segmento debe poder visualizarse con UN B-ROLL específico\n6. No añadas saltos de línea ni formato markdown\n7. Entre 120-150 palabras totales (para ritmo de 35-40 segundos)\n8. Terminar con llamada a la acción clara y urgente\n\nPIENSA EN IMÁGENES: Cada frase debe evocar una imagen o acción visual concreta.\n\nFORMATO DE RESPUESTA:\nDevuelve SOLO el guion listo para leer, sin títulos, sin explicaciones, sin formato markdown, sin saltos de línea."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "id": "openai-gpt4",
+      "name": "GPT-4: Generar Guion",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.1,
+      "position": [
+        5664,
+        1376
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "openAiApi": {
+          "id": "kORUBkYfjkvBOnwb",
+          "name": "OpenAi account Agente La Tribu"
+        }
+      },
+      "onError": "continueRegularOutput",
+      "notes": "🧠 GPT-4 Turbo\n💰 Costo: $0.01"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Yk3z6NnT9_qu-Ameh81EkEz4r8tEyihIBWgEhFmTCZ0",
+          "mode": "list",
+          "cachedResultName": "Video Virales - Control",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Yk3z6NnT9_qu-Ameh81EkEz4r8tEyihIBWgEhFmTCZ0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Yk3z6NnT9_qu-Ameh81EkEz4r8tEyihIBWgEhFmTCZ0/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "id": "google-sheets-trigger",
+      "name": "Nueva Idea (Google Sheets)",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        5008,
+        1376
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "GoWFIHNwPLQSgSlD",
+          "name": "Google Sheets Trigger account"
+        }
+      },
+      "notes": "⚙️ CONFIGURAR:\n✅ Selecciona tu Google Sheet\n✅ Event: Row Added"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        9248,
+        1424
+      ],
+      "id": "26290d4d-497d-4efe-a7c2-62bf012f38de",
+      "name": "Wait1",
+      "webhookId": "9612d5d5-3c7a-46c6-8d1f-a893d3354cdf"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/audio/transcriptions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            },
+            {
+              "name": "model",
+              "value": "whisper-1"
+            },
+            {
+              "name": "response_format",
+              "value": "verbose_json"
+            },
+            {
+              "name": "language",
+              "value": "es"
+            },
+            {
+              "name": "timestamp_granularities[]",
+              "value": "segment"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "whisper-http-verbose",
+      "name": "🎤 Whisper API (Timestamps)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6544,
+        1584
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "kORUBkYfjkvBOnwb",
+          "name": "OpenAi account Agente La Tribu"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// CONSTRUIR PAYLOAD JSON2VIDEO - COBERTURA COMPLETA\n\nconst firstItem = $input.first().json;\nif (!firstItem.videos) {\n  return [];\n}\n\nconst audioData = $('Subir archivo a tmpfiles').first().json;\nconst audioUrl = audioData.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');\n\nconst pexelsResults = $input.all().map(item => item.json);\nconst numBrolls = pexelsResults.length;\n\nconst duracionTotal = 45; // Un poco más para asegurar cobertura\nconst duracionPorEscena = Math.floor(duracionTotal / numBrolls);\n\nconst elements = [];\n\n// AUDIO\nelements.push({\n  type: \"audio\",\n  src: audioUrl,\n  start: 0,\n  duration: -1,\n  volume: 1\n});\n\n// B-ROLLS\npexelsResults.forEach((pexelsData, idx) => {\n  const startTime = idx * duracionPorEscena;\n  const esUltimo = idx === numBrolls - 1;\n  \n  const videos = pexelsData.videos || [];\n  if (videos.length === 0) return;\n  \n  const video = videos[0];\n  const videoFiles = video.video_files || [];\n  if (videoFiles.length === 0) return;\n  \n  let bestFile = videoFiles.find(f => f.width === 1080 && f.height === 1920)\n    || videoFiles.find(f => f.height > f.width && f.quality === 'hd')\n    || videoFiles.find(f => f.height > f.width)\n    || videoFiles[0];\n  \n  if (!bestFile?.link) return;\n  \n  elements.push({\n    type: \"video\",\n    src: bestFile.link,\n    start: startTime,\n    duration: esUltimo ? -2 : duracionPorEscena, // -2 = hasta el final del scene/movie\n    \"z-index\": 0,\n    resize: \"cover\",\n    muted: true,\n    loop: -1\n  });\n  \n  console.log('B-roll ' + (idx+1) + ': ' + startTime + 's - ' + (esUltimo ? 'FIN' : (startTime + duracionPorEscena) + 's'));\n});\n\n// SUBTITULOS\nelements.push({\n  type: \"subtitles\",\n  language: \"es\",\n  settings: {\n    style: \"boxed-word\",\n    position: \"bottom-center\",\n    \"font-family\": \"Montserrat\",\n    \"font-size\": 60,\n    \"font-weight\": \"700\",\n    \"line-color\": \"#FFFFFF\",\n    \"word-color\": \"#FFFF00\",\n    \"box-color\": \"#000000\",\n    \"max-words-per-line\": 4\n  }\n});\n\nconst payload = {\n  resolution: \"custom\",\n  width: 1080,\n  height: 1920,\n  quality: \"high\",\n  fps: 30,\n  scenes: [{\n    elements: elements,\n    duration: -1\n  }]\n};\n\nreturn [{ json: { json2video_payload: payload } }];\n"
+      },
+      "id": "construir-payload-json2video",
+      "name": "🎬 Construir Payload JSON2Video",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7856,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🎙️ Voces ElevenLabs Español - Resumen Rápido\n\n## 👩 FEMENINAS\n\n### España 🇪🇸\n| Voz | voice_id | Estilo |\n|-----|----------|--------|\n| Sheila España ⭐ | `h3l1RP4XfcWsPwoRp9G6` | Alegre, TikTok/Reels |\n| Nina | `Nal4Voh56EtyuScXh27S` | Expresiva, narración |\n| LoidaBurgos | `HYlEvvU9GMan5YdjFYpg` | Joven, clara |\n| Altea | `YCmuhnPXHtoHLIDtPKHp` | Storytelling |\n| Olivia | `kVxrkvFbTMxypLjm2018` | Narración |\n\n### Latinoamérica 🌎\n| Voz | voice_id | Estilo/Acento |\n|-----|----------|---------------|\n| Lizy ⭐ | `vERmHY5ZzBsIRPzH78Rb` | Neutral, profesional |\n| Mariana | `9rvdnhrYoXoUt4igKpBw` | Profunda, emocional |\n| Yinet | `GPzYRfJNEJniCw2WrKzi` | Alegre, colombiana |\n| Valeria | `9oPKasc15pfAbMr7N6Gs` | Argentina |\n| Cristina | `CaJslL1xziwefCeTNzHv` | Mexicana |\n| Paula | `UNIruiz09F4kWYjRpOvy` | Colombiana, confiada |\n\n---\n\n## 👨 MASCULINAS\n\n### España 🇪🇸\n| Voz | voice_id | Estilo |\n|-----|----------|--------|\n| Juan Carlos ⭐ | `RyfjEHnKbtma4Srae2za` | Profunda, calmada |\n| Dante | `usTmJvQOCyW3nRcZ8OEo` | Dinámico, emocionante |\n| Ginyin | `nMPrFLO7QElx9wTR0JGo` | Joven, neutro |\n| Francisco | `IqlEidbJZeC8nXfSwtHV` | Narración, doblaje |\n| Jonathan | `MjOTKwcLB3fovdyKbNmE` | Calmada, narrativa |\n\n### Latinoamérica 🌎\n| Voz | voice_id | Estilo/Acento |\n|-----|----------|---------------|\n| Miguel ⭐ | `vAxdfYVShGAQEwKYqDZR` | Versátil, emocional |\n| Santiago | `15bJsujCI3tcDWeoZsQP` | Mexicano, casual |\n| Beto | `ukupJ4zdf9bo1Py6MiO6` | Argentino, calmado |\n| Agustin | `KqSsYz0buWgkvSbaGn1n` | Buenos Aires, potente |\n| Gilfoy | `LlsiGQPTj7Tt7gsEPZl0` | Mexicano, casual |\n\n---",
+        "height": 1040,
+        "width": 752
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4976,
+        48
+      ],
+      "id": "6c57ae91-5b86-46a0-97a2-6f643043e1d8",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "1vLlJCWRhRcfmTewn4cm",
+          "mode": "list",
+          "cachedResultName": "Javier España - Expressive"
+        },
+        "text": "={{ $json.output[0].content[0].text }}",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        6064,
+        1376
+      ],
+      "id": "33226643-1021-455c-b328-cc71ae6b09dc",
+      "name": "Convert text to speech",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "AQRCo1gZ9BNYx4bp",
+          "name": "ElevenLabs account - curso adri yt"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Eres un editor de vídeo profesional especializado en crear timelines de B-roll para vídeos virales de VOZ EN OFF.\n\n## TRANSCRIPCIÓN DEL AUDIO\n{{ $json.text }}\n\n## DURACIÓN TOTAL DEL AUDIO\n{{ $json.duration }} segundos\n\n## TU TAREA\nAnaliza la transcripción y crea una timeline de 6-8 escenas que cubran TODO el video sin dejar huecos.\n\nPara cada escena:\n1. Define el tiempo de inicio y fin (en formato MM:SS)\n2. Describe brevemente el tema de esa sección\n3. Extrae 2-3 keywords VISUALES en INGLÉS para buscar en Pexels\n\n## REGLAS CRÍTICAS\n- La primera escena DEBE empezar en 00:00\n- La última escena DEBE terminar al final del audio ({{ $json.duration }} segundos)\n- Las escenas deben ser CONSECUTIVAS sin gaps\n- Cada escena debe durar entre 4-8 segundos\n- Las keywords deben ser VISUALES y concretas (objetos, acciones, lugares)\n- Keywords DIFERENTES para cada escena (variedad visual)\n\n## EJEMPLOS DE KEYWORDS\n- \"levantarse temprano\" → \"sunrise\", \"alarm clock\", \"morning coffee\"\n- \"ganar dinero\" → \"cash money\", \"business success\", \"entrepreneur working\"\n- \"redes sociales\" → \"smartphone scrolling\", \"social media icons\", \"phone notification\"\n- \"salud y fitness\" → \"gym workout\", \"healthy food\", \"person running\"\n- \"productividad\" → \"laptop working\", \"to-do list\", \"focused person\"\n- \"llamada a la acción\" → \"subscribe button\", \"follow icon\", \"thumbs up\"\n\n## IMPORTANTE\nResponde SOLO con el JSON estructurado que define el Output Parser. No añadas texto adicional.\n",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Eres un editor de video profesional. Tu trabajo es analizar transcripciones de audio y crear timelines de B-roll perfectamente sincronizadas. Siempre respondes en el formato JSON exacto que se te pide."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        6912,
+        1584
+      ],
+      "id": "424c89b7-e470-419f-891c-05e1545b78ba",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"escenas\": [\n    {\n      \"numero\": 1,\n      \"inicio\": \"00:00\",\n      \"fin\": \"00:06\",\n      \"tema\": \"Hook inicial - captar atención\",\n      \"keywords\": [\"shocking fact\", \"surprised person\"]\n    },\n    {\n      \"numero\": 2,\n      \"inicio\": \"00:06\",\n      \"fin\": \"00:12\",\n      \"tema\": \"Presentar el problema\",\n      \"keywords\": [\"frustrated person\", \"problem solving\"]\n    },\n    {\n      \"numero\": 3,\n      \"inicio\": \"00:12\",\n      \"fin\": \"00:18\",\n      \"tema\": \"Contexto o datos\",\n      \"keywords\": [\"data chart\", \"research study\"]\n    },\n    {\n      \"numero\": 4,\n      \"inicio\": \"00:18\",\n      \"fin\": \"00:24\",\n      \"tema\": \"Solución parte 1\",\n      \"keywords\": [\"success celebration\", \"achievement\"]\n    },\n    {\n      \"numero\": 5,\n      \"inicio\": \"00:24\",\n      \"fin\": \"00:30\",\n      \"tema\": \"Solución parte 2\",\n      \"keywords\": [\"transformation\", \"before after\"]\n    },\n    {\n      \"numero\": 6,\n      \"inicio\": \"00:30\",\n      \"fin\": \"00:36\",\n      \"tema\": \"Beneficios o resultados\",\n      \"keywords\": [\"happy lifestyle\", \"positive results\"]\n    },\n    {\n      \"numero\": 7,\n      \"inicio\": \"00:36\",\n      \"fin\": \"00:40\",\n      \"tema\": \"Call to action\",\n      \"keywords\": [\"subscribe button\", \"follow social\"]\n    }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        7200,
+        1792
+      ],
+      "id": "2be2fe50-590a-4a61-8247-77d2df2394bb",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        6816,
+        1792
+      ],
+      "id": "806433ec-4862-4154-b411-a259a8f52a67",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "kORUBkYfjkvBOnwb",
+          "name": "OpenAi account Agente La Tribu"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener escenas del AI Agent\nconst escenas = $('AI Agent').first().json.output.escenas;\n\n// Función para convertir \"MM:SS\" a segundos\nfunction timeToSeconds(timeStr) {\n  const [min, sec] = timeStr.split(':').map(Number);\n  return min * 60 + sec;\n}\n\n// Crear un item por cada escena\nreturn escenas.map(escena => ({\n  json: {\n    numero: escena.numero,\n    inicio: timeToSeconds(escena.inicio),\n    fin: timeToSeconds(escena.fin),\n    duracion: timeToSeconds(escena.fin) - timeToSeconds(escena.inicio),\n    tema: escena.tema,\n    search_query: escena.keywords.slice(0, 2).join(' '),\n    keywords: escena.keywords\n  }\n}));"
+      },
+      "id": "guardar-escenas",
+      "name": "Procesar Escenas para Pexels",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        7264,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://tmpfiles.org/api/v1/upload",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        6528,
+        1104
+      ],
+      "id": "ccbdd7b4-6aa1-4dc1-aec1-64b98eddb3ad",
+      "name": "Subir archivo a tmpfiles"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extraer el texto con el JSON\nconst rawText = $input.first().json.output[0].content[0].text;\n\n// Extraer JSON del bloque de código markdown\nconst jsonMatch = rawText.match(/```json\\n([\\s\\S]*?)\\n```/);\n\nif (!jsonMatch) {\n  throw new Error('No se encontró JSON en la respuesta');\n}\n\nconst copies = JSON.parse(jsonMatch[1]);\n\nreturn [{\n  json: {\n    instagram: copies.instagram,\n    tiktok: copies.tiktok,\n    youtube_titulo: copies.youtube_titulo,\n    youtube_descripcion: copies.youtube_descripcion,\n    twitter: copies.twitter\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        9872,
+        1088
+      ],
+      "id": "28777ecb-57ea-41dc-9f28-0ab99bbd10b6",
+      "name": "Ordenar los copies"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a6b731d6-8631-4dbc-916d-686ee13cebdd",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        5360,
+        1376
+      ],
+      "id": "89f39cbf-f7b9-4c32-b5a5-c62db1add546",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 ¿Quieres DOMINAR n8n?\n\n# Sesiones GRATIS todos los domingos\n\n### Aprende lo que nadie te cuenta:\n\n### - ✅ **Workflows avanzados** que generan resultados reales\n### - ✅ **Monetiza tus automatizaciones** y crea un negocio\n### - ✅ **Secretos de arquitectura** para flujos profesionales\n### - ✅ **Comunidad exclusiva** de automatizadores\n\n---\n\n## 💡 De principiante a experto en n8n\n\nNo solo aprenderás a crear workflows...\n**Aprenderás a VENDERLOS.**\n\n---\n\n## 👉🏼 [ÚNETE YA - Es GRATIS](https://divisualproject.academy/mentorias-domingos-plantillas/)\n\n*Plazas limitadas cada domingo*",
+        "height": 704,
+        "width": 672,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5728,
+        384
+      ],
+      "id": "9df86898-3b30-4fb8-87ad-faa1c32587db",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# 🎬 ¿Te está gustando este curso?\n\n## Sigue aprendiendo en mi canal de YouTube\n\nHe invertido **muchas horas** creando este contenido gratuito para ti.\n\nMi único objetivo: que aprendas y crezcas con n8n.\n\n---\n\n### 🙏 Solo te pido una cosa...\n\n### Este curso lo hice con **mucho tiempo y cariño**.\n\n### No te cuesta nada, pero para mí significa TODO:\n\n## [❤️ SUSCRÍBETE AHORA](https://www.youtube.com/@juanpe.divisual)\n\n---\n\n*Tu suscripción me ayuda a seguir creando contenido gratuito para ti y para toda la comunidad.*\n\n**¡Gracias por tu apoyo!** 🚀",
+        "height": 736,
+        "width": 768,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        10272,
+        1296
+      ],
+      "id": "8a5f6368-498e-48a0-a03b-fed6e8bf0350",
+      "name": "Sticky Note2"
+    }
+  ],
+  "pinData": {
+    "1️⃣ Nueva Idea (Google Sheets)1": [
+      {
+        "json": {
+          "idea_video": "5 hábitos matutinos de millonarios que cambiarán tu vida",
+          "status": "",
+          "video_url": "",
+          "fecha": ""
+        }
+      }
+    ],
+    "2️⃣ GPT-4: Generar Guion1": [
+      {
+        "json": {
+          "output": [
+            {
+              "id": "msg_0a82d589aa3b139000697791ec8f7c819f87da78dd5e3da7b0",
+              "type": "message",
+              "status": "completed",
+              "content": [
+                {
+                  "type": "output_text",
+                  "annotations": [],
+                  "logprobs": [],
+                  "text": "¿Sabías que el 90% de los millonarios tienen hábitos matutinos específicos que les ayudan a triunfar?...\n\nSi sientes que tus mañanas son un caos y nada productivas, aquí te traigo la solución...\n\nPrimero, levántate temprano. Sí, como a las 5:00 a.m. Este simple cambio te dará un par de horas adicionales para enfocarte en tus metas...\n\nSegundo, medita. Solo diez minutos para aclarar tu mente y prepararte para el día...\n\nTercero, haz ejercicio. No necesitas una maratón, solo algo para despertar tu cuerpo y mente...\n\nCuarto, lee. Aunque sean solo 10 páginas de un libro que estimule tu crecimiento personal...\n\nY quinto, planifica tu día. Dedica unos minutos para establecer tus objetivos diarios y visualiza cómo los vas a alcanzar...\n\nAhora, ¿listo para cambiar tu vida? Empieza mañana mismo, ¡no esperes más!"
+                }
+              ],
+              "role": "assistant"
+            }
+          ]
+        }
+      }
+    ],
+    "4.5️⃣ Subir Imagen a Blotato1": [
+      {
+        "json": {
+          "url": "https://database.blotato.io/storage/v1/object/public/public_media/eebb0af7-8c69-4ca9-9a94-14970ca9ca3a/388fa67a-5a0e-463c-b724-c177c9eb6e0b.png",
+          "id": "7b9ec3ae-d43b-4d46-8cc4-ea16ce14130e"
+        }
+      }
+    ],
+    "6️⃣ D-ID: Crear Video1": [
+      {
+        "json": {
+          "id": "tlk_-sarKOtlXFaYjkhkdBR-d",
+          "created_at": "2026-01-26T16:11:00.344Z",
+          "created_by": "google-oauth2|103866932474488396070",
+          "status": "created",
+          "object": "talk"
+        }
+      }
+    ],
+    "🎤 Whisper: Transcribir Audio": [
+      {
+        "json": {
+          "text": "¿Sabías que el 90% de los millonarios comparten los mismos hábitos matutinos? Hoy te revelo 5 que pueden transformar totalmente tu día, y tal vez tu vida. Primero, levantarse temprano. Sí, suena típico, pero los millonarios comienzan su día a las 5 de la madrugada. Esto les da tranquilidad para planificar y priorizar sin distracciones. Segundo, meditación o mindfulness. Incluso 5 minutos cada mañana para aclarar tu mente y enfocarte en tus objetivos. Tercero, ejercicio físico. No necesitas un gimnasio completo, una sesión corta de yoga o una caminata rápida activa tu cuerpo y mente. Cuarto, lectura. Ya sea un libro o noticias de la industria o estudios, invertir al menos 20 minutos en aprender algo nuevo cada día. Quinto, gratitud. Tomar un momento para agradecer lo que tienes te pone en un estado positivo y agradecido. Ahora, no solo escuches, empieza mañana mismo. Comenta aquí abajo cuál hábito vas a adoptar y comparte este vídeo para motivar a otros. Actúa ahora, transforma tu mañana.",
+          "usage": {
+            "type": "duration",
+            "seconds": 71
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Guardar Escenas en StaticData": [
+      {
+        "json": {
+          "escena_numero": 1,
+          "inicio": "00:00",
+          "fin": "00:06",
+          "tema": "Introducción a los hábitos matutinos de millonarios",
+          "keywords": [
+            "morning routine",
+            "wealthy habits",
+            "sunrise"
+          ],
+          "search_query": "morning routine"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 2,
+          "inicio": "00:06",
+          "fin": "00:12",
+          "tema": "La importancia del tiempo",
+          "keywords": [
+            "clock",
+            "time management",
+            "daily planner"
+          ],
+          "search_query": "clock"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 3,
+          "inicio": "00:12",
+          "fin": "00:20",
+          "tema": "Problema de perder tiempo en la mañana",
+          "keywords": [
+            "smartphone",
+            "distraction",
+            "wasting time"
+          ],
+          "search_query": "smartphone"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 4,
+          "inicio": "00:20",
+          "fin": "00:28",
+          "tema": "Presentación de los cinco hábitos",
+          "keywords": [
+            "checklist",
+            "goals",
+            "success"
+          ],
+          "search_query": "checklist"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 5,
+          "inicio": "00:28",
+          "fin": "00:36",
+          "tema": "Hábito 1: Levantarse temprano",
+          "keywords": [
+            "alarm clock",
+            "early riser",
+            "morning light"
+          ],
+          "search_query": "alarm clock"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 6,
+          "inicio": "00:36",
+          "fin": "00:44",
+          "tema": "Hábito 2: Meditación o mindfulness",
+          "keywords": [
+            "meditation",
+            "calm",
+            "mindfulness"
+          ],
+          "search_query": "meditation"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 7,
+          "inicio": "00:44",
+          "fin": "00:52",
+          "tema": "Hábito 3 y 4: Ejercicio y lectura",
+          "keywords": [
+            "exercise",
+            "healthy breakfast",
+            "reading"
+          ],
+          "search_query": "exercise"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "escena_numero": 8,
+          "inicio": "00:52",
+          "fin": "00:59",
+          "tema": "Hábito 5: Planificación del día y conclusión",
+          "keywords": [
+            "planning",
+            "to-do list",
+            "success mindset"
+          ],
+          "search_query": "planning"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "1️⃣4️⃣ 🎯 GPT-4: Generar Copies Virales": {
+      "main": [
+        [
+          {
+            "node": "Ordenar los copies",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1️⃣6️⃣ Blotato: Upload Media": {
+      "main": [
+        [
+          {
+            "node": "1️⃣7️⃣ 📸 Instagram Reels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "1️⃣7️⃣ 📸 Instagram Reels": {
+      "main": [
+        [
+          {
+            "node": "2️⃣6️⃣ Actualizar Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2️⃣6️⃣ Actualizar Google Sheet": {
+      "main": [
+        []
+      ]
+    },
+    "🌟 JSON2Video: Crear Video Viral": {
+      "main": [
+        [
+          {
+            "node": "⏳ Wait: Renderizado JSON2Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⏳ Wait: Renderizado JSON2Video": {
+      "main": [
+        [
+          {
+            "node": "📊 JSON2Video: Obtener Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📊 JSON2Video: Obtener Status": {
+      "main": [
+        [
+          {
+            "node": "✅ IF: Video Viral Listo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ IF: Video Viral Listo?": {
+      "main": [
+        [
+          {
+            "node": "🎉 Extraer Video Viral Final",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎉 Extraer Video Viral Final": {
+      "main": [
+        [
+          {
+            "node": "1️⃣4️⃣ 🎯 GPT-4: Generar Copies Virales",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GPT-4: Generar Guion": {
+      "main": [
+        [
+          {
+            "node": "Convert text to speech",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nueva Idea (Google Sheets)": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "⏳ Wait: Renderizado JSON2Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎤 Whisper API (Timestamps)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎬 Construir Payload JSON2Video": {
+      "main": [
+        [
+          {
+            "node": "🌟 JSON2Video: Crear Video Viral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🎥 Pexels: Buscar B-Roll": {
+      "main": [
+        [
+          {
+            "node": "🎬 Construir Payload JSON2Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert text to speech": {
+      "main": [
+        [
+          {
+            "node": "🎤 Whisper API (Timestamps)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Subir archivo a tmpfiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Procesar Escenas para Pexels",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Procesar Escenas para Pexels": {
+      "main": [
+        [
+          {
+            "node": "🎥 Pexels: Buscar B-Roll",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir archivo a tmpfiles": {
+      "main": [
+        [
+          {
+            "node": "🎬 Construir Payload JSON2Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ordenar los copies": {
+      "main": [
+        [
+          {
+            "node": "1️⃣6️⃣ Blotato: Upload Media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "GPT-4: Generar Guion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "7d4a271b-2e36-49a0-b0fd-6c6a357bf814",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "RpREjjiZFg7XSOat",
+  "tags": [
+    {
+      "updatedAt": "2026-01-24T18:52:51.970Z",
+      "createdAt": "2026-01-24T18:52:51.970Z",
+      "id": "0MDAWeekbxRbdAKV",
+      "name": "Curso Adrián Sáenz N8N 2"
+    }
+  ]
+}

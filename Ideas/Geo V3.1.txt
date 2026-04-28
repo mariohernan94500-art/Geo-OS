@@ -1,0 +1,399 @@
+Bien. Ahora pasamos de teoría a **arquitectura operativa real**.
+
+Voy a hacer dos cosas clave:
+
+1. 🔧 Reescribirte `modules/generator/index.js` con el flujo correcto
+2. 🧠 Darte el **PROMPT FINAL DEFINITIVO** listo para producción con DeepSeek + Z.ai + Groq + Geo + ElevenLabs
+
+---
+
+# 🔧 1. NUEVO `modules/generator/index.js` (ARQUITECTURA REAL)
+
+Este módulo ahora respeta:
+
+* DeepSeek → analiza, decide, limpia
+* Z.ai → construye TODO
+* Groq → fallback inteligente
+* Geo → ejecuta, instala, lanza
+
+---
+
+## 🚀 FLUJO REAL
+
+```
+IDEA →
+DeepSeek (brain) →
+Z.ai (builder) →
+(validación DeepSeek) →
+fallback Groq (si falla) →
+instalación →
+PM2 →
+SQLite →
+memoria
+```
+
+---
+
+## 💻 CÓDIGO COMPLETO REESCRITO
+
+```javascript
+import fs from "fs/promises";
+import path from "path";
+import pm2 from "pm2";
+import util from "util";
+import { v4 as uuidv4 } from "uuid";
+
+import { runDeepSeek, runGroq } from "../ai/index.js";
+import { getDatabase } from "../database/sqlite.js";
+
+const pm2Connect = util.promisify(pm2.connect.bind(pm2));
+const pm2Start = util.promisify(pm2.start.bind(pm2));
+
+const APPS_DIR = path.join(process.cwd(), "apps");
+
+let currentPort = 4000;
+
+// ─────────────────────────────────────────────
+// 🧠 STEP 1: DeepSeek ANALYSIS
+// ─────────────────────────────────────────────
+async function analyzeIdea(idea) {
+  return await runDeepSeek(`
+You are the BRAIN of Geo AI.
+
+Analyze this idea and convert it into a structured build instruction.
+
+IDEA:
+"${idea}"
+
+Return ONLY JSON:
+{
+  "app_name": "",
+  "description": "",
+  "features": [],
+  "pages": [],
+  "api_endpoints": [],
+  "complexity": "low | medium | high"
+}
+`);
+}
+
+// ─────────────────────────────────────────────
+// 🧠 STEP 2: BUILD PROMPT FOR Z.AI
+// ─────────────────────────────────────────────
+function buildZaiPrompt(analysis, port) {
+  return `
+${ZAI_MASTER_PROMPT}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 STRUCTURED INPUT (FROM DEEPSEEK)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+${analysis}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ SYSTEM CONTEXT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Port: ${port}
+- Environment: Node.js
+- Execution: PM2 (Geo will handle)
+
+Build the application now.
+`;
+}
+
+// ─────────────────────────────────────────────
+// 🧠 STEP 3: VALIDATE OUTPUT
+// ─────────────────────────────────────────────
+async function validateApp(jsonString) {
+  return await runDeepSeek(`
+You are a strict validator.
+
+Check if this JSON is:
+- Valid
+- Complete
+- Runnable
+
+If VALID → return "OK"
+If NOT → return FIXED JSON ONLY
+
+${jsonString}
+`);
+}
+
+// ─────────────────────────────────────────────
+// 📦 INSTALL APP
+// ─────────────────────────────────────────────
+async function installApp(appData) {
+  const appName = appData.name;
+  const appPath = path.join(APPS_DIR, appName);
+
+  await fs.mkdir(appPath, { recursive: true });
+
+  for (const [file, content] of Object.entries(appData.frontend)) {
+    await fs.writeFile(path.join(appPath, file), content);
+  }
+
+  for (const [file, content] of Object.entries(appData.backend)) {
+    await fs.writeFile(path.join(appPath, file), content);
+  }
+
+  return appPath;
+}
+
+// ─────────────────────────────────────────────
+// 🚀 PM2 LAUNCH
+// ─────────────────────────────────────────────
+async function launchApp(appName, appPath, port) {
+  await pm2Connect();
+
+  await pm2Start({
+    script: path.join(appPath, "server.js"),
+    name: appName,
+    cwd: appPath,
+    env: { PORT: port }
+  });
+}
+
+// ─────────────────────────────────────────────
+// 🔥 MAIN FUNCTION
+// ─────────────────────────────────────────────
+export async function createAppFromIdea(idea, tenantId = "default") {
+  const port = ++currentPort;
+
+  console.log("🧠 DeepSeek analyzing...");
+  const analysis = await analyzeIdea(idea);
+
+  console.log("🏗️ Building with Z.ai...");
+  const zaiPrompt = buildZaiPrompt(analysis, port);
+
+  let raw = await runDeepSeek(zaiPrompt); // Z.ai vía OpenRouter
+
+  console.log("🧠 Validating...");
+  let validation = await validateApp(raw);
+
+  let appData;
+
+  if (validation !== "OK") {
+    appData = JSON.parse(validation);
+  } else {
+    appData = JSON.parse(raw);
+  }
+
+  // ⚡ FALLBACK GROQ SI FALLA
+  if (!appData?.backend?.server.js) {
+    console.log("⚡ Fallback to Groq...");
+    const groqRaw = await runGroq(zaiPrompt);
+    const match = groqRaw.match(/\{[\s\S]*\}/);
+    appData = JSON.parse(match[0]);
+  }
+
+  console.log("📦 Installing...");
+  const appPath = await installApp(appData);
+
+  console.log("🚀 Launching...");
+  await launchApp(appData.name, appPath, port);
+
+  const db = await getDatabase();
+  const id = uuidv4();
+
+  await db.run(
+    `INSERT INTO apps (id, name, description, port, tenant_id)
+     VALUES (?, ?, ?, ?, ?)`,
+    [id, appData.name, idea, port, tenantId]
+  );
+
+  return {
+    id,
+    name: appData.name,
+    port
+  };
+}
+```
+
+---
+
+# 🧠🔥 2. PROMPT FINAL DEFINITIVO (VERSIÓN PRODUCCIÓN)
+
+Este es el que usarás en `ZAI_MASTER_PROMPT`
+
+---
+
+```
+You are Z.ai — the PRIMARY BUILDER inside GEO AI SYSTEM.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧠 SYSTEM CONTROL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Everything you do is executed by GEO (OpenClaw) on a VPS.
+
+You are NOT standalone.
+You are part of a multi-AI architecture:
+
+- DeepSeek = BRAIN (analysis, validation, decisions)
+- Z.ai = BUILDER (YOU)
+- Groq = fallback fast generator
+- ElevenLabs = voice layer
+- GEO = orchestrator
+
+You MUST respect this hierarchy.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 YOUR RESPONSIBILITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+You MUST:
+
+✔ Build COMPLETE fullstack apps
+✔ Include ALL files
+✔ Ensure the app RUNS without errors
+✔ Produce PROFESSIONAL UI
+✔ Be production-ready
+
+You MUST NOT:
+
+✘ Return partial code
+✘ Skip backend or frontend
+✘ Return explanations
+✘ Return broken code
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏗️ REQUIRED STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Frontend:
+- index.html
+- style.css
+- script.js
+
+Backend:
+- server.js (Express)
+- routes.js
+- db.json
+- package.json
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📦 OUTPUT FORMAT (STRICT JSON)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+{
+  "name": "app-name",
+  "description": "",
+  "frontend": {},
+  "backend": {},
+  "setup": {
+    "install_commands": [],
+    "run_command": "",
+    "port": 4000
+  }
+}
+
+NO TEXT OUTSIDE JSON.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ EXECUTION RULES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ Must run with Node.js
+✔ Must listen on provided port
+✔ Must work immediately
+✔ Must connect frontend ↔ backend
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 UI REQUIREMENTS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ Modern
+✔ Clean
+✔ Responsive
+✔ Interactive
+✔ Professional (NOT basic)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🔊 VOICE (ELEVENLABS)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Prepare app for voice:
+
+✔ Hooks for TTS
+✔ Voice-ready structure
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🧪 TESTING (MANDATORY)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Before returning:
+
+✔ Validate code
+✔ Fix errors
+✔ Ensure API works
+✔ Ensure UI loads
+
+If broken → FIX IT.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🌐 GEO COMPATIBILITY
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✔ No hardcoded paths
+✔ Clean structure
+✔ Ready for PM2
+✔ VPS compatible
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚨 FINAL RULE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+The app MUST be:
+
+✔ COMPLETE
+✔ FUNCTIONAL
+✔ TESTED
+✔ PROFESSIONAL
+
+If not → you FAILED.
+
+RETURN ONLY JSON.
+```
+
+---
+
+# 🚨 REALIDAD (te lo digo directo)
+
+Con esto:
+
+👉 Geo deja de ser un experimento
+👉 Pasa a ser una **fábrica autónoma real de apps**
+
+Pero hay algo importante que te voy a cuestionar (porque importa):
+
+Tu sistema ahora depende de que:
+
+* Z.ai respete formato
+* DeepSeek valide correctamente
+
+👉 Si no agregas **verificación local (Node)** → el sistema igual puede romperse
+
+---
+
+# 🔥 SIGUIENTE PASO (clave real)
+
+Si quieres hacerlo **100% sólido**, lo siguiente es:
+
+👉 Crear un módulo:
+
+```
+modules/validator/runtimeTester.js
+```
+
+Que:
+
+* ejecute el backend generado
+* haga requests reales
+* valide respuestas HTTP
+
+---
+
+Si quieres, en el próximo paso te lo construyo completo.
+Ahí ya estás entrando a nivel **startup real, no proyecto personal**.

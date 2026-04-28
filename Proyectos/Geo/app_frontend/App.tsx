@@ -8,6 +8,7 @@ import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { useState, useRef, useEffect } from 'react';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system/legacy';
+import * as LocalAuthentication from 'expo-local-authentication';
 
 LogBox.ignoreLogs([
   'Expo AV has been deprecated',
@@ -16,7 +17,7 @@ LogBox.ignoreLogs([
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
 const DEV_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJ1c3JfZGV2XzEyMyIsInJvbGUiOiJPV05FUiIsImlzQWN0aXZlIjp0cnVlLCJpYXQiOjE3NzUxMDQwOTMsImV4cCI6MTgwNjY2MTY5M30.OXz1CULxLJMnrSTElvVt1uPARdIsydZDKmSu489VShg';
-const BASE_URL = 'http://192.168.1.15:3000';
+const BASE_URL = 'http://76.13.166.221:3000';
 
 // ─── VAD CONFIG ───────────────────────────────────────────────────────────────
 const VAD_SPEECH_THRESHOLD_DB = -35;
@@ -70,9 +71,78 @@ function MessageBubble({ msg }: { msg: ChatMessage }) {
   );
 }
 
+// ─── PANTALLA DE BLOQUEO ─────────────────────────────────────────────────────
+function LockScreen({ onUnlock }: { onUnlock: () => void }) {
+  const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
+
+  const autenticar = async () => {
+    setChecking(true);
+    setError('');
+    try {
+      const compatible = await LocalAuthentication.hasHardwareAsync();
+      const enrolled  = await LocalAuthentication.isEnrolledAsync();
+
+      if (!compatible || !enrolled) {
+        // Sin biometría configurada — acceso directo
+        onUnlock();
+        return;
+      }
+
+      const result = await LocalAuthentication.authenticateAsync({
+        promptMessage: 'Verificá tu identidad para acceder a GEO OS',
+        fallbackLabel: 'Usar PIN',
+        cancelLabel: 'Cancelar',
+        disableDeviceFallback: false,
+      });
+
+      if (result.success) {
+        onUnlock();
+      } else {
+        setError('Autenticación fallida. Intentá de nuevo.');
+      }
+    } catch {
+      setError('Error al acceder al sensor biométrico.');
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  useEffect(() => { autenticar(); }, []);
+
+  return (
+    <View style={lockStyles.container}>
+      <View style={lockStyles.logoContainer}>
+        <Text style={lockStyles.logoText}>GEO</Text>
+        <Text style={lockStyles.logoSub}>OS</Text>
+      </View>
+      <Text style={lockStyles.titulo}>Tu Asistente Personal</Text>
+      {error ? <Text style={lockStyles.error}>{error}</Text> : null}
+      <TouchableOpacity style={lockStyles.btn} onPress={autenticar} disabled={checking}>
+        {checking
+          ? <ActivityIndicator color="#fff" />
+          : <Text style={lockStyles.btnText}>🔐 Desbloquear</Text>
+        }
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const lockStyles = StyleSheet.create({
+  container:       { flex: 1, backgroundColor: '#0a0a0a', alignItems: 'center', justifyContent: 'center', padding: 32 },
+  logoContainer:   { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 8 },
+  logoText:        { fontSize: 72, fontWeight: '900', color: '#ffffff', letterSpacing: -2 },
+  logoSub:         { fontSize: 32, fontWeight: '300', color: '#888', marginBottom: 12, marginLeft: 4 },
+  titulo:          { fontSize: 16, color: '#555', marginBottom: 48, letterSpacing: 2 },
+  error:           { color: '#ff4444', marginBottom: 16, textAlign: 'center', fontSize: 14 },
+  btn:             { backgroundColor: '#1a1a1a', borderWidth: 1, borderColor: '#333', paddingVertical: 16, paddingHorizontal: 40, borderRadius: 12 },
+  btnText:         { color: '#fff', fontSize: 16, fontWeight: '600' },
+});
+
 // ─── APP ─────────────────────────────────────────────────────────────────────
 export default function App() {
   // ── Estado UI ──────────────────────────────────────────────────────────────
+  const [desbloqueado, setDesbloqueado] = useState(false);
   const [convState, setConvState] = useState<ConversationState>(ConversationState.IDLE);
   const convStateRef = useRef<ConversationState>(ConversationState.IDLE);
   const [isListening, setIsListening] = useState(false);
@@ -633,6 +703,10 @@ export default function App() {
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER
   // ═══════════════════════════════════════════════════════════════════════════
+
+  if (!desbloqueado) {
+    return <LockScreen onUnlock={() => setDesbloqueado(true)} />;
+  }
 
   return (
     <SafeAreaProvider>

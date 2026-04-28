@@ -1,0 +1,33 @@
+node_modules/
+dist/
+.temp/
+
+# ── Secretos y variables de entorno ─────────────────────────────────────────
+# Excluir TODOS los archivos .env excepto el template de ejemplo
+.env
+.env.*
+!.env.example
+
+# ── Base de datos ────────────────────────────────────────────────────────────
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# ── Archivos de servicio y credenciales ─────────────────────────────────────
+service-account.json
+*.pem
+*.key
+
+# ── Audio temporal ───────────────────────────────────────────────────────────
+temp_audio/*
+!temp_audio/.gitkeep
+
+# ── Diagnósticos y tests temporales ─────────────────────────────────────────
+diagnose_*.ts
+test-*.ts
+SKILL*.md
+
+# ── Logs ─────────────────────────────────────────────────────────────────────
+server_logs.txt
+*.log

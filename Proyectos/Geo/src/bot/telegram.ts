@@ -1,6 +1,7 @@
 /**
- * GEO OS — Bot de Telegram
- * Modos: /modo_geo | /modo_comercio | /modo_warroom | /modo_productividad
+ * FASE 3 — Bot de Telegram Unificado
+ * Un solo bot con modos: /modo_geo | /modo_comercio | /modo_warroom | /modo_productividad
+ * + comando /tokens para ver consumo
  */
 import { Bot, Context, NextFunction, InputFile } from 'grammy';
 import { limit } from '@grammyjs/ratelimiter';
@@ -12,6 +13,8 @@ import { generarReporteTexto } from '../security/tokenTracker.js';
 import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import { get } from 'https';
 import { join } from 'path';
+import fetch from 'node-fetch';
+import FormData from 'form-data';
 
 const TEMP_DOWNLOADS = join(process.cwd(), 'temp_audio');
 if (!existsSync(TEMP_DOWNLOADS)) mkdirSync(TEMP_DOWNLOADS, { recursive: true });
@@ -24,7 +27,7 @@ const procesandoUsuarios = new Set<string>();
 
 function getMode(userId: string): BotMode { return userModes.get(userId) ?? 'geo'; }
 function getSource(mode: BotMode): MemorySource {
-    return ({ geo: 'geo', comercio: 'ecoorigen', warroom: 'geo', productividad: 'productividad' } as const)[mode];
+    return ({ geo: 'geo', comercio: 'ecoorigen', warroom: 'geo', productividad: 'voren' } as const)[mode];
 }
 
 // ─── Rate limit ────────────────────────────────────────────────────────────────
@@ -50,13 +53,13 @@ botServidor.command('start', async (ctx: Context) => {
     const userId = ctx.from!.id.toString();
     const modo = getMode(userId);
     await ctx.reply(
-        `🦾 *GEO OS v2 — En Línea*\n\n` +
+        `🦾 *Géo OS v1 — En Línea*\n\n` +
         `Modo actual: *${modo.toUpperCase()}*\n\n` +
         `*Comandos:*\n` +
         `/modo_geo — Asistente general\n` +
         `/modo_comercio — EcoOrigen / Shopify\n` +
         `/modo_warroom — Métricas y análisis\n` +
-        `/modo_productividad — Tareas / Proyectos\n` +
+        `/modo_productividad — Tareas / Voren\n` +
         `/modo_seguridad — Escaneo y protección\n` +
         `/modo_salud — Ejercicio y bienestar\n` +
         `/modo_compras — Precios y listas\n` +
@@ -90,6 +93,54 @@ botServidor.command('borrarmemoria', async (ctx: Context) => {
 });
 
 // ─── Descargar archivo ─────────────────────────────────────────────────────────
+// ─── VISIÓN: análisis de imágenes (vía API) ───────────────────────────────
+botServidor.on('message:photo', async (ctx: any) => {
+  const userId = ctx.from!.id.toString();
+  const allowed = appConfig.telegram.usuariosPermitidos.map(String);
+  if (!allowed.includes(userId)) {
+    return ctx.reply('⛔ No estás autorizado.');
+  }
+
+  try {
+    await ctx.reply('📸 Analizando imagen... (puede tardar hasta 1 minuto)');
+    
+    const photoArray = ctx.message.photo;
+    const largestPhoto = photoArray[photoArray.length - 1];
+    const fileId = largestPhoto.file_id;
+    
+    const file = await ctx.api.getFile(fileId);
+    const fileUrl = `https://api.telegram.org/file/bot${appConfig.telegram.token}/${file.file_path}`;
+    
+    const imagePath = `/tmp/telegram_${Date.now()}.jpg`;
+    const response = await fetch(fileUrl);
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const fs = await import('fs');
+    fs.writeFileSync(imagePath, buffer);
+    
+    const FormData = (await import('form-data')).default;
+    const form = new FormData();
+    form.append('image', fs.createReadStream(imagePath));
+    
+    const visionRes = await fetch('http://localhost:3000/api/vision', {
+      method: 'POST',
+      body: form,
+      headers: form.getHeaders()
+    });
+    
+    const data = (await visionRes.json()) as { description?: string };
+    fs.unlinkSync(imagePath);
+    
+    if (data.description) {
+      ctx.reply(`🖼️ ${data.description}`);
+    } else {
+      ctx.reply('❌ No pude analizar la imagen.');
+    }
+  } catch (error: any) {
+    console.error('[Telegram Vision] Error:', error);
+    ctx.reply('⚠️ Error al procesar la imagen.');
+  }
+});
+
 async function descargarArchivo(ctx: Context, destino: string): Promise<void> {
     const file    = await ctx.getFile();
     const fileUrl = `https://api.telegram.org/file/bot${appConfig.telegram.token}/${file.file_path}`;
@@ -131,12 +182,17 @@ botServidor.on('message:text', async (ctx: Context) => {
         await ctx.replyWithChatAction('typing');
         const modo     = getMode(userId);
         const source   = getSource(modo);
-        const respuesta = await peticionGeoCore(userId, texto, source, modo);
-        for (const trozo of respuesta.match(/[\s\S]{1,4000}/g) || []) {
-            await ctx.reply(trozo, { parse_mode: 'Markdown' }).catch(() => ctx.reply(trozo));
+        const respText = await peticionGeoCore(userId, texto, source, modo);
+        for (const trozo of (respText.match(/[\s\S]{1,4000}/g) || [])) {
+            try {
+                await ctx.reply(trozo, { parse_mode: 'Markdown' });
+            } catch {
+                await ctx.reply(trozo);
+            }
         }
-    } catch (err: any) {
-        await ctx.reply(`⚠️ Error: ${err.message}`);
+    } catch (err) {
+        console.error('[Telegram] Error en texto:', err);
+        await ctx.reply('⚠️ Error procesando tu mensaje.');
     } finally {
         procesandoUsuarios.delete(userId);
     }
@@ -144,19 +200,19 @@ botServidor.on('message:text', async (ctx: Context) => {
 
 // ─── Voz ───────────────────────────────────────────────────────────────────────
 botServidor.on('message:voice', async (ctx: Context) => {
-    const userId = ctx.from!.id.toString();
+    const userId   = ctx.from!.id.toString();
+    const tempPath = join(TEMP_DOWNLOADS, `voice_${userId}_${Date.now()}.ogg`);
     if (procesandoUsuarios.has(userId)) { await ctx.reply('⏳ Procesando tu mensaje anterior...'); return; }
     procesandoUsuarios.add(userId);
-    const tempPath = join(TEMP_DOWNLOADS, `voice_${userId}_${Date.now()}.ogg`);
     try {
-        await ctx.replyWithChatAction('record_voice');
         await descargarArchivo(ctx, tempPath);
-        await procesarMediaYResponder(ctx, userId, tempPath, 'Mensaje de voz');
-    } catch (err: any) {
-        await ctx.reply(`⚠️ Error en voz: ${err.message}`);
+        await procesarMediaYResponder(ctx, userId, tempPath, 'Audio');
+    } catch (err) {
+        console.error('[Telegram] Error en voz:', err);
+        await ctx.reply('⚠️ Error procesando el audio.');
     } finally {
-        procesandoUsuarios.delete(userId);
         await limpiarArchivo(tempPath);
+        procesandoUsuarios.delete(userId);
     }
 });
 
@@ -164,14 +220,18 @@ botServidor.on('message:voice', async (ctx: Context) => {
 botServidor.on('message:video', async (ctx: Context) => {
     const userId   = ctx.from!.id.toString();
     const tempPath = join(TEMP_DOWNLOADS, `video_${userId}_${Date.now()}.mp4`);
+    if (procesandoUsuarios.has(userId)) { await ctx.reply('⏳ Procesando tu mensaje anterior...'); return; }
+    procesandoUsuarios.add(userId);
     try {
-        await ctx.reply('🎬 Procesando video...');
         await descargarArchivo(ctx, tempPath);
-        await procesarMediaYResponder(ctx, userId, tempPath, 'Video', ctx.message?.caption);
-    } catch (err: any) {
-        await ctx.reply(`⚠️ Error en video: ${err.message}`);
+        const caption = (ctx.message as any)?.caption || '';
+        await procesarMediaYResponder(ctx, userId, tempPath, 'Video', caption);
+    } catch (err) {
+        console.error('[Telegram] Error en video:', err);
+        await ctx.reply('⚠️ Error procesando el video.');
     } finally {
         await limpiarArchivo(tempPath);
+        procesandoUsuarios.delete(userId);
     }
 });
 
@@ -179,16 +239,22 @@ botServidor.on('message:video', async (ctx: Context) => {
 botServidor.on('message:video_note', async (ctx: Context) => {
     const userId   = ctx.from!.id.toString();
     const tempPath = join(TEMP_DOWNLOADS, `vidnote_${userId}_${Date.now()}.mp4`);
+    if (procesandoUsuarios.has(userId)) { await ctx.reply('⏳ Procesando tu mensaje anterior...'); return; }
+    procesandoUsuarios.add(userId);
     try {
-        await ctx.reply('📹 Procesando nota de video...');
         await descargarArchivo(ctx, tempPath);
-        await procesarMediaYResponder(ctx, userId, tempPath, 'Video circular');
-    } catch (err: any) {
-        await ctx.reply(`⚠️ Error: ${err.message}`);
+        await procesarMediaYResponder(ctx, userId, tempPath, 'VideoNota');
+    } catch (err) {
+        console.error('[Telegram] Error en video nota:', err);
+        await ctx.reply('⚠️ Error procesando el video.');
     } finally {
         await limpiarArchivo(tempPath);
+        procesandoUsuarios.delete(userId);
     }
 });
+// ─── Fotos ────────────────────────────────────────────────────────────────────
+// ─── VISIÓN: análisis de imágenes (vía API) ───────────────────────────────
+
 
 // ─── Arranque ──────────────────────────────────────────────────────────────────
 export async function arrancarAgenteEnTelegram() {

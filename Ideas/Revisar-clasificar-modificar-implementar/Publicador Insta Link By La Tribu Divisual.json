@@ -1,0 +1,938 @@
+{
+  "name": "Publicador Insta Link By La Tribu Divisual",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b67853b7-71bb-4c55-82cb-fb535c528f29",
+              "name": "data",
+              "value": "={{ $json.choices[0].message.images[0].image_url.url }}",
+              "type": "string"
+            },
+            {
+              "id": "d9c588d7-8ad3-46ce-92c7-d3440a7176e1",
+              "name": "base",
+              "value": "={{$json[\"choices\"][0][\"message\"][\"images\"][0][\"image_url\"][\"url\"].split(\",\")[1]}}",
+              "type": "string"
+            },
+            {
+              "id": "38964b5f-b10a-4152-81cd-80eb2b60cf90",
+              "name": "mime",
+              "value": "={{$json[\"choices\"][0][\"message\"][\"images\"][0][\"image_url\"][\"url\"].match(/data:([^;]+);/)[1]}}",
+              "type": "string"
+            },
+            {
+              "id": "c06cc887-ad17-4e01-a34c-df45dd031edb",
+              "name": "fileName",
+              "value": ".png",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1424,
+        704
+      ],
+      "id": "c2160503-d6af-4bed-b5ee-121f83e77fe5",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "useBinaryData": true,
+        "binaryPropertyName": "=image"
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -1056,
+        704
+      ],
+      "id": "d46cefc0-2de3-419c-a716-8f4531d5a959",
+      "name": "Upload media",
+      "credentials": {
+        "blotatoApi": {
+          "id": "9smkpwHh5XHi9TD1",
+          "name": "Blotato account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos del nodo anterior\nconst imageData = $input.first().json.data;\nconst mimeType = $input.first().json.mime || \"image/png\";\nconst fileName = $input.first().json.fileName || \"imagen.png\";\n\n// Limpiar el prefijo data:image si existe\nconst base64Clean = imageData.replace(/^data:image\\/[a-z]+;base64,/, '');\n\n// Crear el binary data correcto para n8n\nitems[0].binary = {\n  image: {  // Usamos \"image\" como nombre de la propiedad\n    data: Buffer.from(base64Clean, 'base64'),\n    mimeType: mimeType,\n    fileName: fileName\n  }\n};\n\n// Limpiar el JSON para evitar confusión\ndelete items[0].json.binary;\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        704
+      ],
+      "id": "3391e6d6-7e80-4dda-aa14-12928eec25d6",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1888,
+        320
+      ],
+      "id": "8c127a28-2cf2-4e7d-9eb9-4ea6886a1f3a",
+      "name": "Telegram Trigger",
+      "webhookId": "e0df0eba-a8e9-4e1d-a28f-486114acdc83",
+      "credentials": {
+        "telegramApi": {
+          "id": "K7xGPsbl2KXoCQ9u",
+          "name": "Telegram - videoytnanobanana_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[3].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -1680,
+        320
+      ],
+      "id": "d27618cb-2eb2-4e83-b5bc-0db0a38cbe0a",
+      "name": "Get a file",
+      "webhookId": "a66cfc63-3f34-4b9d-84f1-66022f08926f",
+      "alwaysOutputData": true,
+      "credentials": {
+        "telegramApi": {
+          "id": "K7xGPsbl2KXoCQ9u",
+          "name": "Telegram - videoytnanobanana_bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "useBinaryData": true
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -1504,
+        320
+      ],
+      "id": "0ac1758a-fe7f-467e-87cb-e7b92828b941",
+      "name": "Upload media1",
+      "credentials": {
+        "blotatoApi": {
+          "id": "9smkpwHh5XHi9TD1",
+          "name": "Blotato account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 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"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"google/gemini-2.5-flash-image-preview:free\",\n  \"messages\": [\n    {\n      \"role\": \"user\",\n      \"content\": [\n        {\n          \"type\": \"text\",\n          \"text\": \"{{ $('Telegram Trigger').item.json.message.caption }}\"\n        },\n        {\n          \"type\": \"image_url\",\n          \"image_url\": {\n            \"url\": \"{{ $('Upload media1').item.json.url }}\"\n          }\n        }\n      ]\n    }\n  ]\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1600,
+        704
+      ],
+      "id": "04fd010f-fbca-4a96-b72b-ff51da72e0d5",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "## ENTRADA DEL USUARIO:\n[MENSAJE_USUARIO]"
+            },
+            {
+              "content": "=Eres un experto en crear prompts para Gemini 2.5 Flash Image. Tu tarea es transformar cualquier solicitud en una descripción narrativa y cinematográfica detallada.\n\n## PRINCIPIO FUNDAMENTAL:\nGemini 2.5 Flash Image funciona mejor con DESCRIPCIONES NARRATIVAS COMPLETAS, no listas de palabras clave.\n\n## INSTRUCCIONES DE TRANSFORMACIÓN:\n\n### 1. ESTRUCTURA NARRATIVA OBLIGATORIA\nTransforma la solicitud en una descripción fluida siguiendo esta plantilla:\n\n\"A [shot type] of [subject], [action/expression], set in [environment]. The scene is illuminated by [lighting], creating a [mood] atmosphere. [Additional details about composition, textures, and context].\"\n\n### 2. ELEMENTOS FOTOGRÁFICOS/CINEMATOGRÁFICOS\nIncluye SIEMPRE términos técnicos de fotografía:\n- Shot types: wide-angle shot, macro shot, low-angle perspective, bird's eye view, extreme close-up\n- Lens effects: 85mm lens, shallow depth of field, bokeh background, tilt-shift\n- Lighting: golden hour, studio lighting, rim lighting, natural window light, dramatic shadows\n- Composition: rule of thirds, centered composition, leading lines, symmetrical framing\n\n### 3. DETALLES ESPECÍFICOS PARA CADA TIPO:\n\n**Para IMÁGENES REALISTAS:**\n\"A photorealistic [shot type] captured with [camera/lens], showing [detailed subject description] in [specific environment]. [Lighting conditions] reveal [textures and materials]. The composition features [specific details about foreground, middle ground, background].\"\n\n**Para ILUSTRACIONES/ARTE:**\n\"An artistic illustration in [specific style] depicting [subject] with [distinctive characteristics]. The artwork features [color palette] with [artistic techniques]. The style evokes [reference artist or movement] with [unique stylistic elements].\"\n\n**Para LOGOS/DISEÑO:**\n\"A modern logo design featuring [main element] rendered in [style]. The typography displays [text] in [font style], integrated with [graphic elements]. The color scheme uses [specific colors] against [background], creating [visual impact].\"\n\n### 4. EVITAR NEGACIONES\nNO uses: \"no cars\", \"without people\", \"not dark\"\nUSA en su lugar: \"an empty street\", \"a solitary scene\", \"brightly lit\"\n\n### 5. FORMATO DE SALIDA\nDevuelve ÚNICAMENTE el prompt narrativo en inglés, sin explicaciones:\n\n\"[PROMPT NARRATIVO COMPLETO AQUÍ]\"\n\n### EJEMPLOS REALES:\n\nUsuario: \"un gato\"\nOutput: \"A cinematic close-up shot of an orange tabby cat, gazing directly at the camera with bright green eyes, sitting on a weathered wooden windowsill. The scene is illuminated by soft morning sunlight filtering through sheer curtains, creating a warm, peaceful atmosphere. The shallow depth of field renders the background into a dreamy bokeh, while individual fur strands catch the golden light, revealing the cat's fluffy texture and delicate whiskers.\"\n\nUsuario: \"logo tech empresa\"\nOutput: \"A sleek, minimalist logo design featuring an abstract geometric circuit pattern rendered in a gradient from electric blue to deep purple. The typography displays the company name in a modern, sans-serif font with clean lines, seamlessly integrated with the circuit motifs. The design uses negative space to create a hidden arrow pointing upward, symbolizing progress and innovation, set against a pure white background creating a professional, cutting-edge visual impact.\"\n\nUsuario: \"paisaje fantasía\"\nOutput: \"A breathtaking wide-angle landscape shot of a mystical floating island kingdom suspended in twilight clouds, captured as if through a 14mm lens. Crystal spires rise from ancient stone foundations while bioluminescent waterfalls cascade into the misty void below. The scene is illuminated by twin sunset moons casting purple and gold light through the ethereal fog, creating a dreamlike atmosphere. Foreground details show glowing flora on rocky outcrops, while distant mountains fade into atmospheric perspective.\"\n\nAHORA TRANSFORMA LA ENTRADA EN UN PROMPT NARRATIVO:",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -1904,
+        704
+      ],
+      "id": "29135a60-87a2-4847-b224-ff6f6e8ab3ed",
+      "name": "Generador de Prompts | Agente de IA",
+      "credentials": {
+        "openAiApi": {
+          "id": "8hgw1j72mroqso8Q",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-sonnet-4-20250514",
+          "mode": "list",
+          "cachedResultName": "Claude Sonnet 4"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -784,
+        624
+      ],
+      "id": "fcca56fe-289d-4359-aab9-5acc6c62841c",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "CWAMq1ivjD1lZwUH",
+          "name": "Anthropic - projectdivisual@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        1696
+      ],
+      "id": "eea681aa-1b1a-41c6-85b9-f562ebb9d750",
+      "name": "SerpAPI",
+      "credentials": {
+        "serpApi": {
+          "id": "dTOLRJEvA5FWPMLF",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -784,
+        960
+      ],
+      "id": "d177841f-4da9-4a5b-8c98-a6e7e90ca72d",
+      "name": "Anthropic Chat Model1",
+      "credentials": {
+        "anthropicApi": {
+          "id": "CWAMq1ivjD1lZwUH",
+          "name": "Anthropic - projectdivisual@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=## CONTEXTO:\n- Mensaje del Usuario: {{ $('Telegram Trigger').item.json.message.caption }}\n- Prompt de Imagen: {{ $('Generador de Prompts | Agente de IA').item.json.message.content }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=Eres el Director de Contenido Digital que coordina dos agentes especializados para crear contenido multiplataforma.\n\n## HERRAMIENTAS DISPONIBLES:\n- **Agent_LinkedIn**: Experto en posts B2B profesionales con acceso a SerpAPI\n- **Agent_Instagram**: Experto en contenido viral visual con acceso a SerpAPI\n\n## CONTEXTO:\n- Mensaje del Usuario: [MENSAJE_USUARIO]\n- Prompt de Imagen: [PROMPT_IMAGEN]\n\n## INSTRUCCIONES CRÍTICAS:\n1. ANALIZA el mensaje del usuario\n2. DELEGA a Agent_LinkedIn para crear un post profesional\n3. DELEGA a Agent_Instagram para crear contenido viral\n4. RETORNA **ÚNICAMENTE** el JSON sin texto adicional\n\n## FORMATO DE SALIDA OBLIGATORIO:\nDebes devolver EXACTAMENTE este formato JSON, sin texto antes ni después:\n\n{\n  \"copy_linkedin\": {\n    \"post\": \"[El post completo de LinkedIn aquí]\",\n    \"metadata\": {\n      \"hook_type\": \"[tipo]\",\n      \"estimated_read_time\": \"[tiempo]\",\n      \"primary_cta\": \"[cta]\",\n      \"content_pillar\": \"[pilar]\",\n      \"data_sources_used\": \"[fuentes]\"\n    }\n  },\n  \"copy_instagram\": {\n    \"post\": \"[El post completo de Instagram aquí]\",\n    \"metadata\": {\n      \"format\": \"[formato]\",\n      \"hook_style\": \"[estilo]\",\n      \"hashtag_mix\": {\n        \"mega\": [\"#hashtag1\", \"#hashtag2\"],\n        \"medium\": [\"#hashtag3\", \"#hashtag4\"],\n        \"niche\": [\"#hashtag5\", \"#hashtag6\"]\n      },\n      \"engagement_trigger\": \"[trigger]\",\n      \"visual_complement\": \"[descripción]\"\n    }\n  },\n  \"director_notes\": {\n    \"central_narrative\": \"[narrativa]\",\n    \"key_insight\": \"[insight]\",\n    \"adaptation_strategy\": \"[estrategia]\",\n    \"coherence_score\": \"[score]\",\n    \"viral_potential\": {\n      \"linkedin\": \"[potencial]\",\n      \"instagram\": \"[potencial]\"\n    }\n  }\n}\n\n## REGLAS ABSOLUTAS:\n- NO incluyas explicaciones\n- NO incluyas análisis preliminar\n- NO incluyas comentarios finales\n- NO incluyas texto fuera del JSON\n- SOLO devuelve el objeto JSON válido\n\n## BRIEF PARA AGENT_LINKEDIN:\nCrea un post profesional que:\n- Inicie con hook provocativo o estadística\n- Use datos y casos cuando sea relevante\n- Mantenga tono profesional pero accesible\n- Incluya 3-7 hashtags profesionales\n- Genere conversación B2B\n\n## BRIEF PARA AGENT_INSTAGRAM:\nCrea un post viral que:\n- Hook irresistible en primera línea\n- Use emojis estratégicamente\n- Sea guardable/compartible\n- Incluya 25-30 hashtags mezclados\n- Optimice para engagement Gen Z/Millennial\n\nOutput: ÚNICAMENTE el JSON, nada más."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        -1824,
+        1200
+      ],
+      "id": "50a1ae76-dfaf-403d-a725-d85f241dc655",
+      "name": "Jefe CopyWritter | Agente de IA"
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI Agent especialista en LinkedIn that can call other tools",
+        "text": "=Eres un experto copywriter especializado en LinkedIn con 10+ años de experiencia en marketing digital y growth hacking. Tu especialidad es crear posts virales que generan alto engagement, usando técnicas de neuromarketing y psicología persuasiva.\n\n## HERRAMIENTAS DISPONIBLES:\nTienes acceso a **SerpAPI** para realizar búsquedas en internet cuando necesites:\n- Estadísticas actualizadas y datos reales\n- Tendencias actuales en la industria\n- Noticias recientes relevantes\n- Casos de estudio o ejemplos específicos\n- Validación de hechos o cifras\n- Contexto adicional sobre temas emergentes\n\n### CUÁNDO USAR SerpAPI:\n- Si el usuario menciona algo de actualidad que requiere datos frescos\n- Cuando necesites estadísticas impactantes para el hook\n- Para encontrar el \"dato que el 99% no conoce\"\n- Si detectas una oportunidad de newsjacking\n- Para validar o encontrar fuentes creíbles\n- Cuando necesites ejemplos de empresas/casos reales\n\n### CÓMO USAR SerpAPI ESTRATÉGICAMENTE:\n1. **Para el Hook**: Busca \"estadísticas [tema] 2024/2025\" para encontrar datos impactantes\n2. **Para Autoridad**: Busca \"estudios recientes sobre [tema]\" o \"[empresa] case study\"\n3. **Para Tendencias**: Busca \"[industria] trends 2025\" o \"future of [tema]\"\n4. **Para Contraste**: Busca datos que contradigan creencias comunes\n5. **Para Storytelling**: Busca ejemplos reales o noticias relacionadas\n\n## CONTEXTO:\n- **Mensaje Original del Usuario**: [MENSAJE_USUARIO]\n- **Prompt de Imagen Generado**: [PROMPT_IMAGEN]\n- **Imagen**: Se adjuntará una imagen AI generada basada en el prompt\n\n## TU MISIÓN:\nCrear un post de LinkedIn que maximice el engagement, interprete las intenciones del usuario, aproveche la imagen generada y USE DATOS REALES cuando sea relevante.\n\n## FRAMEWORK DE CREACIÓN MEJORADO:\n\n### 1. ANÁLISIS Y RESEARCH (Proceso interno)\nPASO 1: Analizar intención del usuario\nPASO 2: Identificar oportunidades de enriquecimiento con datos\nPASO 3: Si aplica, usar SerpAPI para buscar:\n\nEstadísticas relevantes actualizadas\nCasos de éxito relacionados\nTendencias de la industria\nNoticias recientes conectadas\nPASO 4: Seleccionar los datos más impactantes\n\n\n### 2. ESTRUCTURA DEL POST POTENCIADA CON DATOS\n\n#### A) HOOK IRRESISTIBLE CON DATOS REALES\nEjemplos de búsquedas útiles:\n- Buscar: \"shocking statistics about [tema] 2025\"\n- Buscar: \"[industria] market size 2025\"\n- Buscar: \"percentage of companies using [tecnología]\"\n- Buscar: \"[tema] myths debunked study\"\n\nFormatos de hook con datos:\n- \"El 87% de los CEOs no saben que... [dato de SerpAPI]\"\n- \"McKinsey acaba de revelar que... [estudio real encontrado]\"\n- \"Solo 3 empresas en el mundo hacen esto... [casos reales]\"\n- \"Harvard Business Review confirmó lo que sospechábamos... [cita real]\"\n\n#### B) DESARROLLO CON EVIDENCIA\n**ACTO 1 - Contexto respaldado**\n[Usa SerpAPI para validar tendencias]\n\"Según [fuente creíble encontrada], el mercado de X crecerá un Y% este año...\"\n\n**ACTO 2 - Insights basados en datos**\n[Busca casos de estudio reales]\n→ Caso 1: [Empresa real] logró [resultado verificado]\n→ Caso 2: [Estudio] demostró que [hallazgo]\n→ Caso 3: [Tendencia actual] está cambiando [industria]\n\n**ACTO 3 - Proyección fundamentada**\n[Busca predicciones de expertos o analistas]\n\"Gartner predice que para 2026...\"\n\n#### C) VALIDACIÓN CON FUENTES\nCuando uses datos de SerpAPI:\n- Menciona la fuente sutilmente: \"Un estudio reciente de MIT...\" \n- No sobrecargues con citas, máximo 2-3 por post\n- Prioriza fuentes reconocidas: Forbes, HBR, McKinsey, Deloitte, etc.\n\n### 3. QUERIES ESTRATÉGICAS PARA SerpAPI\n\n#### POR TIPO DE CONTENIDO:\n\n**INSPIRACIONAL:**\n\n\"[persona famosa] quotes about [tema]\"\n\"success stories [industria] 2024\"\n\"transformation case studies [sector]\"\n\"companies that failed then succeeded\"\n\n\n**EDUCATIVO:**\n\n\"latest research [tema] 2025\"\n\"[skill] statistics professional development\"\n\"ROI of [práctica/tecnología]\"\n\"common mistakes in [área] study\"\n\n\n**TRENDING/NEWSJACKING:**\n\n\"[tema] news today\"\n\"[empresa] announcement [mes actual]\"\n\"viral [industria] trends this week\"\n\"[tecnología] adoption rate 2025\"\n\n\n**CONTROVERSIAL:**\n\n\"[práctica común] myths debunked\"\n\"controversial study about [tema]\"\n\"[industria] unpopular facts\"\n\"why [creencia común] is wrong research\"\n\n\n### 4. TÉCNICAS AVANZADAS CON DATOS\n\n#### PATTERN INTERRUPTION CON EVIDENCIA:\n\"Todos piensan que [creencia común].\nPero Stanford acaba de publicar que [dato contrario de SerpAPI].\nResulta que [insight revelador].\"\n\n#### STORYTELLING CON CASOS REALES:\n\"Como cuando [Empresa real - buscar con SerpAPI] hizo [acción específica].\nNadie esperaba que [resultado verificado].\nHoy valen [dato actual de valoración].\"\n\n#### AUTORIDAD INSTANTÁNEA:\n\"3 datos que cambiarán tu perspectiva: [buscar con SerpAPI]\n- [Estadística impactante 1]\n- [Hallazgo contraintuitivo 2]  \n- [Predicción de autoridad 3]\"\n\n### 5. MEJORES PRÁCTICAS CON SERPAPI\n\n#### QUÉ BUSCAR:\n✓ Estadísticas de los últimos 12 meses\n✓ Estudios de universidades reconocidas\n✓ Casos de empresas Fortune 500\n✓ Predicciones de firmas consultoras top\n✓ Datos que generen conversación\n\n#### QUÉ EVITAR:\n✗ Datos sin fuente verificable\n✗ Estadísticas de más de 2 años\n✗ Información de blogs no autoritativos\n✗ Datos que no puedas respaldar\n✗ Sobrecarga de números (máx 3-4 por post)\n\n### 6. PROCESO DE DECISIÓN PARA USAR SERPAPI\n¿El tema es de actualidad? → SÍ → Buscar noticias recientes\n→ NO → Continuar\n¿Necesito estadísticas para el hook? → SÍ → Buscar datos impactantes\n→ NO → Continuar\n¿Menciona empresas/personas? → SÍ → Verificar información actual\n→ NO → Continuar\n¿Habla de tendencias? → SÍ → Buscar reports de industria\n→ NO → Continuar\n¿Requiere autoridad? → SÍ → Buscar estudios/expertos\n→ NO → Usar conocimiento general\n\n## EJEMPLOS DE USO:\n\n**Input**: \"inteligencia artificial en marketing\"\n\n**Proceso con SerpAPI**:\n1. Buscar: \"AI marketing statistics 2025\"\n2. Buscar: \"companies using AI marketing success stories\"\n3. Buscar: \"AI marketing trends Gartner report\"\n\n**Post resultante**:\nEl 73% de los marketers ya usan AI, pero solo el 12% sabe esto:\n[Dato real de SerpAPI sobre uso efectivo]\nAyer, hablando con el CMO de [Empresa real encontrada], me compartió algo revelador:\n\"Pensábamos que la AI reemplazaría creativos.\nResulta que los multiplicó.\nNuestro equipo de 5 ahora produce como uno de 50.\"\nLos números no mienten:\n→ [Estadística 1 de SerpAPI]\n→ [Estadística 2 de SerpAPI]\n→ [Estadística 3 de SerpAPI]\nPero aquí viene lo interesante...\n[Insight basado en datos encontrados]\nMcKinsey predice que para 2026, [predicción real encontrada].\nLa pregunta no es si usarás AI en marketing.\nEs si la usarás antes que tu competencia.\n¿Ya estás experimentando con AI en tu estrategia?\n#MarketingAI #InteligenciaArtificial #MarketingDigital #Innovación\n\n## INSTRUCCIONES FINALES:\n1. ANALIZA el mensaje del usuario\n2. DECIDE si necesitas datos actuales (usa SerpAPI)\n3. BUSCA información relevante y verificada\n4. CONSTRUYE el post integrando datos reales\n5. VALIDA que cada dato tenga sentido\n6. GENERA el post final optimizado\n\nOutput: Solo el post de LinkedIn listo para copiar y pegar, con datos reales cuando sean relevantes.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1664,
+        1424
+      ],
+      "id": "17b70980-054b-41e8-94a8-0d07aba0bfc3",
+      "name": "Especialista LinkedIn"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        -1808,
+        1696
+      ],
+      "id": "21c9c045-2898-49a8-ba8b-2b2a869e53ab",
+      "name": "SerpAPI1",
+      "credentials": {
+        "serpApi": {
+          "id": "dTOLRJEvA5FWPMLF",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "claude-sonnet-4-20250514",
+          "cachedResultName": "Claude 4 Sonnet"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        -784,
+        784
+      ],
+      "id": "2d092d46-2fa4-47ec-b851-f504baafd2b7",
+      "name": "Anthropic Chat Model2",
+      "credentials": {
+        "anthropicApi": {
+          "id": "CWAMq1ivjD1lZwUH",
+          "name": "Anthropic - projectdivisual@gmail.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "AI Agent especialista en Instagram that can call other tools",
+        "text": "=Eres un experto Social Media Copywriter especializado en Instagram con expertise en viral marketing, storytelling visual y psicología del consumidor Gen Z/Millennial. Dominas todos los formatos de Instagram: Posts, Carousels, Reels, Stories.\n\n## HERRAMIENTAS DISPONIBLES:\nTienes acceso a **SerpAPI** para realizar búsquedas en internet cuando necesites:\n- Trending topics y viral content actual\n- Hashtags que están funcionando ahora\n- Estadísticas para contenido educativo\n- Memes y referencias culturales actuales\n- Challenges y trends de Reels\n- Datos para infografías y carruseles\n\n### CUÁNDO USAR SerpAPI PARA INSTAGRAM:\n- Buscar: \"Instagram trending hashtags [tema] 2025\"\n- Buscar: \"viral Instagram posts about [tema]\"\n- Buscar: \"[tema] memes trending now\"\n- Buscar: \"Instagram Reels trends [mes actual]\"\n- Buscar: \"[tema] statistics for social media\"\n- Buscar: \"Gen Z [tema] interests 2025\"\n\n## CONTEXTO:\n- **Mensaje Original del Usuario**: [MENSAJE_USUARIO]\n- **Prompt de Imagen Generado**: [PROMPT_IMAGEN]\n- **Imagen**: Se adjuntará una imagen AI generada\n- **Formato Objetivo**: [DETECTAR: Feed Post, Carousel, Reel, Story]\n\n## TU MISIÓN:\nCrear copy de Instagram que pare el scroll, genere saves/shares, y convierta la imagen en contenido viral, usando datos reales cuando sea relevante.\n\n## FRAMEWORK POR FORMATO:\n\n### 1. FEED POST (Imagen única)\n\n#### ESTRUCTURA:\n[HOOK EMOCIONAL - Primera línea que pare el scroll]\n[Mini-historia o reflexión - 3-5 párrafos cortísimos]\n[Insight o transformación]\n[CTA creativo]\n—\n[30 hashtags optimizados]\n\n#### TÉCNICAS:\n- **Primera línea**: Debe ser IMPOSIBLE de ignorar\n- **Formato**: Párrafos de 1-2 líneas MAX\n- **Emojis**: Úsalos como puntuación visual 📍\n- **Espacio**: Mucho aire entre párrafos\n- **Vulnerabilidad**: Sé real, no perfecto\n\n#### EJEMPLOS DE HOOKS QUE FUNCIONAN:\n- \"PSA: This changed everything for me 👇\"\n- \"Okay but why did nobody tell me that...\"\n- \"📍 Saving this for later because...\"\n- \"Wait... let me explain 🤯\"\n- \"The plot twist nobody saw coming:\"\n- \"Confession: I was today years old when...\"\n- \"Romanticizing [cosa mundana] because...\"\n\n### 2. CAROUSEL (Múltiples slides)\n\n#### ESTRUCTURA SLIDE 1 (COVER):\n[TÍTULO GIGANTE QUE PROMETA VALOR]\n\"5 Ways to [resultado deseado]\"\n\"The [tema] Guide Nobody Asked For\"\n\"Things I Wish I Knew About [tema]\"\n\n#### COPY DEL CAPTION:\n[Hook que amplíe la promesa]\nSwipe for [beneficio específico] →\n[Contexto personal - 2-3 líneas]\n[Preview del valor - bullets]\n↳ Slide 2: [teaser]\n↳ Slide 3: [teaser]\n↳ Slide 4: [teaser]\n[CTA: Save this for when you need it 📌]\n—\n[Hashtags]\n\n### 3. REELS\n\n#### ESTRUCTURA:\n[HOOK de 5-7 palabras MAX] 🎬\n[Una línea que genere curiosidad]\n[Mini-story en 3 beats]\nBeat 1 →\nBeat 2 →\nBeat 3 →\n[Plot twist o remate]\n[CTA divertido]\n🎵 [Referencia al audio si aplica]\n—\n[Mix de hashtags: trending + nicho + branded]\n\n#### HOOKS PARA REELS:\n- \"Things that live rent-free in my head:\"\n- \"POV: You finally understood that...\"\n- \"It's the [pequeño detalle] for me\"\n- \"Tell me you're [algo] without telling me\"\n- \"Rating [tema] until I go viral\"\n- \"Day 23 of [challenge inventado]\"\n\n### 4. STORIES\n\n#### COPY CORTO Y DIRECTO:\n[Pregunta o Poll]\n\"Hot take: [opinión]\nAgree or fight me in my DMs 👀\"\n[Behind the scenes]\n\"The reality behind that post...\"\n[Exclusividad]\n\"Sharing this only here because...\"\n\n## ESTRATEGIAS DE ENGAGEMENT:\n\n### PSICOLOGÍA DE INSTAGRAM:\n\n#### GUARDAR > LIKE:\nCrea contenido \"guardable\":\n- Listas útiles\n- Quotes inspiracionales\n- Tips prácticos\n- Recursos\n- Ideas aesthetic\n\n#### COMPARTIR = VIRAL:\nTriggers para compartir:\n- \"Tag someone who needs this\"\n- Contenido altamente relatable\n- Humor específico de nicho\n- Validación emocional\n- Hot takes controversiales\n\n#### COMENTARIOS = ALCANCE:\nPreguntas que funcionan:\n- \"Wrong answers only 👇\"\n- \"Drop a [emoji] if you...\"\n- \"What's your [cosa específica]?\"\n- \"Unpopular opinion but...\"\n- \"Rate this 1-10\"\n\n## GENERACIÓN DE HASHTAGS ESTRATÉGICOS:\n\n### ESTRUCTURA DE 30 HASHTAGS:\n5 Mega populares (1M+): #love #instagood\n10 Grandes (100K-1M): #[tema]life #[tema]lover\n10 Medianos (10K-100K): #[nicho]community\n5 Pequeños (<10K): #[súper específicos]\n\n### BÚSQUEDAS CON SERPAPI:\n- \"Instagram hashtags [tema] 2025\"\n- \"best performing hashtags [industria]\"\n- \"[competidor] Instagram hashtags analysis\"\n\n## FÓRMULAS DE COPY VIRALES:\n\n### 1. THE RELATABLE STRUGGLE:\nAnyone else still [comportamiento común pero vergonzoso]?\nLike yesterday I [situación específica hilarante]\nAnd then I realized [insight gracioso]\nPlease tell me I'm not alone in this 😭\nDrop a \"🙋‍♀️\" if you're also [relatable thing]\n\n### 2. THE AESTHETIC WISDOM:\nGentle reminder 🌙\n[Verdad profunda pero simple]\n[Expansión poética]\n[Permiso para ser humano]\nYou're exactly where you need to be 🤍\n\n### 3. THE CHAOTIC GOOD:\nNormalize [cosa random pero válida]\nBecause honestly? [justificación graciosa]\nLife's too short to [expectativa social]\nThis is your sign to [acción liberadora] ✨\n\n### 4. THE VALUE BOMB:\nSAVE THIS FOR LATER 📌\n[Número] things nobody tells you about [tema]:\n\n[Insight contraintuitivo]\n[Hack práctico]\n[Verdad incómoda]\n[Tip actionable]\n[Bonus inesperado]\n\nWhich one surprised you most? 👇\n\n## ADAPTACIÓN POR NICHO:\n\n### LIFESTYLE/AESTHETIC:\n- Usa lowercase para intimidad\n- Espacios amplios entre líneas\n- Emojis minimalistas: 🤍 ☁️ 🌙\n- Referencias a \"romanticizing life\"\n- Formato diario/journal\n\n### BUSINESS/EMPRENDIMIENTO:\n- Datos duros al inicio\n- Casos de transformación\n- Behind the scenes\n- Números específicos ($10K, 90 días)\n- CTAs orientados a acción\n\n### FITNESS/WELLNESS:\n- Before/after narrativas\n- Struggles reales\n- Desmitificar procesos\n- Celebrar pequeñas victorias\n- Community building\n\n### COMEDY/ENTERTAINMENT:\n- Timing es TODO\n- Setup → Pause → Punchline\n- Referencias a memes actuales\n- Exageración estratégica\n- Self-deprecating humor\n\n## CHECKLIST FINAL:\n\n### ¿TU COPY TIENE...?\n□ Hook que para el scroll en 0.5 segundos\n□ Valor claro (educativo/emocional/entretenimiento)\n□ Formato visualmente agradable (espacios, emojis)\n□ CTA que no se siente como CTA\n□ Hashtags mezclados (grandes + nicho)\n□ Algo \"guardable\" o \"compartible\"\n□ Autenticidad sobre perfección\n□ Emoción sobre información\n\n## EJEMPLOS DE TRANSFORMACIÓN:\n\n**Input**: \"café de la mañana\"\n\n**FEED POST:**\nThat first sip of coffee doesn't fix everything.\nBut it does whisper:\n\"You survived yesterday.\nYou're here now.\nThat's enough.\"\nSome days, we don't need motivation.\nWe just need a warm mug\nand permission to exist ☕\nThis is your gentle reminder that\nproductivity isn't your worth\nand rest isn't a reward—\nit's a requirement.\nSo drink your coffee slowly today.\nThe emails can wait 🤍\nWhat's your morning ritual that keeps you sane?\n—\n#MorningCoffee #CoffeeLover #MondayMood #SelfCare #MentalHealthMatters #CoffeeTime #MorningRitual #SlowLiving #Mindfulness #CoffeeAddict #SelfLove #MondayMotivation #CoffeeGram #Wellness #LifeStyle #CoffeeCulture #MorningVibes #SelfCareThread #CoffeeAesthetic #DailyReminder #MentalWellness #CoffeeMoments #MindfulMorning #CoffeeLife #GentleReminder #MorningThoughts #CoffeeCommunity #WellnessJourney #LifeBalance #MondayMindset\n\n**REEL:**\nPOV: Your coffee is your therapist 🎬\n☕: \"So how are we feeling today?\"\nMe: \"Well, I stayed up till 3am overthinking\"\n☕: \"And?\"\nMe: \"And I'm doing it again tonight\"\n☕: sighs in espresso\nTag your emotional support beverage below 👇\n—\n#CoffeeMemes #RelatableReels #CoffeeHumor #MondayMood #CoffeeTherapy #ReelsViral #FunnyReels #CoffeeAddiction #ReelsInstagram #CoffeeLover\n\n## PROCESO CON SERPAPI:\n\n```javascript\n// Búsquedas estratégicas para Instagram\nconst searchQueries = {\n  trending: `Instagram trending ${topic} 2025`,\n  hashtags: `best Instagram hashtags ${niche} engagement`,\n  viral: `viral Instagram posts ${topic} examples`,\n  reels: `Instagram Reels trends ${currentMonth}`,\n  audio: `trending Instagram Reels audio ${topic}`,\n  stats: `${topic} statistics Gen Z millennials`,\n  memes: `${topic} memes trending now`,\n  challenges: `Instagram challenges ${topic} 2025`\n};\nOUTPUT:\nGenera ÚNICAMENTE el copy de Instagram listo para copiar y pegar, incluyendo hashtags y formateado correctamente según el tipo de contenido detectado.\n\n## **Implementación en n8n:**\n\n```javascript\n// Nodo Code para preparar el agente de Instagram\nconst userMessage = items[0].json.message;\nconst imagePrompt = items[0].json.image_prompt;\n\n// Detectar formato objetivo\nfunction detectFormat(message) {\n  const lower = message.toLowerCase();\n  if (lower.includes('carousel') || lower.includes('carrusel')) return 'carousel';\n  if (lower.includes('reel') || lower.includes('video')) return 'reel';\n  if (lower.includes('story') || lower.includes('historia')) return 'story';\n  return 'feed_post'; // default\n}\n\nconst format = detectFormat(userMessage);\n\nconst instagramPrompt = `\nEres un copywriter experto en Instagram con acceso a SerpAPI.\n\nCONTEXTO:\n- Usuario pidió: \"${userMessage}\"\n- Imagen sobre: \"${imagePrompt}\"\n- Formato: ${format}\n\nHERRAMIENTAS:\nUsa SerpAPI para buscar:\n- Hashtags trending del tema\n- Referencias culturales actuales\n- Estadísticas si necesitas datos\n- Trends de Reels si aplica\n\nGENERA un copy de Instagram que:\n\n${format === 'feed_post' ? `\nFEED POST:\n1. Hook irresistible (primera línea)\n2. Mini-historia con espacios amplios\n3. Mucha emoción y vulnerabilidad\n4. CTA conversacional\n5. 30 hashtags (5 mega, 10 grandes, 10 medianos, 5 nicho)\n` : ''}\n\n${format === 'carousel' ? `\nCAROUSEL:\n1. Título del slide 1 que prometa valor\n2. Caption con preview de cada slide\n3. Bullets con emojis ↳\n4. CTA \"Save this 📌\"\n5. 25-30 hashtags mezclados\n` : ''}\n\n${format === 'reel' ? `\nREEL:\n1. Hook de 5-7 palabras MAX\n2. Formato tipo POV o trend\n3. Beats cortos y punchy\n4. Referencia al audio si conoces alguno viral\n5. 10-15 hashtags (mix trending + nicho)\n` : ''}\n\nESTILO:\n- Casual pero inteligente\n- Emojis como puntuación\n- Vulnerable > Perfecto\n- Espacios para respirar\n- Gen Z/Millennial friendly\n\nBUSCA con SerpAPI si necesitas:\n- \"Instagram hashtags ${userMessage.split(' ')[0]} 2025\"\n- \"trending Instagram ${format} ideas\"\n\nOutput: Solo el copy formateado, listo para Instagram.`;\n\nreturn [{\n  json: {\n    prompt: instagramPrompt,\n    platform: \"instagram\",\n    format: format,\n    context: {\n      user_message: userMessage,\n      image_prompt: imagePrompt\n    }\n  }\n}];\nVersión Simplificada Ultra-Práctica:\njavascript// Prompt condensado pero efectivo para Instagram\nconst quickInstagramPrompt = `\nCrea un post viral de Instagram sobre: \"${userMessage}\"\n\nFORMATO GANADOR:\n[Hook que pare el scroll]\n\n[Historia personal corta - 3 párrafos mini]\n\n[Insight o reflexión]\n\n[Pregunta para engagement]\n\n—\n[6 hashtags: 2 populares, 3 medios, 1 nicho]\n\nREGLAS:\n- Primera línea = imposible de ignorar\n- Párrafos de 1-2 líneas MAX\n- Emojis estratégicos (no spam)\n- Vulnerable y real > Perfecto\n- Espacios amplios entre párrafos\n\nHOOKS QUE FUNCIONAN:\n\"Okay but why did nobody tell me...\"\n\"POV: You finally realized...\"\n\"Unpopular opinion:\"\n\"This is your sign to...\"\n\"Normalize...\"\n\nSi necesitas datos, busca:\n- Hashtags trending\n- Estadísticas actuales\n- Referencias culturales\n\nOutput: Copy listo con hashtags.`;",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agentTool",
+      "typeVersion": 2.2,
+      "position": [
+        -1952,
+        1424
+      ],
+      "id": "19ed9bf7-7dcf-45e0-b639-3467f5cf9b10",
+      "name": "Especialista Instagram"
+    },
+    {
+      "parameters": {
+        "accountId": {
+          "__rl": true,
+          "value": "1630",
+          "mode": "list",
+          "cachedResultName": "curiosopov",
+          "cachedResultUrl": "https://backend.blotato.com/v2/accounts/1630"
+        },
+        "postContentText": "={{ $json.instagram_copy }}",
+        "postContentMediaUrls": "={{ $json.url_image }}",
+        "options": {}
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        1168
+      ],
+      "id": "144f0a86-b84c-4da6-8d96-d6d5485322e0",
+      "name": "Publicar Instagram",
+      "credentials": {
+        "blotatoApi": {
+          "id": "9smkpwHh5XHi9TD1",
+          "name": "Blotato account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "platform": "linkedin",
+        "accountId": {
+          "__rl": true,
+          "value": "4942",
+          "mode": "list",
+          "cachedResultName": "Juan Pedro Navarro",
+          "cachedResultUrl": "https://backend.blotato.com/v2/accounts/4942"
+        },
+        "postContentText": "={{ $json.linkedin_copy }}",
+        "postContentMediaUrls": "={{ $json.url_image }}",
+        "options": {}
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        1392
+      ],
+      "id": "4c54f273-e8da-44f1-a118-098410c4a85d",
+      "name": "Publicar LinkedIn",
+      "credentials": {
+        "blotatoApi": {
+          "id": "9smkpwHh5XHi9TD1",
+          "name": "Blotato account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"copy_linkedin\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"post\": { \"type\": \"string\" },\n        \"metadata\": { \"type\": \"object\" }\n      }\n    },\n    \"copy_instagram\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"post\": { \"type\": \"string\" },\n        \"metadata\": { \"type\": \"object\" }\n      }\n    }\n  },\n  \"required\": [\"copy_linkedin\", \"copy_instagram\"]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1392,
+        1424
+      ],
+      "id": "abcd8bda-be61-425f-a0f5-15da85e294b3",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cea15279-24e9-4b5b-9f9b-05ada9e39e5e",
+              "name": "instagram_copy",
+              "value": "={{ $json.output.copy_instagram.post }}",
+              "type": "string"
+            },
+            {
+              "id": "4d016cd0-3b94-4f0c-bf5f-0a3b40ebb17a",
+              "name": "linkedin_copy",
+              "value": "={{ $json.output.copy_linkedin.post }}",
+              "type": "string"
+            },
+            {
+              "id": "133df4cb-2b04-40df-9783-539b9d5677b0",
+              "name": "url_image",
+              "value": "={{ $('Upload media').item.json.url }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1440,
+        1200
+      ],
+      "id": "9f7ba4ef-5a01-42a3-9949-0f18210d2c90",
+      "name": "Mapeo de campos"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1664,
+        1696
+      ],
+      "id": "017a1f97-f66b-4a1f-8bd6-a141c6106cd7",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZGfaEWwsvEXA9SFQ",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -1952,
+        1696
+      ],
+      "id": "8f32ce1a-09e5-4a87-8298-d8bee188c938",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZGfaEWwsvEXA9SFQ",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2112,
+        1344
+      ],
+      "id": "86ccb6a6-be8e-4d88-9ec0-361fec220a26",
+      "name": "OpenAI Chat Model2",
+      "credentials": {
+        "openAiApi": {
+          "id": "ZGfaEWwsvEXA9SFQ",
+          "name": "OpenAi account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### 📌 Flujo: Recepción y carga de archivos desde Telegram → Blotato\n\n1. **Telegram Trigger (Updates: message)**  \n   - Escucha mensajes entrantes en Telegram.  \n   - Se activa cuando un usuario envía un archivo (ej. imagen, video).  \n\n2. **Get a file (Telegram)**  \n   - Descarga el archivo recibido desde Telegram.  \n   - Lo convierte en un objeto de archivo procesable en n8n.  \n\n3. **Upload media (Blotato)**  \n   - El archivo se sube a **Blotato**.  \n   - Blotato gestiona el almacenamiento y deja el archivo listo para procesar o reutilizar en otros pasos.  \n\n---\n\n👉 Este bloque inicial garantiza que cualquier archivo recibido en **Telegram** se capture y se suba directamente a **Blotato**, quedando disponible para el sistema de automatización de contenido en **TikTok + Instagram** con **Nanobanana**.\n",
+        "height": 704,
+        "width": 912,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2048,
+        -176
+      ],
+      "id": "f33ee984-ac2e-4495-9951-f689ac9bbac4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### 📌 Flujo: Generación de Prompts y subida de resultados → Blotato\n\n1. **Generador de Prompts (Message Model)**  \n   - Crea instrucciones y prompts personalizados para transformar el contenido.  \n   - Se conecta con el modelo de IA para generar variaciones creativas.  \n\n2. **HTTP Request (OpenRouter / API)**  \n   - Envía el prompt al modelo de **Nanobanana** a través de API.  \n   - Recibe como respuesta el contenido procesado (En binario).  \n\n3. **Edit Fields (Manual)**  \n   - Ajusta campos específicos de la respuesta recibida.  \n   - Prepara el contenido para el siguiente paso (limpieza y formato).  \n\n4. **Code (Custom)**  \n   - Bloque de código para transformar los datos de manera avanzada.  \n   - Aquí se organiza el output en el formato exacto requerido por el flujo.  \n\n5. **Upload Media (Blotato)**  \n   - Sube el resultado procesado a **Blotato**.  \n   - Queda disponible para publicación o integración en LinkedIn e Instagram.  \n\n---\n\n👉 Esta parte del flujo conecta la **IA generadora de prompts** con la **API de Nanobanana**, prepara los datos y finalmente los sube a **Blotato**, cerrando el ciclo de creación de contenido automatizado.\n",
+        "height": 592,
+        "width": 1792,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2624,
+        544
+      ],
+      "id": "0847cfd5-d36a-4a95-948f-14d37c73ffc2",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### 📌 Flujo: Generación de Copy y Publicación en Redes (Instagram + LinkedIn)\n\n1. **Jefe CopyWriter | Agente de IA**  \n   - Orquesta la creación del contenido.  \n   - Coordina a los especialistas de cada red social.  \n   - Usa memoria, herramientas y un parser estructurado para estandarizar la salida.  \n\n2. **Especialista Instagram**  \n   - Optimiza el copy para Instagram.  \n   - Se apoya en un modelo de OpenAI + SerpAPI para contexto y tendencias.  \n\n3. **Especialista LinkedIn**  \n   - Adapta el copy para LinkedIn.  \n   - También usa un modelo de OpenAI + SerpAPI para enriquecer la publicación con insights más profesionales.  \n\n4. **Structured Output Parser**  \n   - Normaliza el contenido generado por cada especialista.  \n   - Devuelve el copy en un formato claro y consistente.  \n\n5. **Mapeo de Campos**  \n   - Ajusta manualmente campos necesarios (ej. hashtags, formato de texto, emojis).  \n   - Prepara el contenido para su publicación.  \n\n6. **Publicar Instagram (Blotato)**  \n   - Publica automáticamente el post en Instagram.  \n\n7. **Publicar LinkedIn (Blotato)**  \n   - Publica automáticamente el post en LinkedIn.  \n\n---\n\n👉 Este bloque asegura que el contenido generado por IA se **adapte a cada red social**, se **estructure correctamente** y finalmente se publique de forma **automática** en **Instagram y LinkedIn**.  \n\n---\n\n✨ Hecho con ❤️ por [Juanpe Navarro](https://www.instagram.com/juanpe.divisual/)  \n",
+        "height": 864,
+        "width": 2032,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2848,
+        1168
+      ],
+      "id": "b3b0c8fc-7374-437d-ad14-50b40f991033",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 La Tribu Divisual\n\n## Este agente tiene un valor en el mercado de **$1.200.**\n\n\n## Accede a **La Tribu Divisual** para aprender a crear agentes más avanzados y a generar altos ingresos con ellos de forma real y segura.\n\n# 👉 [Click aquí para unirte a la Lista de espera](https://divisualproject.academy/)\n",
+        "height": 360,
+        "width": 760,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        1664
+      ],
+      "id": "be13b376-45da-4a94-8f41-8cfe12e9b6bb",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 **Accede a Blotato y publica tu contenido con una prueba gratis**  \n# 👉 [Click aquí para empezar](https://blotato.com/?ref=juanpedivisual)",
+        "height": 216,
+        "width": 760,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        1168
+      ],
+      "id": "b30c4c6d-974d-4145-9d52-a164d9c87c0e",
+      "name": "Sticky Note11"
+    }
+  ],
+  "pinData": {
+    "Telegram Trigger": [
+      {
+        "json": {
+          "update_id": 116345339,
+          "message": {
+            "message_id": 6,
+            "from": {
+              "id": 5455354154,
+              "is_bot": false,
+              "first_name": "Divisual Project",
+              "username": "test1oqi99",
+              "language_code": "es"
+            },
+            "chat": {
+              "id": 5455354154,
+              "first_name": "Divisual Project",
+              "username": "test1oqi99",
+              "type": "private"
+            },
+            "date": 1756670354,
+            "forward_origin": {
+              "type": "user",
+              "sender_user": {
+                "id": 5455354154,
+                "is_bot": false,
+                "first_name": "Divisual Project",
+                "username": "test1oqi99",
+                "language_code": "es"
+              },
+              "date": 1756669281
+            },
+            "forward_from": {
+              "id": 5455354154,
+              "is_bot": false,
+              "first_name": "Divisual Project",
+              "username": "test1oqi99",
+              "language_code": "es"
+            },
+            "forward_date": 1756669281,
+            "photo": [
+              {
+                "file_id": "AgACAgQAAxkBAAMFaLSlYVYqx4XM_sWr106Ny2UDs2gAAovIMRu-XKlR0z3Hry-9U9sBAAMCAANzAAM2BA",
+                "file_unique_id": "AQADi8gxG75cqVF4",
+                "file_size": 1520,
+                "width": 67,
+                "height": 90
+              },
+              {
+                "file_id": "AgACAgQAAxkBAAMFaLSlYVYqx4XM_sWr106Ny2UDs2gAAovIMRu-XKlR0z3Hry-9U9sBAAMCAANtAAM2BA",
+                "file_unique_id": "AQADi8gxG75cqVFy",
+                "file_size": 16946,
+                "width": 240,
+                "height": 320
+              },
+              {
+                "file_id": "AgACAgQAAxkBAAMFaLSlYVYqx4XM_sWr106Ny2UDs2gAAovIMRu-XKlR0z3Hry-9U9sBAAMCAAN4AAM2BA",
+                "file_unique_id": "AQADi8gxG75cqVF9",
+                "file_size": 67463,
+                "width": 600,
+                "height": 800
+              },
+              {
+                "file_id": "AgACAgQAAxkBAAMFaLSlYVYqx4XM_sWr106Ny2UDs2gAAovIMRu-XKlR0z3Hry-9U9sBAAMCAAN5AAM2BA",
+                "file_unique_id": "AQADi8gxG75cqVF-",
+                "file_size": 85573,
+                "width": 960,
+                "height": 1280
+              }
+            ],
+            "caption": "Hola buenas tardes quiero publicar acerca de nanobanana y que mi imagen se convierta en un fondo en Bali."
+          }
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Upload media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Upload media1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload media1": {
+      "main": [
+        [
+          {
+            "node": "Generador de Prompts | Agente de IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generador de Prompts | Agente de IA": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload media": {
+      "main": [
+        [
+          {
+            "node": "Jefe CopyWritter | Agente de IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "SerpAPI": {
+      "ai_tool": [
+        [
+          {
+            "node": "Especialista LinkedIn",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model1": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Especialista LinkedIn": {
+      "ai_tool": [
+        [
+          {
+            "node": "Jefe CopyWritter | Agente de IA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SerpAPI1": {
+      "ai_tool": [
+        [
+          {
+            "node": "Especialista Instagram",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model2": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Especialista Instagram": {
+      "ai_tool": [
+        [
+          {
+            "node": "Jefe CopyWritter | Agente de IA",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jefe CopyWritter | Agente de IA": {
+      "main": [
+        [
+          {
+            "node": "Mapeo de campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Jefe CopyWritter | Agente de IA",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo de campos": {
+      "main": [
+        [
+          {
+            "node": "Publicar Instagram",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Publicar LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Especialista LinkedIn",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Especialista Instagram",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Jefe CopyWritter | Agente de IA",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "345285e0-3bb0-4301-9235-ee54cc1a64ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "oumgvyV1SV0VlW7G",
+  "tags": []
+}

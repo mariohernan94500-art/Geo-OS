@@ -1,0 +1,493 @@
+{
+  "name": "La Tribu - Olaf",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1088,
+        0
+      ],
+      "id": "ffec3527-67fc-473d-a49e-7ab93e6f27e7",
+      "name": "Telegram Trigger",
+      "webhookId": "156532e8-3edd-40fe-a14d-3d51a291ac03",
+      "credentials": {
+        "telegramApi": {
+          "id": "EH1PovKjYfGjc0M1",
+          "name": "Telegram - Asistente Redes Sociales"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "fileId": "={{ $json.message.photo[3].file_id }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        -880,
+        0
+      ],
+      "id": "fdf6d6d0-14db-4534-aaff-52dcada3a0ba",
+      "name": "Get a file",
+      "webhookId": "6c11f02b-cced-42d2-9954-302f980711de",
+      "credentials": {
+        "telegramApi": {
+          "id": "EH1PovKjYfGjc0M1",
+          "name": "Telegram - Asistente Redes Sociales"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "useBinaryData": true
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        0
+      ],
+      "id": "9c0f6d3c-8e99-4815-9b8d-00f2fb97c7e5",
+      "name": "Upload media",
+      "credentials": {
+        "blotatoApi": {
+          "id": "oCk3oHU1JFvbBOlI",
+          "name": "Blotato account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer (PON AQUÍ TU API KEY)"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"bytedance/seedream-v4-edit\",\n  \"input\": {\n    \"prompt\": \"Transform this mobile photo into a luxurious professional product shot for a high-end home accessories boutique. Create an elegant lifestyle staging with {{ $('Analizar imagen').item.json.content }} as the focal point. Use a sophisticated color palette with warm neutrals (beige, cream, soft gold) and deep accent colors. Style: editorial luxury magazine photography with soft natural lighting, subtle shadows, and bokeh background. Include complementary luxury elements like marble surfaces, velvet textures, fresh orchids or peonies, and gold accents. Composition should be minimalist yet opulent, with negative space that breathes elegance. Professional studio quality, 8K resolution, photorealistic rendering.\",\n    \"image_urls\": [\n      \"POR AQUÍ EL LINK DE REFERENCIA\"\n    ],\n    \"image_size\": \"square_hd\",\n    \"image_resolution\": \"1K\",\n    \"max_images\": 1\n  }\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1072,
+        320
+      ],
+      "id": "a3ef09fe-7192-47ba-bf64-65c30a8aad0e",
+      "name": "Crear imagen"
+    },
+    {
+      "parameters": {
+        "url": "https://api.kie.ai/api/v1/jobs/recordInfo",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "taskId",
+              "value": "={{ $json.data.taskId }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer PON AQUÍ TU API KEY"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -864,
+        320
+      ],
+      "id": "5ddad36b-b9fe-45f4-978b-247ff4a19bc1",
+      "name": "Traer imagen"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a76212cc-5ee8-402f-8de6-65b8103b132e",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -688,
+        320
+      ],
+      "id": "a30de8c8-8217-40e3-9364-8946c374966c",
+      "name": "If"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -496,
+        480
+      ],
+      "id": "9a505da1-5c5c-4c43-8cb2-88b4cee92c37",
+      "name": "Wait",
+      "webhookId": "6fe2cfa4-8a44-4139-8a97-5dc160323322"
+    },
+    {
+      "parameters": {
+        "resource": "media",
+        "mediaUrl": "={{ $json.imageUrl }}"
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -320,
+        304
+      ],
+      "id": "61983cdc-98d3-49a2-87f8-3ab00a9584d5",
+      "name": "Upload media1",
+      "credentials": {
+        "blotatoApi": {
+          "id": "oCk3oHU1JFvbBOlI",
+          "name": "Blotato account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "accountId": {
+          "__rl": true,
+          "value": "1630",
+          "mode": "list",
+          "cachedResultName": "curiosopov",
+          "cachedResultUrl": "https://backend.blotato.com/v2/accounts/1630"
+        },
+        "postContentText": "={{ $('copywritter').item.json.message.content.copy_instagram }}",
+        "postContentMediaUrls": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "@blotato/n8n-nodes-blotato.blotato",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        304
+      ],
+      "id": "eeb06cf1-f422-466e-8dc1-c8f5a7bb2071",
+      "name": "Create post",
+      "credentials": {
+        "blotatoApi": {
+          "id": "oCk3oHU1JFvbBOlI",
+          "name": "Blotato account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "analyze",
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "text": "Identify only the main object in this image. Provide a brief description in 2-5 words maximum. No additional context or details.",
+        "imageUrls": "={{ $json.url }}",
+        "options": {
+          "maxTokens": 30
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -496,
+        0
+      ],
+      "id": "d2ef1069-d2c1-4d45-9260-6f43954c023e",
+      "name": "Analizar imagen",
+      "credentials": {
+        "openAiApi": {
+          "id": "kORUBkYfjkvBOnwb",
+          "name": "OpenAi account Agente La Tribu"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "chatgpt-4o-latest",
+          "mode": "list",
+          "cachedResultName": "CHATGPT-4O-LATEST"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.content }}"
+            },
+            {
+              "content": "=Eres un experto copywriter especializado en marketing de lujo para redes sociales. Tu tarea es crear copies cautivadores para una tienda premium de accesorios de casa de lujo, transformando descripciones de fotos en contenido irresistible que genere engagement y deseo de compra.\nCONTEXTO DE MARCA:\n\nSector: Accesorios de casa de lujo (decoración premium, textiles exclusivos, arte decorativo)\nValores: Elegancia, exclusividad, sofisticación, calidad artesanal\nCliente objetivo: Personas con alto poder adquisitivo que valoran el diseño, la calidad y la distinción\n\nINSTRUCCIONES:\nBasándote en la descripción de la foto proporcionada, crea tres copies perfectamente adaptados para cada red social:\nPara LinkedIn (1300 caracteres máximo):\n\nTono profesional pero cercano\nEnfoque en la calidad, craftsmanship y valor de inversión\nIncluir 3-5 hashtags profesionales relevantes\nEstructura: Hook potente + storytelling breve + propuesta de valor + CTA sutil\nUsar emojis con moderación (máximo 2-3)\n\nPara Instagram (2200 caracteres máximo, pero optimizar para 125-150 iniciales):\n\nTono aspiracional y emocional\nPrimera línea debe ser un gancho irresistible (visible sin \"ver más\")\nContar una mini-historia o despertar una emoción\nIncluir 20-30 hashtags relevantes al final (mezcla de populares y nicho)\nUsar emojis estratégicamente para romper el texto\nCTA claro (link en bio, DM, etc.)\n\nPara Facebook (63,206 caracteres disponibles, pero optimizar para 40-80 caracteres):\n\nTono conversacional y acogedor\nCopy conciso y directo que invite a la interacción\nPregunta o afirmación que genere comentarios\nMáximo 3-5 hashtags\nEmoji al inicio para captar atención\nEnfoque en crear comunidad y compartir\n\nFÓRMULA DE ÉXITO:\n\nDespertar deseo: No vendas el producto, vende el estilo de vida\nCrear urgencia sutil: Exclusividad sin presión agresiva\nConectar emocionalmente: ¿Qué sensación evoca este accesorio en el hogar?\nDemostrar valor: Calidad, durabilidad, distinción\n\nPALABRAS PODEROSAS A INCLUIR:\nExclusivo, artesanal, atemporale, sofisticado, curado, distintivo, excepcional, refinado, sublime, extraordinario, único, lujoso, premium, selecto, exquisito\nFORMATO DE RESPUESTA OBLIGATORIO:\nResponde ÚNICAMENTE con un JSON válido en este formato exacto:\njson{\n  \"copy_linkedin\": \"texto completo del copy de LinkedIn con hashtags incluidos\",\n  \"copy_instagram\": \"texto completo del copy de Instagram con todos los hashtags al final\",\n  \"copy_facebook\": \"texto completo del copy de Facebook con hashtags si aplica\"\n}\nDESCRIPCIÓN DE LA FOTO A PROCESAR:\n[El usuario insertará aquí la descripción de la foto]\n\nIMPORTANTE:\n\nGenera el JSON directamente sin texto adicional\nCada copy debe ser único, no repetir frases entre plataformas\nMantén la coherencia de marca pero adapta el mensaje a cada audiencia\nSi la descripción menciona precios, inclúyelos sutilmente solo en LinkedIn\nAsegúrate de que el JSON esté correctamente formateado para parsearse en n8n",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -304,
+        0
+      ],
+      "id": "18e1e7a2-45f2-44f5-83c7-4899d04e6442",
+      "name": "copywritter",
+      "credentials": {
+        "openAiApi": {
+          "id": "kORUBkYfjkvBOnwb",
+          "name": "OpenAi account Agente La Tribu"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener los datos\nconst data = items[0].json.data.resultJson;\n\n// Parsear si es string\nconst parsedData = typeof data === 'string' ? JSON.parse(data) : data;\n\n// Extraer el URL\nreturn {\n  imageUrl: parsedData.resultUrls[0]\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        304
+      ],
+      "id": "3620fa8c-d8b8-4fcc-8f45-ea990f65a58e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 La Tribu Divisual\n\n## Este sistema tiene un valor en el mercado de **$5000.**\n\n\n## Accede a **La Tribu Divisual** para aprender a crear agentes más avanzados y a generar altos ingresos con ellos de forma real y segura.\n\n# 👉 [Click aquí para unirte a la Lista de espera](https://divisualproject.academy/)\n",
+        "height": 360,
+        "width": 952,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        640
+      ],
+      "id": "ad3ef4a9-c328-4e9b-93f1-fd2f7635acf2",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "@[youtube](MsWd3NkvADE)",
+        "height": 1152,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -144
+      ],
+      "id": "a22f5afb-62e1-426b-b1eb-b5d6fd2c063c",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "# Vídeo obligatorio de ver\n\n\n\n\n# 👉 [Click aquí para verlo en Youtube](https://youtu.be/MsWd3NkvADE?si=FoQ7MxwRsukKO87X)\n",
+        "height": 216,
+        "width": 952,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        240,
+        416
+      ],
+      "id": "15c38a73-8bf5-4f2e-aaad-52cc5ac3de23",
+      "name": "Sticky Note"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Upload media",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload media": {
+      "main": [
+        [
+          {
+            "node": "Analizar imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear imagen": {
+      "main": [
+        [
+          {
+            "node": "Traer imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Traer imagen": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Traer imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload media1": {
+      "main": [
+        [
+          {
+            "node": "Create post",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analizar imagen": {
+      "main": [
+        [
+          {
+            "node": "copywritter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "copywritter": {
+      "main": [
+        [
+          {
+            "node": "Crear imagen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Upload media1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "27f1652e-6406-422d-8291-7763142257db",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "vXzEzI4fHEMThHVZ",
+  "tags": []
+}

@@ -1,0 +1,876 @@
+{
+  "name": "v2 Agente Email Scrapper - Conseguir Clientes - La Tribu Divisual",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a0c892e7-3f34-428c-afee-60df996b500c",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "schema",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "ee97ab7a-9921-4c3b-95dd-2ede83a31a25",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "google",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "6326ca6f-8dc1-4ef4-8325-31100e23f0db",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "gg",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "2b01c0dd-ec51-43b9-84f8-fd080a446e24",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "gstatic",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "6659d028-9d54-4fac-8f53-930c3c832680",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "whatsapp",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "7edbb875-1e2b-470a-8092-8c70f344232f",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "wa.link",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "1aafcb3c-5a40-4483-9dfc-a5c944938457",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "facebook",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "f486bcab-39f1-4726-a0c3-2c1afd5498ec",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "wa.me",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "18bdea02-0121-4887-996a-7b4c5c5dfc45",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "instagram",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "e21e8d7c-b485-4bd6-9848-bbab66bc7955",
+              "leftValue": "={{ $json.websiteUri }}",
+              "rightValue": "facebook",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        1072
+      ],
+      "id": "dfca65f2-27c6-4c7d-9cd2-75cca2a0180c",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        928,
+        1040
+      ],
+      "id": "9ce3f301-92a7-4fb5-aeb6-15d0cf02a7b4",
+      "name": "Loop Over Items",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2128,
+        1072
+      ],
+      "id": "260688c2-3d08-479c-860b-0234409906d1",
+      "name": "Wait",
+      "webhookId": "53742f3b-6ebe-40c9-8c8f-ad44dad6ff43"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42862ea8-a8c9-4f54-9dbd-898e9f4fe8a9",
+              "name": "maps_url",
+              "value": "={{ \n  (() => {\n    const niche = $json.niche;\n    const city = $json.city;\n    const query = `${niche} ${city}`;\n    const gl = 'es'; // cambiar si quieres usar otro país (ej: 'mx', 'cl', 'ar', etc.)\n    return `https://www.google.com/maps/search/${encodeURIComponent(query)}?hl=es&gl=${gl}&region=${gl}`;\n  })() \n}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        592
+      ],
+      "id": "51eab32f-9f7a-4e21-a486-9b0489957ea2",
+      "name": "Construir URL"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        400,
+        80
+      ],
+      "id": "c93435ee-c520-4d97-bf1f-f6a7ee48ead8",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Actúa como un usuario que está realizando una búsqueda rápida y directa. \n\nTu tarea es generar una frase corta del estilo:  \n**\"Búscame [tipo de negocio] en [provincia española]\"**.\n\n## TIPOS DE NEGOCIOS\n- médicos\n- abogados\n- clínicas dentales\n- dentistas\n- inmobiliarias\n- asesorías\n- clínicas médicas\n- clínicas de belleza\n- Salones de belleza\n- Fisioterapeutas\n- Masajistas\n- Odontólogos\n- Osteópatas\n\n## REQUERIMIENTOS\n\n- Varía constantemente el tipo de negocio.\n- Varía la provincia de forma aleatoria entre todas las provincias de España.\n- La frase debe ser simple, informal y directa. No añadas explicaciones ni repitas formatos exactos.\n- La provincia debe ser siempre española.\n\nEjemplos de posibles respuestas:\n- \"Búscame médicos en Sevilla.\"\n- \"Búscame inmobiliarias en Zaragoza.\"\n- \"Búscame clínicas dentales en Valencia.\"\n\nDevuelve solo una frase por vez. Cambia cada vez que se active.\n\nNo repitas los mismos [tipos de negocio] ni los mismas [provincias] de manera consecutiva."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        608,
+        128
+      ],
+      "id": "68130ed6-65c5-4e44-a9f2-fd194a46d30e",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "8hgw1j72mroqso8Q",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4",
+          "mode": "list",
+          "cachedResultName": "LEAD SCRAPPING CONTROL - CURSO N8N JUANPE ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Web": "={{ $('Loop Over Items').item.json.websiteUri }}",
+            "Correo": "={{ $json.email }}",
+            "Estado": "Sin enviar"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Web",
+              "displayName": "Web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Correo",
+              "displayName": "Correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Correo Icebreaker",
+              "displayName": "Correo Icebreaker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2944,
+        1152
+      ],
+      "id": "7f7172af-562a-46ef-bfe0-fe60e610ab65",
+      "name": "Google Sheets2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i8uAjlC8WiPjtIsA",
+          "name": "Google Sheets divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# 🗺️ Flujo de Prospección por Nicho y Ciudad (Google Maps + OpenAI + Loop)\n\nEste flujo permite automatizar la **búsqueda de negocios** desde Google Maps, a partir de dos variables:  \n✅ El **nicho comercial** (tipo de negocio)  \n✅ La **ciudad** objetivo\n\nUsa la API oficial de Google Places para obtener hasta 20 resultados por búsqueda, procesando cada negocio individualmente.\n\n---\n\n## 🔄 Descripción paso a paso\n\n1. ⏰ **`Schedule Trigger`**  \n   Inicia automáticamente el flujo en el momento definido.\n\n2. 🧠 **`OpenAI` (Message Model)**  \n   Interpreta una solicitud de lenguaje natural enviada por el usuario y extrae las variables `nicho` y `ciudad`.\n\n3. 📝 **`Mapeo de texto`**  \n   Permite revisión o ajuste manual de las variables obtenidas.\n\n4. 🧮 **`Diferenciar nicho de ciudad`**  \n   Separa correctamente los valores `nicho` y `ciudad` para formar una consulta sólida.\n\n5. 🔗 **`Construir URL`**  \n   Arma la petición a la API de Google Places con el formato correcto.\n\n6. 🌐 **`Scrapeo Google Maps`**  \n   Realiza una búsqueda a `https://places.googleapis.com/v1/places:searchText`  \n   Devuelve hasta 20 lugares coincidentes con la búsqueda.\n\n7. 🧩 **`Split Out Items`**  \n   Separa cada lugar encontrado como un ítem individual (ej. 20 lugares → 20 ítems).\n\n8. 🔁 **`Loop Over Items`**  \n   Itera uno por uno sobre los lugares para aplicar acciones personalizadas:\n   - Scraping adicional\n   - Enriquecimiento con más datos\n   - Análisis o contacto\n\n---\n\n## 📌 Resultado\n\nObtienes un flujo escalable que permite:\n- Buscar negocios por sector en distintas ciudades\n- Procesar los datos uno por uno (loop controlado)\n- Preparar el resultado para exportación, scraping, contacto comercial, etc.\n\n---\n\n> 🛠️ Este flujo está listo para ampliarse con:\n> - Extracción de correos\n> - Limpieza y validación de sitios web\n> - Almacenamiento en Google Sheets o CRM\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n### ✅ Resultado:\nEl flujo devuelve una lista de sitios web reales y locales, filtrados y únicos, listos para usar en campañas, análisis o automatización comercial.\n\n**Hecho con ❤️ por [Juan Pe Navarro](https://www.youtube.com/@juanpe.divisual)**\n",
+        "height": 1900,
+        "width": 1240,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -304
+      ],
+      "id": "7f4a293c-ac0d-4d3d-9d4b-cc4897f7acb4",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "# 📬 Flujo de Scraping + Captura de Emails + Google Sheets\n\nEste flujo automatiza la **extracción de leads desde páginas web**, accediendo a sitios obtenidos previamente, extrayendo sus correos electrónicos y almacenando los resultados filtrados directamente en una hoja de cálculo de Google Sheets.\n\n---\n\n## 🔄 Proceso del flujo\n\n1. 🔎 **Filtrado inicial (`Filter`)**  \n   Filtra las URLs para quedarnos solo con las que son válidas para scraping.\n\n2. 🧹 **Limpieza de URLs (`Limpiamos web`)**  \n   Elimina prefijos como `www.` y normaliza los dominios para evitar duplicados.\n\n3. ⏱️ **Espera (`Wait1`)**  \n   Da tiempo entre solicitudes para evitar bloqueos o sobrecarga.\n\n4. 🌐 **Scraping de páginas (`Scrapeo de páginas`)**  \n   Realiza peticiones a las páginas y recupera el contenido HTML.\n\n5. ⏱️ **Espera (`Wait`)**  \n   Segunda pausa para controlar el ritmo de scraping.\n\n6. ✉️ **Extracción de emails (`Extraer emails`)**  \n   Busca y filtra direcciones de correo **reales y útiles** (evitando info@, contacto@, etc.).\n\n7. ⚖️ **Condición (`If`)**  \n   Separa ítems que contienen al menos un email válido.\n\n8. 🧼 **Eliminación de duplicados (`Borrar duplicados`)**  \n   Asegura que no se repitan direcciones de correo o sitios ya registrados.\n\n9. 📊 **Exportación a Google Sheets (`Google Sheets`)**  \n   Agrega automáticamente los datos (URL + email) a una hoja de cálculo para análisis o campañas.\n\n---\n\n## ✅ Resultado\n\nUna **base de datos limpia y lista para usar** en formato Google Sheets, ideal para:\n- Contacto comercial directo\n- Prospección B2B\n- Análisis local\n- Segmentación por sector\n\n---\n\n> 🛡️ El flujo incluye control de errores, pausas estratégicas y limpieza de datos para obtener resultados reales, evitando spam o datos genéricos.\n",
+        "height": 1680,
+        "width": 1940
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -320
+      ],
+      "id": "68345ec7-e54f-4c0d-b2d3-d0216cb047fd",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Función para quitar tildes y limpiar texto\nconst normalize = (str) =>\n  str.normalize(\"NFD\").replace(/[\\u0300-\\u036f]/g, \"\").toLowerCase().trim();\n\nconst originalText = $json.text || '';\nconst text = normalize(originalText);\n\n// Nuevos patrones: buscame, quiero, necesito, hay... [nicho] en [ciudad]\nconst regex = /\\b(?:busc(a|ame|qu?ame)|quiero|necesito|hay)\\s+(.*?)\\s+en\\s+(.+?)([.,\\s]|$)/i;\nconst match = text.match(regex);\n\nif (match && match[2] && match[3]) {\n  const niche = match[2].trim();\n  const city = match[3].trim();\n  return [\n    {\n      json: {\n        niche,\n        city,\n        original: originalText\n      }\n    }\n  ];\n} else {\n  return [\n    {\n      json: {\n        error: \"❌ No se pudo extraer el nicho y la ciudad.\",\n        original: originalText\n      }\n    }\n  ];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        384
+      ],
+      "id": "6ba45aa3-7ee0-4daa-9904-5dee55521346",
+      "name": "Diferenciar nicho de ciudad"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a7f57ab7-bd4f-408b-83d9-67943051eeed",
+              "name": "text",
+              "value": "={{ $json.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "6c6e831f-588a-4c8d-b483-523d2a9506ba",
+              "name": "text",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        160
+      ],
+      "id": "db4631be-0ce6-4f83-ba92-5c52a677d87b",
+      "name": "Mapeo de texto"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.websiteUri }}",
+        "options": {
+          "redirect": {
+            "redirect": {}
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1920,
+        1072
+      ],
+      "id": "32e2aeaf-9863-4e4d-b05a-e5e516f1c566",
+      "name": "Scrapeo de páginas",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = ($input.first().json.data || '').toString();\n\n// Buscar todos los emails usando expresión regular\nconst regex = /\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b/gi;\nconst matches = input.match(regex) || [];\n\n// Palabras clave a excluir (emails genéricos)\nconst filtrosBloqueo = [\n  'info', 'contact', 'admin', 'support', 'noreply', 'ventas', 'marketing',\n  'hello', 'service', 'help', 'mail', 'email', 'contacto', 'reservas', 'hola'\n];\n\n// Filtrar solo correos reales (ni genéricos ni técnicos)\nconst emails = matches.filter(email => {\n  const user = email.split('@')[0].toLowerCase();\n  return !filtrosBloqueo.some(bloqueado => user.includes(bloqueado));\n});\n\n// Si no encuentra ninguno, devolver un ítem vacío\nif (emails.length === 0) {\n  return [{ json: { email: '' } }];\n}\n\n// Si encuentra, devolver todos los emails filtrados\nreturn emails.map(email => ({ json: { email } }));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2320,
+        1072
+      ],
+      "id": "56e5a7f8-bb02-48f3-95f5-e37408109009",
+      "name": "Extraer emails",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        2752,
+        1072
+      ],
+      "id": "ae4e999e-aff6-4156-bc15-3b1eeb0d4e91",
+      "name": "Borrar duplicados1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "content": "## Plantilla Google Sheet\n[Click aqui](https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit?gid=0#gid=0)",
+        "height": 120
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3168,
+        960
+      ],
+      "id": "b940e3f2-5388-4246-983f-8b7f324903c1",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://places.googleapis.com/v1/places:searchText",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Goog-Api-Key",
+              "value": "PON_AQUI_TU_API_KEY_DE_GOOGLE"
+            },
+            {
+              "name": "X-Goog-FieldMask",
+              "value": "places.websiteUri"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"textQuery\": \"{{ $('Diferenciar nicho de ciudad').item.json.niche }} en {{ $('Diferenciar nicho de ciudad').item.json.city }}\"\n} ",
+        "options": {
+          "allowUnauthorizedCerts": true,
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 2
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        800
+      ],
+      "id": "2390402e-2ad9-4c63-8766-a8dd89352568",
+      "name": "Scrapeo Google Maps1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.places",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        624,
+        1040
+      ],
+      "id": "ec40e83b-629e-4aec-96a4-ea4de8b77911",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Este código toma cada item, revisa si comienza con \"www.\" y lo elimina\nreturn items.map(item => {\n  const original = $input.first().json.websiteUri || '';\n  const cleaned = original.replace(/^https?:\\/\\/(www\\.)?/i, 'https://');\n  return {\n    json: {\n      ...item.json,\n      web: cleaned\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        1072
+      ],
+      "id": "5898b34f-ac85-4a31-bc24-f3d3ed29c96c",
+      "name": "Limpiamos web"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "671ac39a-b1fe-40ae-b7cb-8e0cdbdceea7",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "25df11cf-6576-47e8-b6f2-a468a8896bc5",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": ".jpg",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "625e79ef-2723-4a98-a5ef-549210dadee9",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": ".png",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "338e9ca9-fb8e-43b9-aaaf-d8df691f8d85",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "doctoralia",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "e89f7b46-f0bc-450e-b9cd-fe1d48c52b8a",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "-",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "2feeb7f2-13a1-496c-b295-2fc53a7813d3",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "_",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "55e965ee-c60a-4a34-bde7-e430ed24fd64",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "wixpress",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "263ddc03-40bc-4686-8ae3-17003c1f40f2",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "sentry",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            },
+            {
+              "id": "87c00765-eb4b-461b-92aa-5fce007afed9",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": ".webp",
+              "operator": {
+                "type": "string",
+                "operation": "notContains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2528,
+        1072
+      ],
+      "id": "136df5cf-2c35-453a-99c7-8bdc6f103005",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        1072
+      ],
+      "id": "264452d3-9ef2-4961-8e37-2db024b311a6",
+      "name": "Wait1",
+      "webhookId": "00f5960a-b958-4618-8f58-bbbebe9c3a99"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 La Tribu Divisual\n\n## Este sistema tiene un valor en el mercado de **$5000.**\n\n\n## Accede a **La Tribu Divisual** para aprender a crear agentes más avanzados y a generar altos ingresos con ellos de forma real y segura.\n\n# 👉 [Click aquí para unirte a la Lista de espera](https://divisualproject.academy/)\n",
+        "height": 360,
+        "width": 952,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3168,
+        240
+      ],
+      "id": "d4caabb1-0a15-497b-a84a-4edc06d0b54d",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "@[youtube](MsWd3NkvADE)",
+        "height": 928,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3152,
+        -320
+      ],
+      "id": "50a0d957-238b-4085-ab0d-3c8ce7077aba",
+      "name": "Sticky Note3"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Limpiamos web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Extraer emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir URL": {
+      "main": [
+        [
+          {
+            "node": "Scrapeo Google Maps1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Mapeo de texto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Diferenciar nicho de ciudad": {
+      "main": [
+        [
+          {
+            "node": "Construir URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo de texto": {
+      "main": [
+        [
+          {
+            "node": "Diferenciar nicho de ciudad",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrapeo de páginas": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extraer emails": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Borrar duplicados1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrapeo Google Maps1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiamos web": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Borrar duplicados1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Scrapeo de páginas",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2a410360-7376-484e-a866-f0b213ec9c77",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "qmcq0hOCmDVBGYV1",
+  "tags": [
+    {
+      "createdAt": "2025-05-13T08:00:58.464Z",
+      "updatedAt": "2025-05-13T08:00:58.464Z",
+      "id": "IxHXOpyTZspV9j2o",
+      "name": "La Tribu Divisual"
+    }
+  ]
+}

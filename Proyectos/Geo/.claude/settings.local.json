@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlite3 /var/www/geo/Proyectos/GEO/memory.db \"SELECT name FROM sqlite_master WHERE type='table';\")",
+      "Bash(sqlite3 /var/www/geo/04_data/db/geo_memoria.db \"SELECT name FROM sqlite_master WHERE type='table';\")",
+      "Bash(sqlite3 *)",
+      "Bash(python3 *)",
+      "Bash(pm2 list *)",
+      "Bash(pm2 logs *)",
+      "Bash(npm run *)",
+      "Bash(pm2 restart *)",
+      "Bash(curl -s http://localhost:3000/api/public/chat -X POST -H \"Content-Type: application/json\" -d '{\"message\":\"hola\",\"userId\":\"test\"}')",
+      "Bash(npm --version)",
+      "Bash(npm install *)",
+      "Bash(eas *)",
+      "Bash(EXPO_TOKEN=twGVoQp2DUPZIoYUqt-sRyqPCEhqVhXePbfyg9NQ eas whoami)",
+      "Bash(EXPO_TOKEN=twGVoQp2DUPZIoYUqt-sRyqPCEhqVhXePbfyg9NQ eas init *)",
+      "Bash(EXPO_TOKEN=twGVoQp2DUPZIoYUqt-sRyqPCEhqVhXePbfyg9NQ eas build --platform android --profile preview --non-interactive)",
+      "Bash(npx expo *)",
+      "Bash(npx tsc *)",
+      "Bash(EXPO_TOKEN=twGVoQp2DUPZIoYUqt-sRyqPCEhqVhXePbfyg9NQ eas build:list *)",
+      "Bash(EXPO_TOKEN=2pL_UrOZhXOS8CWjVUTE13mHEOxz25xHw9m8g9fX eas build:list *)",
+      "Bash(EXPO_TOKEN=2pL_UrOZhXOS8CWjVUTE13mHEOxz25xHw9m8g9fX eas build:cancel *)",
+      "Bash(EXPO_TOKEN=2pL_UrOZhXOS8CWjVUTE13mHEOxz25xHw9m8g9fX eas build *)",
+      "Bash(curl *)"
+    ]
+  }
+}

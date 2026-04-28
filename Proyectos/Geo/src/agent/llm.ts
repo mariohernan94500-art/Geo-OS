@@ -1,122 +1,168 @@
 /**
- * Motor LLM de Geo OS v2 - Con selección dinámica de modelos
- * Proveedores: Gemini, DeepSeek, Groq, Together AI, Fireworks AI, OpenRouter, Claude
- * Fallback automático + timeout por proveedor + selección inteligente de modelo
+ * agent/llm.ts
+ * Geo OS — Router Inteligente de Modelos LLM
  */
 
-import Anthropic from '@anthropic-ai/sdk';
 import { Groq } from 'groq-sdk';
 import OpenAI from 'openai';
 import { appConfig } from '../config.js';
 import { registrarTokens, verificarPresupuestoYAlertar } from '../security/tokenTracker.js';
 
-// Timeout por proveedor (ms) — evita que un proveedor colgado bloquee el fallback
-const LLM_TIMEOUT_MS = 12_000;
+// ─── 2. Type definitions ──────────────────────────────────────────────────────
 
-function conTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
-    return Promise.race([
-        promise,
-        new Promise<T>((_, reject) =>
-            setTimeout(() => reject(new Error(`Timeout ${label} (${ms}ms)`)), ms)
-        ),
-    ]);
-}
+export type ProviderName = 'groq' | 'deepseek' | 'gemini' | 'openrouter' | 'zai';
+export type TaskType = 'code' | 'math' | 'reasoning' | 'tools' | 'summary' | 'multimodal' | 'voice' | 'chat';
 
-// ─── Clientes ─────────────────────────────────────────────────────────────
+// ─── 3. Clientes inicializados ────────────────────────────────────────────────
 
-const groq = new Groq({ apiKey: appConfig.llm.groqKey });
+const groqClient = new Groq({ apiKey: appConfig.llm.groqKey || '' });
 
-// Gemini (OpenAI-compatible)
-let geminiClient: OpenAI | null = null;
-if (appConfig.llm.geminiKey) {
-    geminiClient = new OpenAI({
-        baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-        apiKey: appConfig.llm.geminiKey,
-    });
-}
+const geminiClient = new OpenAI({
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    apiKey: appConfig.llm.geminiKey || '',
+});
 
-// DeepSeek (OpenAI-compatible)
-let deepseekClient: OpenAI | null = null;
-if (appConfig.llm.deepseekKey) {
-    deepseekClient = new OpenAI({
-        baseURL: 'https://api.deepseek.com/v1',
-        apiKey: appConfig.llm.deepseekKey,
-    });
-}
+const deepseekClient = new OpenAI({
+    baseURL: 'https://api.deepseek.com/v1',
+    apiKey: process.env.DEEPSEEK_API_KEY || '',
+});
 
-// Together AI
-let togetherClient: OpenAI | null = null;
-if (appConfig.llm.togetherKey) {
-    togetherClient = new OpenAI({
-        baseURL: 'https://api.together.xyz/v1',
-        apiKey: appConfig.llm.togetherKey,
-    });
-}
+const zaiClient = new OpenAI({
+    baseURL: 'https://api.z.ai/api/coding/paas/v4',
+    apiKey: process.env.ZAI_API_KEY || '',
+});
 
-// Fireworks AI
-let fireworksClient: OpenAI | null = null;
-if (appConfig.llm.fireworksKey) {
-    fireworksClient = new OpenAI({
-        baseURL: 'https://api.fireworks.ai/inference/v1',
-        apiKey: appConfig.llm.fireworksKey,
-    });
-}
-
-// OpenRouter (dinámico)
-let openrouterClient: OpenAI | null = null;
-if (appConfig.llm.openrouterKey) {
-    openrouterClient = new OpenAI({
-        baseURL: 'https://openrouter.ai/api/v1',
-        apiKey: appConfig.llm.openrouterKey,
-        defaultHeaders: {
-            'HTTP-Referer': 'https://geoos.app',
-            'X-Title': 'Geo OS'
-        }
-    });
-}
-
-// Claude (pago opcional)
-let claudeClient: Anthropic | null = null;
-if (appConfig.llm.claudeKey && appConfig.llm.claudePaid === true) {
-    claudeClient = new Anthropic({ apiKey: appConfig.llm.claudeKey });
-}
-
-// ─── Detección de tarea para OpenRouter ───────────────────────────────────
-
-type TaskType = 'code' | 'math' | 'tools' | 'summary' | 'chat';
-
-function detectTaskType(messages: any[]): TaskType {
-    const lastMsg = messages[messages.length - 1]?.content || '';
-    const fullText = messages.map(m => m.content).join(' ').toLowerCase();
-
-    if (/```|function|class|import|return|console\.log|const|let|var/.test(lastMsg) ||
-        /código|programa|script|función|api|endpoint/.test(fullText)) {
-        return 'code';
+const openrouterClient = new OpenAI({
+    baseURL: 'https://openrouter.ai/api/v1',
+    apiKey: appConfig.llm.openrouterKey || '',
+    defaultHeaders: {
+        'HTTP-Referer': 'https://geoos.app',
+        'X-Title': 'Geo OS Router'
     }
-    if (/calcular|matemática|ecuación|suma|resta|multiplicar|dividir|resolver|raíz|logaritmo/.test(fullText)) {
-        return 'math';
-    }
-    if (/herramienta|tool|función|llamar|ejecutar|automatizar/.test(fullText)) {
-        return 'tools';
-    }
-    if (/resume|resumen|sintetiza|abrevia|extrae lo importante/.test(fullText)) {
-        return 'summary';
-    }
-    return 'chat';
+});
+
+// ─── 4. Constantes ────────────────────────────────────────────────────────────
+
+const PROVIDER_TIMEOUT_MS = 8000;
+
+const ROUTING: Record<TaskType, ProviderName[]> = {
+  voice:      ['groq', 'deepseek', 'gemini', 'openrouter', 'zai'],
+  chat:       ['groq', 'deepseek', 'gemini', 'openrouter', 'zai'],
+  code:       ['zai', 'deepseek', 'openrouter', 'groq', 'gemini'],
+  reasoning:  ['deepseek', 'zai', 'openrouter', 'groq', 'gemini'],
+  math:       ['deepseek', 'zai', 'openrouter', 'groq', 'gemini'],
+  tools:      ['deepseek', 'zai', 'openrouter', 'groq', 'gemini'],
+  summary:    ['groq', 'gemini', 'deepseek', 'openrouter', 'zai'],
+  multimodal: ['gemini', 'openrouter', 'deepseek', 'groq', 'zai'],
+};
+
+const MODEL_TO_PROVIDER: Record<string, ProviderName> = {
+  'llama-3.1-8b-instant':       'groq',
+  'llama-3.3-70b-versatile':    'groq',
+  'deepseek-chat':              'deepseek',
+  'glm-4.7':                    'zai',
+  'gemini-2.5-flash-lite':      'gemini',
+  'gemini-2.5-flash':           'gemini',
+  'openrouter/free':            'openrouter',
+};
+
+// ─── 5. detectTaskType ────────────────────────────────────────────────────────
+
+function detectTaskType(messages: any[], operation: string): TaskType {
+  const explicitOps: Record<string, TaskType> = {
+    'voice': 'voice', 'voice_process': 'voice',
+    'code': 'code', 'coding': 'code',
+    'reasoning': 'reasoning', 'razonamiento': 'reasoning',
+    'summary': 'summary', 'resumen': 'summary',
+    'multimodal': 'multimodal',
+    'tools': 'tools',
+    'math': 'math',
+    'chat': 'chat',
+  };
+  
+  if (operation && explicitOps[operation.toLowerCase()]) {
+    return explicitOps[operation.toLowerCase()];
+  }
+  
+  const userMsgs = messages.filter(m => m.role === 'user');
+  const lastMsg  = userMsgs[userMsgs.length - 1]?.content || '';
+  const userText = userMsgs.map(m => m.content).join(' ').toLowerCase();
+
+  if (/```|function|class|import|return|console\.log/.test(lastMsg) ||
+      /código|programa|script|función|api|endpoint/.test(userText)) {
+    return 'code';
+  }
+  if (/calcular|matemática|ecuación|suma|resta|multiplicar|dividir|resolver/.test(userText)) {
+    return 'math';
+  }
+  if (/resume|resumen|sintetiza|abrevia/.test(userText)) {
+    return 'summary';
+  }
+  return 'chat';
 }
 
-function getOpenRouterModel(task: TaskType): string {
-    const models = {
-        code:    'meta-llama/llama-3.1-8b-instruct:free',
-        math:    'google/gemma-2-9b-it:free',
-        tools:   'mistralai/mistral-7b-instruct:free',
-        summary: 'meta-llama/llama-3.3-70b-instruct:free',
-        chat:    'meta-llama/llama-3.3-70b-instruct:free',
-    };
-    return models[task];
+// ─── 6. extractHttpStatus ─────────────────────────────────────────────────────
+
+function extractHttpStatus(err: any): number | null {
+  return err?.status ?? err?.response?.status ?? err?.statusCode ?? null;
 }
 
-// ─── Tracking de tokens ───────────────────────────────────────────────────
+// ─── 7. callWithRetry ─────────────────────────────────────────────────────────
+
+async function callWithRetry<T>(
+  fn: () => Promise<T>, 
+  providerName: string,
+  maxAttempts = 3
+): Promise<T> {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err: any) {
+      const status = extractHttpStatus(err);
+      
+      // ERRORES PERMANENTES → no retry, fallar inmediato
+      if (status === 401 || status === 403 || status === 404) {
+        throw err;
+      }
+      
+      // RATE LIMIT → backoff exponencial 1s, 2s, 4s
+      if (status === 429 && attempt < maxAttempts - 1) {
+        const delay = Math.pow(2, attempt) * 1000;
+        console.warn(`[ROUTER] ${providerName} 429, retry en ${delay}ms`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      
+      // SERVER ERROR (5xx) → retry corto 500ms una vez
+      if (status && status >= 500 && attempt < 1) {
+        await new Promise(r => setTimeout(r, 500));
+        continue;
+      }
+      
+      // TIMEOUT/RED → retry rápido 300ms una vez
+      if (!status && attempt < 1) {
+        await new Promise(r => setTimeout(r, 300));
+        continue;
+      }
+      
+      throw err;
+    }
+  }
+  throw new Error('Unreachable');
+}
+
+// ─── 8. withTimeout ───────────────────────────────────────────────────────────
+
+function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((_, reject) => 
+      setTimeout(() => reject(new Error(`Timeout ${ms}ms`)), ms)
+    ),
+  ]);
+}
+
+// ─── 9. trackUsage ────────────────────────────────────────────────────────────
 
 function trackUsage(userId: string, model: string, operation: string, usage: any) {
     if (!usage) return;
@@ -133,205 +179,205 @@ function trackUsage(userId: string, model: string, operation: string, usage: any
     }
 }
 
-// ─── Normalizadores de respuesta ──────────────────────────────────────────
+// ─── 10. sanitizarMensajes ────────────────────────────────────────────────────
 
-function toAnthropicTools(tools: any[]): Anthropic.Tool[] {
-    return tools.map(t => ({
-        name:        t.function.name,
-        description: t.function.description,
-        input_schema: t.function.parameters as Anthropic.Tool.InputSchema,
-    }));
+function sanitizarMensajes(mensajes: any[]): any[] {
+    const toolCallIds = new Set<string>();
+    for (const m of mensajes) {
+        if (m.role === 'assistant' && m.tool_calls) {
+            for (const tc of m.tool_calls) toolCallIds.add(tc.id);
+        }
+    }
+    return mensajes.filter(m => {
+        // Descartar mensajes assistant que son puro JSON de tool_call sin tool_calls estructurado
+        if (m.role === 'assistant' && !m.tool_calls && m.tool_call_id) return false;
+        // Descartar tool responses sin assistant previo que las invocó
+        if (m.role === 'tool') return m.tool_call_id && toolCallIds.has(m.tool_call_id);
+        return true;
+    });
 }
 
-function normalizarRespuestaClaude(msg: Anthropic.Message): any {
-    const textBlock = msg.content.find((b): b is Anthropic.TextBlock => b.type === 'text');
-    const text = textBlock?.text ?? '';
-    const toolUseBlocks = msg.content.filter((b): b is Anthropic.ToolUseBlock => b.type === 'tool_use');
-    const tool_calls = toolUseBlocks.map(b => ({
-        id:       b.id,
-        type:     'function',
-        function: { name: b.name, arguments: JSON.stringify(b.input) },
-    }));
-    return {
-        role:       'assistant',
-        content:    text || null,
-        tool_calls: tool_calls.length > 0 ? tool_calls : undefined,
-    };
-}
+// ─── 11-15. PROVIDERS ─────────────────────────────────────────────────────────
 
-// ─── Función de llamada genérica para cualquier cliente OpenAI ────────────
-
-async function callOpenAICompatible(
-    client: OpenAI,
-    model: string,
-    messages: any[],
-    tools: any[] | null = null,
-    maxTokens: number = 700
-): Promise<any> {
-    const res = await client.chat.completions.create({
-        model,
-        messages,
-        tools: tools || undefined,
-        tool_choice: tools ? 'auto' : undefined,
+async function callProviderGroq(mensajes: any[], modelo: string, herramientas: any[] | null) {
+    const res = await groqClient.chat.completions.create({
+        model: modelo,
+        messages: mensajes as any,
+        tools: herramientas && herramientas.length > 0 ? (herramientas as any) : undefined,
+        tool_choice: herramientas && herramientas.length > 0 ? 'auto' : undefined,
         temperature: 0.5,
-        max_tokens: maxTokens,
+        max_tokens: 2000,
     });
     const msg = res.choices?.[0]?.message;
-    if (!msg || (!msg.content && !msg.tool_calls)) {
-        throw new Error(`Respuesta vacía o inválida de ${model}`);
-    }
+    if (!msg || (!msg.content && !msg.tool_calls)) throw new Error(`Respuesta vacía o inválida de Groq (${modelo})`);
     return { msg, usage: res.usage };
 }
 
-// ─── Generador principal con cadena de fallback + timeout por proveedor ──────
+async function callProviderGemini(mensajes: any[], modelo: string, herramientas: any[] | null) {
+    const res = await geminiClient.chat.completions.create({
+        model: modelo,
+        messages: mensajes as any,
+        tools: herramientas && herramientas.length > 0 ? (herramientas as any) : undefined,
+        tool_choice: herramientas && herramientas.length > 0 ? 'auto' : undefined,
+        temperature: 0.5,
+        max_tokens: 2000,
+    });
+    const msg = res.choices?.[0]?.message;
+    if (!msg || (!msg.content && !msg.tool_calls)) throw new Error(`Respuesta vacía o inválida de Gemini (${modelo})`);
+    return { msg, usage: res.usage };
+}
+
+async function callProviderDeepSeek(mensajes: any[], modelo: string, herramientas: any[] | null) {
+    const res = await deepseekClient.chat.completions.create({
+        model: modelo,
+        messages: mensajes as any,
+        tools: herramientas && herramientas.length > 0 ? (herramientas as any) : undefined,
+        tool_choice: herramientas && herramientas.length > 0 ? 'auto' : undefined,
+        temperature: 0.5,
+        max_tokens: 2000,
+    });
+    const msg = res.choices?.[0]?.message;
+    if (!msg || (!msg.content && !msg.tool_calls)) throw new Error(`Respuesta vacía o inválida de DeepSeek (${modelo})`);
+    return { msg, usage: res.usage };
+}
+
+async function callProviderZai(mensajes: any[], modelo: string, herramientas: any[] | null) {
+    const res = await zaiClient.chat.completions.create({
+        model: modelo,
+        messages: mensajes as any,
+        tools: herramientas && herramientas.length > 0 ? (herramientas as any) : undefined,
+        tool_choice: herramientas && herramientas.length > 0 ? 'auto' : undefined,
+        temperature: 0.5,
+        max_tokens: 2000,
+    });
+    const msg = res.choices?.[0]?.message;
+    if (!msg || (!msg.content && !msg.tool_calls)) throw new Error(`Respuesta vacía o inválida de Zai (${modelo})`);
+    return { msg, usage: res.usage };
+}
+
+async function callProviderOpenRouter(mensajes: any[], modelo: string, herramientas: any[] | null) {
+    const res = await openrouterClient.chat.completions.create({
+        model: modelo,
+        messages: mensajes as any,
+        tools: herramientas && herramientas.length > 0 ? (herramientas as any) : undefined,
+        tool_choice: herramientas && herramientas.length > 0 ? 'auto' : undefined,
+        temperature: 0.5,
+        max_tokens: 2000,
+    });
+    const msg = res.choices?.[0]?.message;
+    if (!msg || (!msg.content && !msg.tool_calls)) throw new Error(`Respuesta vacía o inválida de OpenRouter (${modelo})`);
+    return { msg, usage: res.usage };
+}
+
+// ─── 16. generarRespuesta ─────────────────────────────────────────────────────
 
 export async function generarRespuesta(
-    mensajes: any[],
-    modelo: string = 'llama-3.3-70b-versatile',
-    herramientas: any[] | null = null,
-    userId: string = 'system',
-    operation: string = 'chat'
+  mensajes: any[],
+  modelo: string = 'llama-3.1-8b-instant',
+  herramientas: any[] | null = null,
+  userId: string = 'system',
+  operation: string = 'chat'
 ): Promise<any> {
-    const task = detectTaskType(mensajes);
-    console.log(`[LLM] Tarea detectada: ${task}`);
+  const startTs = Date.now();
+  
+  const task = detectTaskType(mensajes, operation);
+  let primaryProvider: ProviderName;
+  let providerChain: ProviderName[];
+  let modelOverride = false;
 
-    // ── 1. Gemini (principal — más estable, contexto largo) ───────────────
-    if (geminiClient) {
-        try {
-            console.log('[LLM] 🧠 Gemini 1.5 Flash...');
-            const { msg, usage } = await conTimeout(
-                callOpenAICompatible(geminiClient, 'gemini-1.5-flash', mensajes, herramientas),
-                LLM_TIMEOUT_MS, 'Gemini'
-            );
-            trackUsage(userId, 'gemini-1.5-flash', operation, usage ?? {});
-            return msg;
-        } catch (err: any) {
-            console.warn(`[LLM] Gemini falló: ${err.message}`);
-        }
-    }
+  if (MODEL_TO_PROVIDER[modelo]) {
+    modelOverride = true;
+    primaryProvider = MODEL_TO_PROVIDER[modelo];
+    providerChain = [primaryProvider];
+  } else {
+    providerChain = ROUTING[task] || ROUTING['chat'];
+    primaryProvider = providerChain[0];
+  }
 
-    // ── 2. DeepSeek (pago, alta calidad) ─────────────────────────────────
-    if (deepseekClient) {
-        try {
-            console.log(`[LLM] 🔵 DeepSeek (${appConfig.llm.deepseekModel})...`);
-            const { msg, usage } = await conTimeout(
-                callOpenAICompatible(deepseekClient, appConfig.llm.deepseekModel, mensajes, herramientas),
-                LLM_TIMEOUT_MS, 'DeepSeek'
-            );
-            trackUsage(userId, appConfig.llm.deepseekModel, operation, usage ?? {});
-            return msg;
-        } catch (err: any) {
-            console.warn(`[LLM] DeepSeek falló: ${err.message}`);
-        }
-    }
+  const providersAttempted: ProviderName[] = [];
+  let totalRetries = 0;
+  let finalError: any = null;
 
-    // ── 3. Groq (rápido cuando responde) ─────────────────────────────────
+  for (let i = 0; i < providerChain.length; i++) {
+    const currentProvider = providerChain[i];
+    providersAttempted.push(currentProvider);
+
     try {
-        console.log(`[LLM] ⚡ Groq (${modelo})...`);
-        const res = await conTimeout(
-            groq.chat.completions.create({
-                model: modelo,
-                messages: mensajes,
-                tools: herramientas || undefined,
-                tool_choice: herramientas ? 'auto' : undefined,
-                temperature: 0.5,
-                max_tokens: 700,
-            }),
-            LLM_TIMEOUT_MS, 'Groq'
-        );
-        trackUsage(userId, modelo, operation, res.usage);
-        const msg = res.choices?.[0]?.message;
-        if (msg && (msg.content || msg.tool_calls)) return msg;
-        throw new Error('Respuesta vacía de Groq');
+      const msgsParaProvider = sanitizarMensajes(mensajes);
+      const targetModel = modelOverride ? modelo : 
+          currentProvider === 'groq' ? 'llama-3.3-70b-versatile' :
+          currentProvider === 'deepseek' ? (process.env.DEEPSEEK_MODEL || 'deepseek-chat') :
+          currentProvider === 'gemini' ? 'gemini-2.5-flash-lite' :
+          currentProvider === 'openrouter' ? 'openrouter/free' :
+          currentProvider === 'zai' ? 'glm-4.7' : 'llama-3.1-8b-instant';
+
+      const callOp = async () => {
+        totalRetries++; // Contar todos los intentos reales
+        switch (currentProvider) {
+          case 'groq': return await callProviderGroq(msgsParaProvider, targetModel, herramientas);
+          case 'gemini': return await callProviderGemini(msgsParaProvider, targetModel, herramientas);
+          case 'deepseek': return await callProviderDeepSeek(msgsParaProvider, targetModel, herramientas);
+          case 'zai': return await callProviderZai(msgsParaProvider, targetModel, herramientas);
+          case 'openrouter': return await callProviderOpenRouter(msgsParaProvider, targetModel, herramientas);
+          default: throw new Error(`Provider desconocido: ${currentProvider}`);
+        }
+      };
+
+      const { msg, usage } = await callWithRetry(
+        () => withTimeout(callOp(), PROVIDER_TIMEOUT_MS),
+        currentProvider,
+        3
+      );
+
+      console.log('[ROUTER]', JSON.stringify({
+        ts: new Date().toISOString(),
+        userId,
+        operation,
+        task,
+        modelOverride,
+        primary: primaryProvider,
+        attempted: providersAttempted,
+        successProvider: currentProvider,
+        successModel: targetModel,
+        totalLatencyMs: Date.now() - startTs,
+        retries: totalRetries - 1, // Restamos 1 para solo contar "re-intentos" extra
+      }));
+
+      trackUsage(userId, targetModel, operation, usage);
+      return msg;
+      
     } catch (err: any) {
-        console.warn(`[LLM] Groq falló: ${err.message}`);
+      finalError = err;
+      const status = extractHttpStatus(err);
+      
+      if (status === 401 || status === 403 || status === 404) {
+        console.warn(`[ROUTER] Skipping ${currentProvider} due to permanent error ${status}`);
+      } else {
+        console.warn(`[ROUTER] Provider ${currentProvider} failed: ${err.message}`);
+      }
     }
+  }
 
-    // ── 4. Together AI ───────────────────────────────────────────────────
-    if (togetherClient) {
-        try {
-            console.log('[LLM] 🤝 Together AI (Llama 3.3 70B)...');
-            const { msg, usage } = await conTimeout(
-                callOpenAICompatible(togetherClient, 'meta-llama/Llama-3.3-70B-Instruct-Turbo', mensajes, herramientas),
-                LLM_TIMEOUT_MS, 'Together'
-            );
-            trackUsage(userId, 'together-llama-3.3-70b', operation, usage ?? {});
-            return msg;
-        } catch (err: any) {
-            console.warn(`[LLM] Together falló: ${err.message}`);
-        }
-    }
+  // Fallback final
+  console.log('[ROUTER]', JSON.stringify({
+    ts: new Date().toISOString(),
+    userId,
+    operation,
+    task,
+    modelOverride,
+    primary: primaryProvider,
+    attempted: providersAttempted,
+    successProvider: null,
+    successModel: null,
+    totalLatencyMs: Date.now() - startTs,
+    retries: totalRetries,
+    error: finalError?.message || 'All providers failed'
+  }));
 
-    // ── 5. Fireworks AI ──────────────────────────────────────────────────
-    if (fireworksClient) {
-        try {
-            console.log('[LLM] 🔥 Fireworks AI (Llama 3.3 70B)...');
-            const { msg, usage } = await conTimeout(
-                callOpenAICompatible(fireworksClient, 'accounts/fireworks/models/llama-v3p3-70b-instruct', mensajes, herramientas),
-                LLM_TIMEOUT_MS, 'Fireworks'
-            );
-            trackUsage(userId, 'fireworks-llama-3.3-70b', operation, usage ?? {});
-            return msg;
-        } catch (err: any) {
-            console.warn(`[LLM] Fireworks falló: ${err.message}`);
-        }
-    }
-
-    // ── 6. OpenRouter con selección dinámica ──────────────────────────────
-    if (openrouterClient) {
-        const openrouterModel = getOpenRouterModel(task);
-        console.log(`[LLM] 🔄 OpenRouter (${openrouterModel}) para tarea: ${task}`);
-        try {
-            const { msg, usage } = await conTimeout(
-                callOpenAICompatible(openrouterClient, openrouterModel, mensajes, herramientas),
-                LLM_TIMEOUT_MS, 'OpenRouter'
-            );
-            trackUsage(userId, `openrouter-${openrouterModel}`, operation, usage ?? {});
-            return msg;
-        } catch (err: any) {
-            console.warn(`[LLM] OpenRouter falló: ${err.message}`);
-        }
-    }
-
-    // ── 7. Claude (solo si es de pago y está configurado) ─────────────────
-    if (claudeClient && appConfig.llm.claudePaid) {
-        try {
-            console.log('[LLM] 🧬 Claude (pago) - calidad extrema...');
-            const systemMsg = mensajes.find(m => m.role === 'system');
-            const otrosMsgs = mensajes.filter(m => m.role !== 'system').map(m => {
-                if (m.role === 'tool') {
-                    return { role: 'user' as const, content: [{ type: 'tool_result' as const, tool_use_id: m.tool_call_id, content: m.content }] };
-                }
-                if (m.role === 'assistant' && m.tool_calls) {
-                    return { role: 'assistant' as const, content: m.tool_calls.map((tc: any) => ({ type: 'tool_use' as const, id: tc.id, name: tc.function.name, input: JSON.parse(tc.function.arguments) })) };
-                }
-                return { role: m.role as 'user' | 'assistant', content: m.content };
-            });
-            const params: Anthropic.MessageCreateParams = {
-                model: appConfig.llm.claudeModel || 'claude-sonnet-4-6',
-                max_tokens: 700,
-                system: systemMsg?.content,
-                messages: otrosMsgs as Anthropic.MessageParam[],
-            };
-            if (herramientas && herramientas.length > 0) {
-                params.tools = toAnthropicTools(herramientas);
-            }
-            const res = await conTimeout(
-                claudeClient.messages.create(params),
-                LLM_TIMEOUT_MS, 'Claude'
-            );
-            trackUsage(userId, appConfig.llm.claudeModel || 'claude-sonnet-4-6', operation, res.usage);
-            return normalizarRespuestaClaude(res);
-        } catch (err: any) {
-            console.warn(`[LLM] Claude falló: ${err.message}`);
-        }
-    }
-
-    // ── 8. Último recurso (nunca silencio) ────────────────────────────────
-    console.error('[LLM] Todos los modelos fallaron');
-    return {
-        role: 'assistant',
-        content: '⚠️ Lo siento, todos los sistemas de IA están temporalmente agotados. Por favor, repite tu mensaje en unos segundos.',
-        tool_calls: undefined
-    };
+  console.error('[LLM] Todos los modelos fallaron');
+  return {
+    role: 'assistant',
+    content: "⚠️ Lo siento, todos los sistemas de IA están temporalmente agotados. Por favor, repite tu mensaje en unos segundos.",
+    tool_calls: undefined
+  };
 }

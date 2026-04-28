@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guía de Instalación — 7 Skills de Marketing para Claude Cowork</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #e0e0e0; font-family: 'Inter', sans-serif; line-height: 1.7; font-size: 16px; }
+  .container { max-width: 920px; margin: 0 auto; padding: 40px 24px 80px; }
+  .header { text-align: center; padding: 60px 0 40px; border-bottom: 1px solid #1a1a2e; margin-bottom: 40px; }
+  .header h1 { font-size: 2.4em; font-weight: 900; color: #fff; margin-bottom: 16px; }
+  .header h1 span { background: linear-gradient(135deg, #ff4444, #fb923c); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: #888; font-size: 1.1em; }
+
+  section { margin-bottom: 48px; }
+  section h2 { font-size: 1.45em; font-weight: 800; padding: 12px 0 12px 20px; margin-bottom: 20px; position: relative; color: #60a5fa; }
+  section h2::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; border-radius: 2px; background: #60a5fa; }
+  h3 { font-size: 1.12em; font-weight: 700; color: #d0d0d0; margin: 24px 0 10px; }
+  p { margin-bottom: 12px; color: #c8c8c8; }
+  strong { color: #fff; }
+  code { background: #1a1a2e; color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-size: 0.9em; font-family: 'JetBrains Mono', monospace; }
+  pre { background: #0d0d14; border: 1px solid #1a1a2e; border-radius: 8px; padding: 16px 20px; overflow-x: auto; margin: 12px 0 16px; }
+  pre code { background: none; padding: 0; font-size: 0.88em; color: #4ade80; }
+
+  .step { background: #111118; border: 1px solid #1a1a2e; border-radius: 12px; padding: 24px 28px; margin: 20px 0; position: relative; }
+  .step-num { position: absolute; top: -14px; left: 24px; background: #60a5fa; color: #0a0a0a; font-weight: 900; font-size: 0.85em; padding: 4px 14px; border-radius: 20px; font-family: 'JetBrains Mono', monospace; }
+  .step h3 { margin-top: 8px; color: #fff; }
+
+  .highlight { background: #0d1525; border-left: 4px solid #60a5fa; border-radius: 10px; padding: 18px 22px; margin: 18px 0; font-size: 0.95em; }
+  .highlight strong { color: #60a5fa; }
+  .warning { background: #1a1508; border-left: 4px solid #fbbf24; border-radius: 10px; padding: 18px 22px; margin: 18px 0; font-size: 0.95em; }
+  .warning strong { color: #fbbf24; }
+  .good { background: #0d1a0d; border-left: 4px solid #4ade80; border-radius: 10px; padding: 18px 22px; margin: 18px 0; font-size: 0.95em; }
+  .good strong { color: #4ade80; }
+
+  table { width: 100%; border-collapse: collapse; margin: 18px 0; font-size: 0.9em; }
+  th { background: #111833; color: #60a5fa; font-weight: 700; text-align: left; padding: 10px 14px; font-size: 0.85em; text-transform: uppercase; }
+  td { padding: 10px 14px; border-bottom: 1px solid #1a1a2e; }
+  .green { color: #4ade80; font-weight: 700; }
+
+  .skill-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin: 20px 0; }
+  .skill-item { background: #111118; border: 1px solid #1a1a2e; border-radius: 12px; padding: 20px; }
+  .skill-item .num { font-family: 'JetBrains Mono', monospace; font-size: 0.8em; font-weight: 700; padding: 3px 10px; border-radius: 12px; display: inline-block; margin-bottom: 8px; }
+  .skill-item h4 { font-size: 1.05em; color: #fff; margin-bottom: 6px; }
+  .skill-item p { font-size: 0.9em; color: #888; margin-bottom: 0; }
+
+  .footer { text-align: center; padding: 40px 0; border-top: 1px solid #1a1a2e; margin-top: 40px; color: #555; font-size: 0.85em; }
+
+  .tab-container { margin: 24px 0; }
+  .tabs { display: flex; gap: 0; border-bottom: 2px solid #1a1a2e; }
+  .tab { padding: 12px 24px; font-weight: 700; color: #888; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.2s; font-size: 0.95em; }
+  .tab.active { color: #60a5fa; border-bottom-color: #60a5fa; }
+  .tab:hover { color: #ccc; }
+  .tab-content { display: none; padding: 24px 0; }
+  .tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Guía de Instalación<br><span>7 Skills de Marketing</span></h1>
+    <p>Cómo instalar y usar las 7 skills en Claude Cowork o Claude Code</p>
+  </div>
+
+  <!-- LAS 7 SKILLS -->
+  <section>
+    <h2>Las 7 Skills incluidas</h2>
+    <div class="skill-grid">
+      <div class="skill-item">
+        <span class="num" style="background: rgba(96,165,250,0.15); color: #60a5fa;">SKILL 1</span>
+        <h4>Espía de Tendencias</h4>
+        <p>Monitoriza X/Twitter con Grok para encontrar tendencias de tu nicho.</p>
+      </div>
+      <div class="skill-item">
+        <span class="num" style="background: rgba(74,222,128,0.15); color: #4ade80;">SKILL 2</span>
+        <h4>Scraping de Competencia</h4>
+        <p>Analiza competidores en Instagram, TikTok, LinkedIn con Apify.</p>
+      </div>
+      <div class="skill-item">
+        <span class="num" style="background: rgba(167,139,250,0.15); color: #a78bfa;">SKILL 3</span>
+        <h4>Diseñador con Canva</h4>
+        <p>Crea 10 diseños de redes de golpe con tu identidad visual.</p>
+      </div>
+      <div class="skill-item">
+        <span class="num" style="background: rgba(96,165,250,0.15); color: #60a5fa;">SKILL 4</span>
+        <h4>Dashboard de Negocio</h4>
+        <p>Panel de control HTML con todas tus métricas en un sitio.</p>
+      </div>
+      <div class="skill-item">
+        <span class="num" style="background: rgba(255,68,68,0.15); color: #ff4444;">SKILL 5</span>
+        <h4>Emails de Venta</h4>
+        <p>Secuencias de 7 emails de venta listos para copiar y pegar.</p>
+      </div>
+      <div class="skill-item">
+        <span class="num" style="background: rgba(74,222,128,0.15); color: #4ade80;">SKILL 6</span>
+        <h4>Auditor SEO</h4>
+        <p>Informe SEO profesional de cualquier web con recomendaciones.</p>
+      </div>
+      <div class="skill-item">
+        <span class="num" style="background: rgba(251,191,36,0.15); color: #fbbf24;">SKILL 7</span>
+        <h4>Calendario de Contenido</h4>
+        <p>Plan mensual completo con temas, títulos, hooks y formatos.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- METODO DE INSTALACION -->
+  <section>
+    <h2>Cómo instalar las skills</h2>
+
+    <div class="tab-container">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(0)">Claude Cowork (fácil)</div>
+        <div class="tab" onclick="switchTab(1)">Claude Code (terminal)</div>
+      </div>
+
+      <!-- TAB 1: COWORK -->
+      <div class="tab-content active" id="tab0">
+        <div class="highlight">
+          <strong>Este es el método más fácil.</strong> No necesitas tocar archivos ni terminal. Solo copias y pegas en el chat de Cowork.
+        </div>
+
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>Abre Claude Cowork</h3>
+          <p>Abre la aplicación de escritorio de Claude (Cowork) en tu ordenador.</p>
+        </div>
+
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>Crea un proyecto de Marketing</h3>
+          <p>En la barra lateral izquierda, crea un nuevo proyecto y llámalo <strong>"Marketing"</strong> o <strong>"Skills de Marketing"</strong>.</p>
+        </div>
+
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>Instala cada skill con un prompt</h3>
+          <p>Para cada skill, simplemente escribe esto en el chat:</p>
+          <pre><code>Crea una skill llamada "[nombre-de-la-skill]" con las siguientes instrucciones:
+
+[Pega aquí el contenido completo del SKILL.md]</code></pre>
+          <p>Claude creará la skill automáticamente en tu proyecto. Repite para cada una de las 7 skills.</p>
+        </div>
+
+        <div class="step">
+          <span class="step-num">4</span>
+          <h3>Verifica</h3>
+          <p>Escribe en el chat: <code>"¿Qué skills tengo disponibles?"</code></p>
+          <p>Claude debería listar las 7 skills instaladas.</p>
+        </div>
+
+        <div class="step">
+          <span class="step-num">5</span>
+          <h3>Usa las skills</h3>
+          <p>Simplemente pide lo que necesitas y Claude usará la skill correcta automáticamente:</p>
+          <pre><code>"Busca tendencias de IA esta semana"          → Skill 1
+"Analiza los competidores @X @Y @Z"           → Skill 2
+"Hazme 10 diseños de Instagram"               → Skill 3
+"Crea un dashboard de mi negocio"             → Skill 4
+"Escríbeme emails para vender mi curso"       → Skill 5
+"Audita el SEO de mi web"                     → Skill 6
+"Planifica mi contenido de abril"             → Skill 7</code></pre>
+        </div>
+
+        <div class="good">
+          <strong>Claude detecta qué skill usar automáticamente</strong> basándose en lo que le pides. No necesitas invocarla manualmente — solo describe lo que necesitas y Claude elige la skill correcta.
+        </div>
+      </div>
+
+      <!-- TAB 2: CLAUDE CODE -->
+      <div class="tab-content" id="tab1">
+        <div class="highlight">
+          <strong>Método para usuarios técnicos.</strong> Las skills se instalan como carpetas con archivos SKILL.md.
+        </div>
+
+        <div class="step">
+          <span class="step-num">1</span>
+          <h3>Crea la carpeta de skills</h3>
+          <pre><code>mkdir -p ~/.claude/skills</code></pre>
+        </div>
+
+        <div class="step">
+          <span class="step-num">2</span>
+          <h3>Copia las carpetas de skills</h3>
+          <p>Copia cada carpeta <code>skill-X-nombre/</code> dentro de <code>~/.claude/skills/</code>:</p>
+          <pre><code>cp -r skill-1-espia-tendencias ~/.claude/skills/
+cp -r skill-2-scraping-competencia ~/.claude/skills/
+cp -r skill-3-diseno-canva ~/.claude/skills/
+cp -r skill-4-dashboard-negocio ~/.claude/skills/
+cp -r skill-5-emails-venta ~/.claude/skills/
+cp -r skill-6-auditor-seo ~/.claude/skills/
+cp -r skill-7-calendario-contenido ~/.claude/skills/</code></pre>
+        </div>
+
+        <div class="step">
+          <span class="step-num">3</span>
+          <h3>Verifica la estructura</h3>
+          <pre><code>ls ~/.claude/skills/
+
+# Deberías ver:
+# skill-1-espia-tendencias/
+# skill-2-scraping-competencia/
+# skill-3-diseno-canva/
+# skill-4-dashboard-negocio/
+# skill-5-emails-venta/
+# skill-6-auditor-seo/
+# skill-7-calendario-contenido/</code></pre>
+          <p>Cada carpeta debe contener un archivo <code>SKILL.md</code>.</p>
+        </div>
+
+        <div class="step">
+          <span class="step-num">4</span>
+          <h3>Usa las skills</h3>
+          <p>Abre Claude Code en cualquier proyecto y pide lo que necesitas. Claude detectará las skills automáticamente.</p>
+        </div>
+
+        <div class="warning">
+          <strong>Las skills en <code>~/.claude/skills/</code> están disponibles globalmente</strong> — funcionan en cualquier proyecto que abras con Claude Code. Si quieres skills solo para un proyecto específico, ponlas en <code>tu-proyecto/.claude/skills/</code>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- REQUISITOS POR SKILL -->
+  <section>
+    <h2>Requisitos por skill</h2>
+    <p>No todas las skills necesitan lo mismo. Aquí tienes qué necesita cada una:</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Skill</th>
+          <th>Funciona en</th>
+          <th>Requisito extra</th>
+          <th>Precio servicio</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>1. Espía Tendencias</strong></td>
+          <td>Solo Cowork</td>
+          <td>Sesión iniciada en X (Chrome)</td>
+          <td class="green">$300/mes</td>
+        </tr>
+        <tr>
+          <td><strong>2. Scraping</strong></td>
+          <td>Cowork + Code</td>
+          <td>Conector Apify (gratis)</td>
+          <td class="green">$200-500</td>
+        </tr>
+        <tr>
+          <td><strong>3. Diseño Canva</strong></td>
+          <td>Solo Cowork</td>
+          <td>Conector Canva</td>
+          <td class="green">$150-300</td>
+        </tr>
+        <tr>
+          <td><strong>4. Dashboard</strong></td>
+          <td>Cowork + Code</td>
+          <td>Ninguno</td>
+          <td class="green">$300-500</td>
+        </tr>
+        <tr>
+          <td><strong>5. Emails</strong></td>
+          <td>Cowork + Code</td>
+          <td>Ninguno</td>
+          <td class="green">$300-800</td>
+        </tr>
+        <tr>
+          <td><strong>6. SEO</strong></td>
+          <td>Cowork + Code</td>
+          <td>Ninguno (usa web fetch)</td>
+          <td class="green">$300-500</td>
+        </tr>
+        <tr>
+          <td><strong>7. Calendario</strong></td>
+          <td>Cowork + Code</td>
+          <td>Ninguno</td>
+          <td class="green">$250-400/mes</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="good">
+      <strong>5 de las 7 skills funcionan sin ningún requisito extra</strong> — solo necesitas Claude (Cowork o Code). Las skills 1 y 3 necesitan Cowork por los conectores visuales (X y Canva).
+    </div>
+  </section>
+
+  <!-- TIPS -->
+  <section>
+    <h2>Tips para sacar el máximo</h2>
+    <div class="highlight">
+      <strong>Combina skills.</strong> Puedes encadenar varias en una conversación: "Busca tendencias de mi nicho (Skill 1), luego genera 10 títulos basados en esas tendencias (Skill 7), y finalmente crea los diseños en Canva (Skill 3)." Claude ejecuta las tres en secuencia.
+    </div>
+    <div class="highlight">
+      <strong>Personalízalas.</strong> Cada skill incluye preguntas de configuración. La primera vez que uses una, Claude te preguntará sobre tu negocio, nicho y estilo. Esa info se guarda en la memoria del proyecto — la próxima vez no te lo pregunta.
+    </div>
+    <div class="highlight">
+      <strong>Véndelas como servicio.</strong> Cada skill tiene un precio de referencia al final. Usa esos precios como guía para ofrecer estos servicios a clientes. Con las 7 juntas, puedes facturar $1.850-3.500/mes por cliente.
+    </div>
+  </section>
+
+  <div class="footer">
+    <p>Skills creadas por Juanpe Navarro (@juanpe.divisual) — Abril 2026</p>
+    <p>Canal: <a href="https://youtube.com/@juanpe.divisual" style="color: #60a5fa;">youtube.com/@juanpe.divisual</a></p>
+  </div>
+
+</div>
+
+<script>
+function switchTab(n) {
+  document.querySelectorAll('.tab').forEach((t, i) => t.classList.toggle('active', i === n));
+  document.querySelectorAll('.tab-content').forEach((c, i) => c.classList.toggle('active', i === n));
+}
+</script>
+</body>
+</html>

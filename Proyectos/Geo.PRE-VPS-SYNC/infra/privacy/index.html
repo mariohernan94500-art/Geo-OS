@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Geo OS Privacy Policy — Política de Privacidad — Politique de Confidentialité" />
+  <title>Geo OS — Política de Privacidad</title>
+  <style>
+    :root {
+      --bg: #0a0a0a; --surface: #141414; --border: #2a2a2a;
+      --accent: #6c63ff; --text: #e8e8e8; --muted: #888;
+      --radius: 12px; --max: 800px;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.7; padding: 24px 16px 64px; }
+    .container { max-width: var(--max); margin: 0 auto; }
+    header { text-align: center; padding: 48px 0 32px; }
+    .logo { font-size: 2rem; font-weight: 800; letter-spacing: -1px; }
+    .logo span { color: var(--accent); }
+    header p { color: var(--muted); margin-top: 8px; font-size: 0.9rem; }
+    .lang-switcher { display: flex; justify-content: center; gap: 8px; margin-bottom: 40px; flex-wrap: wrap; }
+    .lang-btn { padding: 6px 18px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: 0.85rem; transition: all .2s; }
+    .lang-btn.active, .lang-btn:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .lang-section { display: none; }
+    .lang-section.active { display: block; }
+    h1 { font-size: 1.6rem; font-weight: 700; margin-bottom: 8px; }
+    .updated { color: var(--muted); font-size: 0.85rem; margin-bottom: 32px; }
+    h2 { font-size: 1.05rem; font-weight: 700; color: var(--accent); margin: 32px 0 12px; display: flex; align-items: center; gap: 8px; }
+    p, li { font-size: 0.95rem; color: #ccc; }
+    ul { padding-left: 20px; margin-top: 8px; }
+    ul li { margin-bottom: 6px; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin: 12px 0; }
+    .third-party { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 12px; }
+    .tp-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-size: 0.85rem; }
+    .tp-item strong { display: block; color: var(--text); margin-bottom: 2px; }
+    .tp-item span { color: var(--muted); font-size: 0.78rem; }
+    .contact-link { color: var(--accent); text-decoration: none; }
+    .contact-link:hover { text-decoration: underline; }
+    footer { text-align: center; margin-top: 64px; color: var(--muted); font-size: 0.8rem; }
+    hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div class="logo">GEO <span>OS</span></div>
+    <p>Personal AI Voice Assistant</p>
+  </header>
+
+  <div class="lang-switcher">
+    <button class="lang-btn active" onclick="setLang('es')">🇪🇸 Español</button>
+    <button class="lang-btn" onclick="setLang('en')">🇺🇸 English</button>
+    <button class="lang-btn" onclick="setLang('fr')">🇫🇷 Français</button>
+  </div>
+
+  <!-- ═══════════════ ESPAÑOL ═══════════════ -->
+  <div id="lang-es" class="lang-section active">
+    <h1>Política de Privacidad</h1>
+    <p class="updated">Última actualización: Abril 2026</p>
+
+    <h2>📋 Información General</h2>
+    <p>Geo OS ("la App") es un asistente personal de voz con inteligencia artificial, desarrollado por Mario Ovalle (Chile). Esta política explica qué datos recopilamos, cómo los usamos y cuáles son tus derechos.</p>
+
+    <h2>🎙️ Datos que Recopilamos</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Audio de voz:</strong> Capturado solo mientras el micrófono está activo. Se envía al backend para su transcripción y procesamiento.</li>
+        <li><strong>Texto (prompts):</strong> Los mensajes de texto que ingresas o que resultan de la transcripción de voz.</li>
+        <li><strong>Dirección IP:</strong> Registrada en los logs del servidor para seguridad y diagnóstico.</li>
+        <li><strong>Logs de errores:</strong> Datos técnicos generados si la app presenta fallos.</li>
+        <li><strong>Token de sesión:</strong> Almacenado localmente en tu dispositivo (EncryptedSharedPreferences) para mantener tu sesión activa.</li>
+      </ul>
+    </div>
+    <p><strong>No recopilamos:</strong> nombre, email, número telefónico, ubicación GPS, contactos, fotos ni información financiera.</p>
+
+    <h2>🎤 Uso del Micrófono</h2>
+    <p>La app solicita acceso al micrófono para detectar voz y enviarla al servidor para su procesamiento por IA. El micrófono <strong>solo se activa cuando tú lo inicias</strong>. No grabamos audio en segundo plano ni sin tu conocimiento.</p>
+
+    <h2>🤖 Servicios de IA Terceros</h2>
+    <p>Para procesar tus comandos de voz y generar respuestas, trabajamos con los siguientes proveedores. Tu audio y texto pueden ser enviados a ellos según el tipo de solicitud:</p>
+    <div class="third-party">
+      <div class="tp-item"><strong>DeepSeek</strong><span>Procesamiento de lenguaje natural</span></div>
+      <div class="tp-item"><strong>OpenRouter</strong><span>Enrutamiento de modelos IA</span></div>
+      <div class="tp-item"><strong>Groq</strong><span>Inferencia de baja latencia</span></div>
+      <div class="tp-item"><strong>ElevenLabs</strong><span>Síntesis de voz (TTS)</span></div>
+    </div>
+    <p style="margin-top:12px">Cada proveedor tiene su propia política de privacidad. Te recomendamos revisarlas. Geo OS no controla cómo estos terceros procesan los datos recibidos.</p>
+
+    <h2>⏱️ Retención de Datos</h2>
+    <ul>
+      <li>Los audios de voz son procesados en tiempo real y <strong>no se almacenan permanentemente</strong> en nuestros servidores.</li>
+      <li>Los logs del servidor se retienen por un máximo de <strong>30 días</strong> con fines de diagnóstico.</li>
+      <li>El token de sesión se almacena en tu dispositivo hasta que cierres sesión o desinstales la app.</li>
+    </ul>
+
+    <h2>🔒 Seguridad</h2>
+    <p>Toda la comunicación entre la app y nuestro backend se realiza mediante <strong>HTTPS/TLS</strong>. Los datos de sesión en tu dispositivo se almacenan en almacenamiento cifrado del sistema operativo Android.</p>
+
+    <h2>👤 Tus Derechos</h2>
+    <ul>
+      <li><strong>Acceso:</strong> Solicita qué datos tenemos sobre ti.</li>
+      <li><strong>Eliminación:</strong> Solicita el borrado de tus datos.</li>
+      <li><strong>Portabilidad:</strong> Solicita una copia de tus datos en formato legible.</li>
+    </ul>
+    <p style="margin-top:8px">Para ejercer tus derechos, escríbenos a <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a>. Respondemos en un máximo de 30 días hábiles.</p>
+
+    <h2>🌍 Transferencia Internacional</h2>
+    <p>Los servicios de IA terceros (DeepSeek, Groq, OpenRouter, ElevenLabs) operan en distintos países. Al usar la app, aceptas que tus datos puedan ser procesados fuera de Chile conforme a las leyes de protección de datos de cada proveedor.</p>
+
+    <h2>📬 Contacto</h2>
+    <div class="card">
+      <p><strong>Responsable:</strong> Mario Ovalle<br>
+      <strong>País:</strong> Chile<br>
+      <strong>Email:</strong> <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a><br>
+      <strong>Web:</strong> <a class="contact-link" href="https://geoos.app">geoos.app</a></p>
+    </div>
+
+    <h2>📝 Cambios a esta Política</h2>
+    <p>Podemos actualizar esta política. Cuando lo hagamos, publicaremos la nueva versión en esta página con una nueva fecha. Si los cambios son significativos, te notificaremos dentro de la app.</p>
+  </div>
+
+  <!-- ═══════════════ ENGLISH ═══════════════ -->
+  <div id="lang-en" class="lang-section">
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated: April 2026</p>
+
+    <h2>📋 General Information</h2>
+    <p>Geo OS ("the App") is a personal AI voice assistant developed by Mario Ovalle (Chile). This policy explains what data we collect, how we use it, and what your rights are.</p>
+
+    <h2>🎙️ Data We Collect</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Voice audio:</strong> Captured only while the microphone is active. Sent to our backend for transcription and processing.</li>
+        <li><strong>Text (prompts):</strong> Text messages you type or that result from voice transcription.</li>
+        <li><strong>IP address:</strong> Logged on the server for security and diagnostic purposes.</li>
+        <li><strong>Error logs:</strong> Technical data generated if the app encounters failures.</li>
+        <li><strong>Session token:</strong> Stored locally on your device (EncryptedSharedPreferences) to keep your session active.</li>
+      </ul>
+    </div>
+    <p><strong>We do NOT collect:</strong> name, email, phone number, GPS location, contacts, photos, or financial information.</p>
+
+    <h2>🎤 Microphone Use</h2>
+    <p>The app requests microphone access to detect voice and send it to the server for AI processing. The microphone is <strong>only activated when you initiate it</strong>. We do not record audio in the background or without your knowledge.</p>
+
+    <h2>🤖 Third-Party AI Services</h2>
+    <p>To process your voice commands and generate responses, we work with the following providers. Your audio and text may be sent to them depending on the type of request:</p>
+    <div class="third-party">
+      <div class="tp-item"><strong>DeepSeek</strong><span>Natural language processing</span></div>
+      <div class="tp-item"><strong>OpenRouter</strong><span>AI model routing</span></div>
+      <div class="tp-item"><strong>Groq</strong><span>Low-latency AI inference</span></div>
+      <div class="tp-item"><strong>ElevenLabs</strong><span>Voice synthesis (TTS)</span></div>
+    </div>
+    <p style="margin-top:12px">Each provider has its own privacy policy. We encourage you to review them. Geo OS does not control how these third parties process received data.</p>
+
+    <h2>⏱️ Data Retention</h2>
+    <ul>
+      <li>Voice audio is processed in real-time and <strong>not stored permanently</strong> on our servers.</li>
+      <li>Server logs are retained for a maximum of <strong>30 days</strong> for diagnostic purposes.</li>
+      <li>The session token is stored on your device until you log out or uninstall the app.</li>
+    </ul>
+
+    <h2>🔒 Security</h2>
+    <p>All communication between the app and our backend uses <strong>HTTPS/TLS</strong>. Session data on your device is stored in Android's encrypted system storage.</p>
+
+    <h2>👤 Your Rights</h2>
+    <ul>
+      <li><strong>Access:</strong> Request what data we hold about you.</li>
+      <li><strong>Deletion:</strong> Request erasure of your data.</li>
+      <li><strong>Portability:</strong> Request a copy of your data in a readable format.</li>
+    </ul>
+    <p style="margin-top:8px">To exercise your rights, write to <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a>. We respond within 30 business days.</p>
+
+    <h2>🌍 International Transfers</h2>
+    <p>Third-party AI services (DeepSeek, Groq, OpenRouter, ElevenLabs) operate in various countries. By using the app, you agree that your data may be processed outside Chile in accordance with each provider's data protection laws.</p>
+
+    <h2>📬 Contact</h2>
+    <div class="card">
+      <p><strong>Controller:</strong> Mario Ovalle<br>
+      <strong>Country:</strong> Chile<br>
+      <strong>Email:</strong> <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a><br>
+      <strong>Website:</strong> <a class="contact-link" href="https://geoos.app">geoos.app</a></p>
+    </div>
+
+    <h2>📝 Changes to this Policy</h2>
+    <p>We may update this policy. When we do, we will post the new version on this page with a new date. If changes are significant, we will notify you within the app.</p>
+  </div>
+
+  <!-- ═══════════════ FRANÇAIS ═══════════════ -->
+  <div id="lang-fr" class="lang-section">
+    <h1>Politique de Confidentialité</h1>
+    <p class="updated">Dernière mise à jour : Avril 2026</p>
+
+    <h2>📋 Informations Générales</h2>
+    <p>Geo OS (« l'Application ») est un assistant vocal personnel basé sur l'intelligence artificielle, développé par Mario Ovalle (Chili). Cette politique explique les données que nous collectons, leur utilisation et vos droits.</p>
+
+    <h2>🎙️ Données Collectées</h2>
+    <div class="card">
+      <ul>
+        <li><strong>Audio vocal :</strong> Capturé uniquement lorsque le microphone est actif. Envoyé au serveur pour transcription et traitement.</li>
+        <li><strong>Texte (prompts) :</strong> Messages texte que vous saisissez ou issus de la transcription vocale.</li>
+        <li><strong>Adresse IP :</strong> Enregistrée dans les journaux du serveur à des fins de sécurité et de diagnostic.</li>
+        <li><strong>Journaux d'erreurs :</strong> Données techniques générées en cas de défaillance de l'application.</li>
+        <li><strong>Jeton de session :</strong> Stocké localement sur votre appareil (EncryptedSharedPreferences) pour maintenir votre session active.</li>
+      </ul>
+    </div>
+    <p><strong>Nous ne collectons PAS :</strong> nom, e-mail, numéro de téléphone, localisation GPS, contacts, photos ni informations financières.</p>
+
+    <h2>🎤 Utilisation du Microphone</h2>
+    <p>L'application demande l'accès au microphone pour détecter la voix et l'envoyer au serveur pour traitement par IA. Le microphone <strong>ne s'active que lorsque vous l'initiez</strong>. Nous n'enregistrons pas l'audio en arrière-plan ni à votre insu.</p>
+
+    <h2>🤖 Services IA Tiers</h2>
+    <p>Pour traiter vos commandes vocales et générer des réponses, nous travaillons avec les fournisseurs suivants :</p>
+    <div class="third-party">
+      <div class="tp-item"><strong>DeepSeek</strong><span>Traitement du langage naturel</span></div>
+      <div class="tp-item"><strong>OpenRouter</strong><span>Routage de modèles IA</span></div>
+      <div class="tp-item"><strong>Groq</strong><span>Inférence à faible latence</span></div>
+      <div class="tp-item"><strong>ElevenLabs</strong><span>Synthèse vocale (TTS)</span></div>
+    </div>
+    <p style="margin-top:12px">Chaque fournisseur dispose de sa propre politique de confidentialité. Geo OS ne contrôle pas la façon dont ces tiers traitent les données reçues.</p>
+
+    <h2>⏱️ Conservation des Données</h2>
+    <ul>
+      <li>Les audios vocaux sont traités en temps réel et <strong>ne sont pas stockés de façon permanente</strong>.</li>
+      <li>Les journaux serveur sont conservés pendant <strong>30 jours maximum</strong> à des fins de diagnostic.</li>
+      <li>Le jeton de session est stocké sur votre appareil jusqu'à la déconnexion ou la désinstallation.</li>
+    </ul>
+
+    <h2>🔒 Sécurité</h2>
+    <p>Toutes les communications entre l'application et notre serveur utilisent <strong>HTTPS/TLS</strong>. Les données de session sur votre appareil sont stockées dans le stockage chiffré du système Android.</p>
+
+    <h2>👤 Vos Droits</h2>
+    <ul>
+      <li><strong>Accès :</strong> Demandez quelles données nous détenons vous concernant.</li>
+      <li><strong>Suppression :</strong> Demandez l'effacement de vos données.</li>
+      <li><strong>Portabilité :</strong> Demandez une copie de vos données dans un format lisible.</li>
+    </ul>
+    <p style="margin-top:8px">Pour exercer vos droits, écrivez à <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a>. Nous répondons sous 30 jours ouvrables.</p>
+
+    <h2>🌍 Transferts Internationaux</h2>
+    <p>Les services IA tiers (DeepSeek, Groq, OpenRouter, ElevenLabs) opèrent dans différents pays. En utilisant l'application, vous acceptez que vos données puissent être traitées en dehors du Chili.</p>
+
+    <h2>📬 Contact</h2>
+    <div class="card">
+      <p><strong>Responsable :</strong> Mario Ovalle<br>
+      <strong>Pays :</strong> Chili<br>
+      <strong>E-mail :</strong> <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a><br>
+      <strong>Site web :</strong> <a class="contact-link" href="https://geoos.app">geoos.app</a></p>
+    </div>
+
+    <h2>📝 Modifications de cette Politique</h2>
+    <p>Nous pouvons mettre à jour cette politique. La nouvelle version sera publiée sur cette page avec une nouvelle date. En cas de modifications importantes, vous serez notifié dans l'application.</p>
+  </div>
+
+  <footer>
+    <p>© 2026 Geo OS · Mario Ovalle · Chile · <a class="contact-link" href="mailto:Mariohernan94500@gmail.com">Mariohernan94500@gmail.com</a></p>
+  </footer>
+</div>
+
+<script>
+  function setLang(lang) {
+    document.querySelectorAll('.lang-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('lang-' + lang).classList.add('active');
+    event.target.classList.add('active');
+    document.documentElement.lang = lang;
+  }
+
+  // Auto-detectar idioma del navegador
+  const userLang = navigator.language || 'es';
+  if (userLang.startsWith('fr')) setLang('fr');
+  else if (userLang.startsWith('en')) setLang('en');
+</script>
+</body>
+</html>

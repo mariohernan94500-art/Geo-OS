@@ -1,0 +1,1410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Geo AI System v3.0</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+  <style>
+    /* ===== CSS Reset & Variables ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #0f172a;
+      --bg-card: #1e293b;
+      --bg-card-hover: #263348;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --green: #10b981;
+      --green-dim: rgba(16, 185, 129, 0.15);
+      --red: #ef4444;
+      --red-dim: rgba(239, 68, 68, 0.15);
+      --yellow: #f59e0b;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border: #334155;
+      --radius: 12px;
+      --radius-sm: 8px;
+      --shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+      --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    html { font-size: 16px; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font-ui);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-primary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* ===== Animations ===== */
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5); }
+      50% { transform: scale(1.08); box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes micPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+      50% { box-shadow: 0 0 0 16px rgba(239, 68, 68, 0); }
+    }
+
+    @keyframes logScroll {
+      0% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    /* ===== Header ===== */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 32px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--accent), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span {
+      font-weight: 300;
+      -webkit-text-fill-color: var(--text-secondary);
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.offline { background: var(--red); animation: none; }
+
+    .header-right { display: flex; align-items: center; gap: 12px; }
+
+    .user-name {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .btn {
+      padding: 8px 20px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-ui);
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--bg-card-hover); color: var(--text-primary); }
+
+    .btn-danger { background: var(--red-dim); color: var(--red); }
+    .btn-danger:hover { background: var(--red); color: #fff; }
+
+    .btn-success { background: var(--green-dim); color: var(--green); }
+    .btn-success:hover { background: var(--green); color: #fff; }
+
+    .btn-sm { padding: 5px 12px; font-size: 0.8rem; }
+
+    /* ===== Main Layout ===== */
+    .main-content {
+      display: flex;
+      gap: 24px;
+      padding: 24px 32px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .left-panel { flex: 0 0 70%; min-width: 0; }
+    .right-panel { flex: 0 0 calc(30% - 24px); min-width: 0; }
+
+    /* ===== Cards ===== */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: var(--transition);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .card:hover { border-color: rgba(59, 130, 246, 0.3); }
+
+    .card + .card { margin-top: 20px; }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* ===== Create App Section ===== */
+    .create-app-form {
+      display: flex;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .create-app-input {
+      flex: 1;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      transition: var(--transition);
+    }
+
+    .create-app-input::placeholder { color: var(--text-muted); }
+    .create-app-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+    .btn-create {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-ui);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-create:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35); }
+    .btn-create:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ===== Spinner ===== */
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2.5px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .spinner.visible { display: inline-block; }
+
+    /* ===== Result Card ===== */
+    .result-card {
+      margin-top: 16px;
+      padding: 16px 20px;
+      background: var(--green-dim);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: var(--radius-sm);
+      display: none;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .result-card.visible { display: block; }
+
+    .result-card h4 {
+      color: var(--green);
+      font-size: 0.95rem;
+      margin-bottom: 8px;
+    }
+
+    .result-card p {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 4px;
+    }
+
+    .result-card a {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .result-card a:hover { text-decoration: underline; }
+
+    /* ===== Apps Grid ===== */
+    .apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .app-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: var(--transition);
+      animation: fadeIn 0.4s ease-out;
+    }
+
+    .app-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow);
+      border-color: rgba(59, 130, 246, 0.3);
+    }
+
+    .app-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .app-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .status-badge {
+      font-size: 0.75rem;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge.running { background: var(--green-dim); color: var(--green); }
+    .status-badge.stopped { background: var(--red-dim); color: var(--red); }
+
+    .app-port {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .app-description {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.5;
+    }
+
+    .app-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; opacity: 0.5; }
+    .empty-state p { font-size: 0.95rem; }
+
+    /* ===== Monitoring Panel ===== */
+    .monitoring-panel {
+      display: none;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .monitoring-panel.visible { display: block; }
+
+    .monitoring-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .gauge-group { margin-bottom: 20px; }
+
+    .gauge-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+    }
+
+    .gauge-value {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .gauge-bar {
+      width: 100%;
+      height: 10px;
+      background: var(--bg-primary);
+      border-radius: 5px;
+      overflow: hidden;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 0.6s ease, background 0.3s;
+    }
+
+    .gauge-fill.cpu { background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); }
+    .gauge-fill.memory { background: linear-gradient(90deg, var(--accent), #8b5cf6); }
+
+    .rpm-counter {
+      text-align: center;
+      padding: 16px;
+      background: var(--bg-primary);
+      border-radius: var(--radius-sm);
+      margin-bottom: 20px;
+    }
+
+    .rpm-counter .number {
+      font-family: var(--font-mono);
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .rpm-counter .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .logs-area {
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px;
+      height: 200px;
+      overflow-y: auto;
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--text-secondary);
+    }
+
+    .logs-area .log-entry { animation: logScroll 0.3s ease-out; }
+    .logs-area .log-entry .timestamp { color: var(--text-muted); }
+    .logs-area .log-entry .log-info { color: var(--accent); }
+    .logs-area .log-entry .log-warn { color: var(--yellow); }
+    .logs-area .log-entry .log-error { color: var(--red); }
+
+    /* ===== Right Panel ===== */
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .stat-row:last-child { border-bottom: none; }
+
+    .stat-label { color: var(--text-secondary); }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* ===== Voice Assistant ===== */
+    .voice-section {
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    .mic-btn {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: none;
+      background: linear-gradient(135deg, var(--red), #dc2626);
+      color: #fff;
+      font-size: 2rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .mic-btn:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(239, 68, 68, 0.4); }
+
+    .mic-btn.listening { animation: micPulse 1.2s ease-in-out infinite; }
+
+    .voice-transcript {
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      min-height: 48px;
+      font-family: var(--font-mono);
+      transition: var(--transition);
+    }
+
+    .voice-transcript.active { border-color: var(--accent); color: var(--text-primary); }
+
+    .voice-response {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: rgba(59, 130, 246, 0.08);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: var(--radius-sm);
+      font-size: 0.85rem;
+      color: var(--accent);
+      display: none;
+    }
+
+    .voice-response.visible { display: block; }
+
+    /* ===== Login Modal ===== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-overlay.visible { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 420px;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .modal h2 {
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+    }
+
+    .modal .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 10px 14px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+
+    .modal-toggle {
+      text-align: center;
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .modal-toggle a {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .modal-toggle a:hover { text-decoration: underline; }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+
+    .modal-actions .btn { flex: 1; justify-content: center; padding: 10px 20px; }
+
+    .form-error {
+      color: var(--red);
+      font-size: 0.82rem;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .form-error.visible { display: block; }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 1024px) {
+      .main-content { flex-direction: column; padding: 16px; }
+      .left-panel, .right-panel { flex: 1 1 100%; }
+      .header { padding: 12px 16px; }
+    }
+
+    @media (max-width: 640px) {
+      .create-app-form { flex-direction: column; }
+      .apps-grid { grid-template-columns: 1fr; }
+      .header-left .logo { font-size: 1.2rem; }
+      .app-actions { flex-direction: column; }
+      .app-actions .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== HEADER ===== -->
+  <header class="header">
+    <div class="header-left">
+      <div class="logo">Geo AI <span>v3.0</span></div>
+      <div class="status-indicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Online</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="user-name" id="userName" style="display:none;"></span>
+      <button class="btn btn-ghost" id="authBtn" onclick="openModal()">Iniciar Sesion</button>
+    </div>
+  </header>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="main-content">
+
+    <!-- LEFT PANEL -->
+    <div class="left-panel">
+
+      <!-- Create App -->
+      <div class="card">
+        <div class="card-title">&#x1F680; Crear Nueva App</div>
+        <div class="create-app-form">
+          <input
+            type="text"
+            class="create-app-input"
+            id="ideaInput"
+            placeholder="Describe tu idea... ej: app de lista de tareas"
+            autocomplete="off"
+          />
+          <button class="btn-create" id="createBtn" onclick="createApp()">
+            <span id="createBtnText">&#x2728; Crear App</span>
+            <div class="spinner" id="createSpinner"></div>
+          </button>
+        </div>
+        <div class="result-card" id="resultCard">
+          <h4>&#x2705; App creada exitosamente</h4>
+          <p><strong>Nombre:</strong> <span id="resultName"></span></p>
+          <p><strong>Puerto:</strong> <span id="resultPort"></span></p>
+          <p><strong>URL:</strong> <a id="resultUrl" href="#" target="_blank"></a></p>
+          <p style="margin-top:8px;"><a id="resultOpenLink" href="#" target="_blank" class="btn btn-success btn-sm">&#x1F517; Abrir App</a></p>
+        </div>
+      </div>
+
+      <!-- Apps Grid -->
+      <div class="card">
+        <div class="card-title">&#x1F4E6; Mis Aplicaciones</div>
+        <div id="appsContainer">
+          <div class="empty-state" id="emptyState">
+            <div class="icon">&#x1F4ED;</div>
+            <p>No tienes aplicaciones todavia. Crea una con tu idea arriba.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Monitoring Panel -->
+      <div class="card monitoring-panel" id="monitoringPanel">
+        <div class="monitoring-header">
+          <div class="card-title" style="margin-bottom:0;">&#x1F4CA; Monitoreo &mdash; <span id="monitoringAppName">-</span></div>
+          <button class="btn btn-ghost btn-sm" onclick="closeMonitoring()">&#x2716; Cerrar</button>
+        </div>
+
+        <div class="gauge-group">
+          <div class="gauge-label">
+            <span>CPU</span>
+            <span class="gauge-value" id="cpuValue">0%</span>
+          </div>
+          <div class="gauge-bar">
+            <div class="gauge-fill cpu" id="cpuFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="gauge-group">
+          <div class="gauge-label">
+            <span>Memoria</span>
+            <span class="gauge-value" id="memValue">0%</span>
+          </div>
+          <div class="gauge-bar">
+            <div class="gauge-fill memory" id="memFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div class="rpm-counter">
+          <div class="number" id="rpmValue">0</div>
+          <div class="label">Requests / min</div>
+        </div>
+
+        <div class="logs-area" id="logsArea">
+          <div class="log-entry"><span class="timestamp">[--:--:--]</span> Esperando logs...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+      <!-- System Stats -->
+      <div class="card">
+        <div class="card-title">&#x1F4BB; Estadisticas del Sistema</div>
+        <div class="stat-row">
+          <span class="stat-label">Memoria Total</span>
+          <span class="stat-value" id="statTotalMem">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Memoria Libre</span>
+          <span class="stat-value" id="statFreeMem">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">CPUs</span>
+          <span class="stat-value" id="statCpuCount">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Uptime</span>
+          <span class="stat-value" id="statUptime">--</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Load Avg</span>
+          <span class="stat-value" id="statLoadAvg">--</span>
+        </div>
+      </div>
+
+      <!-- Voice Assistant -->
+      <div class="card">
+        <div class="card-title">&#x1F399; Asistente de Voz</div>
+        <div class="voice-section">
+          <button class="mic-btn" id="micBtn" onclick="toggleVoice()" aria-label="Activar asistente de voz">
+            &#x1F3A4;
+          </button>
+          <div class="voice-transcript" id="voiceTranscript">Pulsa el microfono y habla...</div>
+          <div class="voice-response" id="voiceResponse"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== LOGIN MODAL ===== -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal">
+      <h2 id="modalTitle">Iniciar Sesion</h2>
+      <p class="subtitle" id="modalSubtitle">Accede a tu cuenta de Geo AI</p>
+
+      <div class="form-group" id="nameGroup" style="display:none;">
+        <label for="authName">Nombre</label>
+        <input type="text" class="form-input" id="authName" placeholder="Tu nombre" />
+      </div>
+
+      <div class="form-group">
+        <label for="authEmail">Email</label>
+        <input type="email" class="form-input" id="authEmail" placeholder="tu@email.com" />
+      </div>
+
+      <div class="form-group">
+        <label for="authPassword">Contrasena</label>
+        <input type="password" class="form-input" id="authPassword" placeholder="********" />
+      </div>
+
+      <div class="form-error" id="formError"></div>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="authSubmitBtn" onclick="submitAuth()">Entrar</button>
+      </div>
+
+      <div class="modal-toggle">
+        <span id="toggleText">No tienes cuenta?</span>
+        <a id="toggleLink" onclick="toggleAuthMode()">Registrate</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== JAVASCRIPT ===== -->
+  <script>
+    /* ============================
+       State
+    ============================ */
+    let apps = [];
+    let isListening = false;
+    let recognition = null;
+    let authMode = 'login'; // 'login' | 'register'
+    let monitoredApp = null;
+
+    /* ============================
+       Auth Helpers
+    ============================ */
+    function getToken() {
+      return localStorage.getItem('geo_token');
+    }
+
+    function isLoggedIn() {
+      return !!getToken();
+    }
+
+    function updateAuthUI() {
+      const authBtn = document.getElementById('authBtn');
+      const userName = document.getElementById('userName');
+      if (isLoggedIn()) {
+        const payload = parseJwt(getToken());
+        const name = payload?.name || payload?.email || 'Usuario';
+        authBtn.textContent = 'Cerrar Sesion';
+        authBtn.onclick = logout;
+        userName.textContent = name;
+        userName.style.display = 'inline';
+      } else {
+        authBtn.textContent = 'Iniciar Sesion';
+        authBtn.onclick = openModal;
+        userName.style.display = 'none';
+      }
+    }
+
+    function parseJwt(token) {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch {
+        return null;
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('geo_token');
+      apps = [];
+      renderApps();
+      updateAuthUI();
+    }
+
+    /* ============================
+       Modal
+    ============================ */
+    function openModal() {
+      document.getElementById('authModal').classList.add('visible');
+      authMode = 'login';
+      updateModalMode();
+    }
+
+    function closeModal() {
+      document.getElementById('authModal').classList.remove('visible');
+      clearForm();
+    }
+
+    function toggleAuthMode() {
+      authMode = authMode === 'login' ? 'register' : 'login';
+      updateModalMode();
+    }
+
+    function updateModalMode() {
+      const isLogin = authMode === 'login';
+      document.getElementById('modalTitle').textContent = isLogin ? 'Iniciar Sesion' : 'Registrarse';
+      document.getElementById('modalSubtitle').textContent = isLogin
+        ? 'Accede a tu cuenta de Geo AI'
+        : 'Crea tu cuenta en Geo AI';
+      document.getElementById('nameGroup').style.display = isLogin ? 'none' : 'block';
+      document.getElementById('authSubmitBtn').textContent = isLogin ? 'Entrar' : 'Crear Cuenta';
+      document.getElementById('toggleText').textContent = isLogin
+        ? 'No tienes cuenta? '
+        : 'Ya tienes cuenta? ';
+      document.getElementById('toggleLink').textContent = isLogin ? 'Registrate' : 'Inicia Sesion';
+      hideFormError();
+    }
+
+    function clearForm() {
+      document.getElementById('authEmail').value = '';
+      document.getElementById('authPassword').value = '';
+      document.getElementById('authName').value = '';
+      hideFormError();
+    }
+
+    function showFormError(msg) {
+      const el = document.getElementById('formError');
+      el.textContent = msg;
+      el.classList.add('visible');
+    }
+
+    function hideFormError() {
+      document.getElementById('formError').classList.remove('visible');
+    }
+
+    async function submitAuth() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value.trim();
+      const name = document.getElementById('authName').value.trim();
+
+      if (!email || !password) {
+        showFormError('Por favor completa todos los campos.');
+        return;
+      }
+
+      const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      const body = authMode === 'register' ? { name, email, password } : { email, password };
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showFormError(data.message || 'Error de autenticacion');
+          return;
+        }
+
+        localStorage.setItem('geo_token', data.token);
+        closeModal();
+        updateAuthUI();
+        loadApps();
+      } catch (err) {
+        showFormError('Error de conexion con el servidor');
+      }
+    }
+
+    /* ============================
+       Create App
+    ============================ */
+    async function createApp() {
+      const idea = document.getElementById('ideaInput').value.trim();
+      if (!idea) return;
+
+      const btn = document.getElementById('createBtn');
+      const spinner = document.getElementById('createSpinner');
+      const btnText = document.getElementById('createBtnText');
+
+      btn.disabled = true;
+      spinner.classList.add('visible');
+      btnText.textContent = 'Creando...';
+
+      const token = getToken();
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      try {
+        const res = await fetch('/api/generator/create', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ idea }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success !== false) {
+          const appData = data.app || data;
+          const port = appData.port || data.port || '---';
+          const name = appData.name || data.name || 'Mi App';
+          const url = appData.url || data.url || `http://localhost:${port}`;
+
+          document.getElementById('resultName').textContent = name;
+          document.getElementById('resultPort').textContent = port;
+          document.getElementById('resultUrl').textContent = url;
+          document.getElementById('resultUrl').href = url;
+          document.getElementById('resultOpenLink').href = url;
+          document.getElementById('resultCard').classList.add('visible');
+
+          document.getElementById('ideaInput').value = '';
+          loadApps();
+        }
+      } catch (err) {
+        console.error('Error creating app:', err);
+      } finally {
+        btn.disabled = false;
+        spinner.classList.remove('visible');
+        btnText.textContent = '\u2728 Crear App';
+      }
+    }
+
+    /* ============================
+       Load & Render Apps
+    ============================ */
+    async function loadApps() {
+      try {
+        const headers = { 'Content-Type': 'application/json' };
+        const token = getToken();
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/generator/apps', { headers });
+        if (res.ok) {
+          const data = await res.json();
+          apps = data.apps || data || [];
+          renderApps();
+        }
+      } catch (err) {
+        console.error('Error loading apps:', err);
+      }
+    }
+
+    function renderApps() {
+      const container = document.getElementById('appsContainer');
+      const emptyState = document.getElementById('emptyState');
+
+      if (!apps || apps.length === 0) {
+        container.innerHTML = '';
+        container.appendChild(createEmptyState());
+        return;
+      }
+
+      let html = '<div class="apps-grid">';
+      apps.forEach(app => {
+        const status = app.status || 'stopped';
+        const statusClass = status === 'running' ? 'running' : 'stopped';
+        const statusLabel = status === 'running' ? 'Running' : 'Stopped';
+
+        html += `
+          <div class="app-card" data-app="${app.name}">
+            <div class="app-card-header">
+              <span class="app-name">${escapeHtml(app.name)}</span>
+              <span class="status-badge ${statusClass}">${statusLabel}</span>
+            </div>
+            <div class="app-port">Puerto: ${app.port || '---'}</div>
+            <div class="app-description">${escapeHtml(app.description || 'Sin descripcion')}</div>
+            <div class="app-actions">
+              <a href="http://localhost:${app.port}" target="_blank" class="btn btn-primary btn-sm">&#x1F517; Abrir</a>
+              <button class="btn btn-ghost btn-sm" onclick="openMonitoring('${escapeHtml(app.name)}')">&#x1F4CA; Monitorear</button>
+              <button class="btn btn-success btn-sm" onclick="deployApp('${escapeHtml(app.name)}')">&#x1F680; Deploy</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteApp('${escapeHtml(app.name)}')">&#x1F5D1; Eliminar</button>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function createEmptyState() {
+      const div = document.createElement('div');
+      div.className = 'empty-state';
+      div.innerHTML = '<div class="icon">&#x1F4ED;</div><p>No tienes aplicaciones todavia. Crea una con tu idea arriba.</p>';
+      return div;
+    }
+
+    function escapeHtml(str) {
+      const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+      return String(str || '').replace(/[&<>"']/g, c => map[c]);
+    }
+
+    /* ============================
+       Delete App
+    ============================ */
+    async function deleteApp(name) {
+      if (!confirm(`Estas seguro de eliminar "${name}"?`)) return;
+
+      const token = getToken();
+      try {
+        const res = await fetch(`/api/generator/apps/${encodeURIComponent(name)}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        if (res.ok) {
+          apps = apps.filter(a => a.name !== name);
+          renderApps();
+          if (monitoredApp === name) closeMonitoring();
+        }
+      } catch (err) {
+        console.error('Error deleting app:', err);
+      }
+    }
+
+    /* ============================
+       Deploy App (placeholder)
+    ============================ */
+    async function deployApp(name) {
+      const token = getToken();
+      try {
+        const res = await fetch(`/api/generator/apps/${encodeURIComponent(name)}/deploy`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        });
+        if (res.ok) {
+          alert(`Deploy de "${name}" iniciado correctamente.`);
+          loadApps();
+        }
+      } catch (err) {
+        console.error('Error deploying app:', err);
+      }
+    }
+
+    /* ============================
+       Monitoring
+    ============================ */
+    function openMonitoring(name) {
+      monitoredApp = name;
+      document.getElementById('monitoringAppName').textContent = name;
+      document.getElementById('monitoringPanel').classList.add('visible');
+      document.getElementById('logsArea').innerHTML =
+        '<div class="log-entry"><span class="timestamp">[--:--:--]</span> Conectado al monitoreo de ' + escapeHtml(name) + '</div>';
+      // Reset gauges
+      updateGauge('cpu', 0);
+      updateGauge('mem', 0);
+      document.getElementById('rpmValue').textContent = '0';
+    }
+
+    function closeMonitoring() {
+      monitoredApp = null;
+      document.getElementById('monitoringPanel').classList.remove('visible');
+    }
+
+    function updateGauge(type, value) {
+      const clamped = Math.min(100, Math.max(0, value));
+      const fill = document.getElementById(`${type}Fill`);
+      const label = document.getElementById(`${type}Value`);
+      fill.style.width = clamped + '%';
+      label.textContent = clamped + '%';
+    }
+
+    function updateMetricsCard(data) {
+      if (!monitoredApp || data.app !== monitoredApp) return;
+
+      if (data.cpu !== undefined) updateGauge('cpu', data.cpu);
+      if (data.memory !== undefined) updateGauge('mem', data.memory);
+      if (data.rpm !== undefined) document.getElementById('rpmValue').textContent = data.rpm;
+
+      if (data.log) {
+        const logsArea = document.getElementById('logsArea');
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+
+        const now = new Date().toLocaleTimeString('es-ES', { hour12: false });
+        const level = data.level || 'info';
+        const levelClass = level === 'warn' ? 'log-warn' : level === 'error' ? 'log-error' : 'log-info';
+
+        entry.innerHTML = `<span class="timestamp">[${now}]</span> <span class="${levelClass}">[${level.toUpperCase()}]</span> ${escapeHtml(data.log)}`;
+        logsArea.appendChild(entry);
+        logsArea.scrollTop = logsArea.scrollHeight;
+
+        // Keep last 200 entries
+        while (logsArea.children.length > 200) {
+          logsArea.removeChild(logsArea.firstChild);
+        }
+      }
+    }
+
+    /* ============================
+       System Stats
+    ============================ */
+    function updateSystemStats(data) {
+      if (data.totalMemory !== undefined) {
+        document.getElementById('statTotalMem').textContent = formatBytes(data.totalMemory);
+      }
+      if (data.freeMemory !== undefined) {
+        document.getElementById('statFreeMem').textContent = formatBytes(data.freeMemory);
+      }
+      if (data.cpuCount !== undefined) {
+        document.getElementById('statCpuCount').textContent = data.cpuCount;
+      }
+      if (data.uptime !== undefined) {
+        document.getElementById('statUptime').textContent = formatUptime(data.uptime);
+      }
+      if (data.loadAvg !== undefined) {
+        const avg = Array.isArray(data.loadAvg) ? data.loadAvg.map(v => v.toFixed(2)).join(', ') : data.loadAvg;
+        document.getElementById('statLoadAvg').textContent = avg;
+      }
+    }
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+
+    function formatUptime(seconds) {
+      const d = Math.floor(seconds / 86400);
+      const h = Math.floor((seconds % 86400) / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      if (d > 0) return `${d}d ${h}h ${m}m`;
+      if (h > 0) return `${h}h ${m}m`;
+      return `${m}m`;
+    }
+
+    /* ============================
+       Socket.io
+    ============================ */
+    function initSocket() {
+      const socket = io();
+
+      socket.on('connect', () => {
+        document.getElementById('statusDot').classList.remove('offline');
+        document.getElementById('statusText').textContent = 'Online';
+      });
+
+      socket.on('disconnect', () => {
+        document.getElementById('statusDot').classList.add('offline');
+        document.getElementById('statusText').textContent = 'Offline';
+      });
+
+      socket.on('app-metrics', (data) => {
+        updateMetricsCard(data);
+      });
+
+      socket.on('system-stats', (data) => {
+        updateSystemStats(data);
+      });
+
+      socket.on('app-update', () => {
+        loadApps();
+      });
+    }
+
+    /* ============================
+       Voice Recognition
+    ============================ */
+    function toggleVoice() {
+      if (isListening) {
+        stopVoice();
+      } else {
+        startVoiceRecognition();
+      }
+    }
+
+    function startVoiceRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Tu navegador no soporta reconocimiento de voz.');
+        return;
+      }
+
+      recognition = new SpeechRecognition();
+      recognition.lang = 'es-ES';
+      recognition.continuous = false;
+      recognition.interimResults = true;
+
+      recognition.onstart = () => {
+        isListening = true;
+        document.getElementById('micBtn').classList.add('listening');
+        const transcript = document.getElementById('voiceTranscript');
+        transcript.textContent = 'Escuchando...';
+        transcript.classList.add('active');
+        document.getElementById('voiceResponse').classList.remove('visible');
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        const isFinal = event.results[0].isFinal;
+
+        document.getElementById('voiceTranscript').textContent = transcript;
+
+        if (isFinal) {
+          sendVoiceCommand(transcript);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        stopVoice();
+        if (event.error === 'not-allowed') {
+          document.getElementById('voiceTranscript').textContent = 'Permiso de microfono denegado.';
+        } else {
+          document.getElementById('voiceTranscript').textContent = 'Error de reconocimiento. Intenta de nuevo.';
+        }
+      };
+
+      recognition.onend = () => {
+        stopVoice();
+      };
+
+      recognition.start();
+    }
+
+    function stopVoice() {
+      isListening = false;
+      document.getElementById('micBtn').classList.remove('listening');
+      document.getElementById('voiceTranscript').classList.remove('active');
+      if (recognition) {
+        try { recognition.stop(); } catch (e) { /* ignore */ }
+        recognition = null;
+      }
+    }
+
+    async function sendVoiceCommand(transcript) {
+      try {
+        const res = await fetch('/api/voice/command', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ transcript }),
+        });
+
+        const data = await res.json();
+
+        if (data.response) {
+          const responseEl = document.getElementById('voiceResponse');
+          responseEl.textContent = data.response;
+          responseEl.classList.add('visible');
+        }
+
+        if (data.audio) {
+          playAudioResponse(data.audio);
+        }
+
+        // Refresh apps if command modified them
+        if (data.refreshApps) {
+          loadApps();
+        }
+      } catch (err) {
+        console.error('Voice command error:', err);
+        document.getElementById('voiceTranscript').textContent = 'Error al procesar el comando.';
+      }
+    }
+
+    function playAudioResponse(base64Audio) {
+      if (!base64Audio) return;
+      try {
+        const audio = new Audio(`data:audio/mp3;base64,${base64Audio}`);
+        audio.play().catch(err => console.warn('Audio playback failed:', err));
+      } catch (err) {
+        console.error('Error playing audio:', err);
+      }
+    }
+
+    /* ============================
+       Enter Key on Idea Input
+    ============================ */
+    document.getElementById('ideaInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        createApp();
+      }
+    });
+
+    /* ============================
+       Close modal on overlay click
+    ============================ */
+    document.getElementById('authModal').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeModal();
+    });
+
+    /* ============================
+       Close modal on Escape key
+    ============================ */
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    /* ============================
+       Init
+    ============================ */
+    (function init() {
+      updateAuthUI();
+      initSocket();
+      if (isLoggedIn()) {
+        loadApps();
+      }
+    })();
+  </script>
+</body>
+</html>

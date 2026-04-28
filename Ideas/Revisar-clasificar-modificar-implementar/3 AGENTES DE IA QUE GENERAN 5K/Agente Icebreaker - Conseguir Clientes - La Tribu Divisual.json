@@ -1,0 +1,962 @@
+{
+  "name": "Agente Icebreaker - Conseguir Clientes - La Tribu Divisual",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://cristinamolinafisioterapia.es/",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        1392
+      ],
+      "id": "6a7727d0-f647-4861-b373-ed84e419fd4a",
+      "name": "Scrape Company URLs1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4",
+          "mode": "list",
+          "cachedResultName": "LEAD SCRAPPING CONTROL - CURSO N8N JUANPE ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Web": "={{ $('Mapeo correo - web1').item.json.web }}",
+            "Correo Icebreaker": "={{ $json.message.content.ASUNTO }}",
+            "Estado": "Enviado"
+          },
+          "matchingColumns": [
+            "Web"
+          ],
+          "schema": [
+            {
+              "id": "Web",
+              "displayName": "Web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Correo",
+              "displayName": "Correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Análisis de la web",
+              "displayName": "Análisis de la web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Correo Icebreaker",
+              "displayName": "Correo Icebreaker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2240,
+        1392
+      ],
+      "id": "ce6f7cc4-cccb-4a62-bbec-b400ad52dd12",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i8uAjlC8WiPjtIsA",
+          "name": "Google Sheets divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb6979ad-b631-408e-b42b-8f2401b39c1c",
+              "name": "correo",
+              "value": "={{ $('Filter1').item.json.Correo }}",
+              "type": "string"
+            },
+            {
+              "id": "999b858f-f84e-401a-8f8d-e8a7d2a9be23",
+              "name": "web",
+              "value": "={{ $('Filter1').item.json.Web }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        1392
+      ],
+      "id": "945dca9d-cb46-47d5-a7ba-52e2ca1e69d9",
+      "name": "Mapeo correo - web1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        208,
+        1360
+      ],
+      "id": "39ca5faa-c4fc-428a-8375-9457cc23f6d7",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Mapeo correo - web1').item.json.correo }}",
+        "subject": "={{ $json.message.content.ASUNTO }}",
+        "message": "={{ $json.message.content.HTML }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2224,
+        1184
+      ],
+      "id": "35057710-f07c-49a2-8d6a-8f09b04f29ce",
+      "name": "Gmail1",
+      "webhookId": "fe5ad01a-4fcd-47da-a355-162292216374",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IokBtq93nPyyaQsm",
+          "name": "Gmail divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $('Loop Over Items1').first().json.data || '';\n\n// Limpieza del texto visible\nconst clean = html\n  .replace(/<script[\\s\\S]*?>[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?>[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<\\/?[^>]+(>|$)/g, '') // eliminar etiquetas HTML\n  .slice(0, 3000); // limitar longitud\n\n// Extracción de colores\nconst colorRegex = /(#(?:[0-9a-f]{3}){1,2}|rgb\\([^)]+\\)|rgba\\([^)]+\\))/gi;\nconst colores = html.match(colorRegex) || [];\n\nreturn [{\n  json: {\n    cleanText: clean,\n    colores: colores\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        1392
+      ],
+      "id": "7076b99f-b5f0-4dba-b4e1-11ea6fe6e105",
+      "name": "Limpiar codigo + colores1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=info web: {{ $json.cleanText }}"
+            },
+            {
+              "content": "=Actúa como un experto en ventas B2B especializado en cold emailing para empresas que ofrecen soluciones de Inteligencia Artificial y Automatización de procesos. Tu tarea es generar un mensaje *icebreaker* llamativo y personalizado que abra un correo de prospección en frío.\n\nVas a recibir la información de la web completa y los colores que se utilizan en esa web que te servirá para hacer mejor tu trabajo y además que la salida sea completamente personalizada y adaptada al posible cliente.\n\n### 🎯 Objetivo:\nEl mensaje debe captar la atención del lector desde la primera línea, generar curiosidad o identificación inmediata, y provocar una **respuesta clara y rápida**. No debe sonar genérico, ni técnico, ni ser una presentación directa de la empresa. Tampoco debe ser robótico o impersonal. **No menciones que estás vendiendo ni que representas una empresa al inicio.**\n\n\n### 🧠 Contexto del negocio (lo puedes usar implícitamente):\nSomos expertos en implementar soluciones de IA en negocios como el del prospecto, con el objetivo de automatizar procesos repetitivos, ahorrar tiempo y permitir flujos de trabajo más eficientes.  \nPuedes consultar el contenido del sitio web para inspirarte en el enfoque, tono, casos de uso y tipo de clientes.\n\n### ✅ Requisitos clave del icebreaker:\n- Que sea breve (5-7 frases máximo).\n- Que hable directamente a una posible *frustración*, *reto* o *curiosidad* del prospecto.\n- Que refleje conocimiento del contexto empresarial actual (sin exagerar).\n- Que no repita literalmente la propuesta de valor.\n- Que invite naturalmente a seguir leyendo o responder.\n- Que cuente que somos especialistas en implementar IA en negocios como el suyo (y que  lo mencione)\n- Hablar en primera persona para generar confianza, tutear.\n- Terminar con un claro CTA para que respondan sí o sí a este primer email. Este CTA tiene que ser en formato botón y ese botón debe redirigir a la respuesta del email a **juanpe@divisualproject.com**\n- Utiliza colores que generen minimalisto y confianza en los seres humanos. Utiliza colores que visualmente sean correctos en todo momento.\n- incluye al final \"Un saludo, Juan Pe Navarro, CEO De Divisual Project\" y en \"Divisual Project\" inluye un link interno hacia: https://divisualproject.com/\n\n\n### 🧪 Formato de salida:\n- [HTML] bien estructurado, bonito y que genere confianza para ponerlo en un mail, con sus encabezados, sus negrias, etc...\n- [Asunto] del email en texto plano.\n- Siempre nombra las salidas como \"HTML\" y como \"ASUNTO\"\n\n### ✳️ Ejemplos de tono aceptado:\n- “¿Te ha pasado que terminas el día sintiendo que solo apagaste incendios, pero no avanzaste en lo importante?”  \n- “Vi lo que están haciendo en [Industria del prospecto] y no pude evitar pensar en cómo podrías eliminar el 80% del trabajo repetitivo sin contratar a nadie nuevo.”  \n- “No sé si ya estás probando IA internamente o todavía parece ciencia ficción para tu equipo, pero…”  \n\nAhora, genera un icebreaker persuasivo para una empresa del sector: **[insertar aquí sector del prospecto o nombre de la empresa si se conoce]**.\n",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1840,
+        1392
+      ],
+      "id": "6e17ef22-8d6b-4378-9a5f-24e82d662a49",
+      "name": "Agente creador de Email IceBreaker1",
+      "credentials": {
+        "openAiApi": {
+          "id": "8hgw1j72mroqso8Q",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4",
+          "mode": "list",
+          "cachedResultName": "LEAD SCRAPPING CONTROL - CURSO N8N JUANPE ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Estado",
+              "lookupValue": "Sin enviar"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        -208,
+        1360
+      ],
+      "id": "205dd9d1-4cb7-4e48-9435-2aaf71aae1da",
+      "name": "Google Sheets2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i8uAjlC8WiPjtIsA",
+          "name": "Google Sheets divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  // Obtener la URL desde $input.first().json.Web\n  let url = $input.first().json.Web;\n  \n  // Verificar que la URL existe\n  if (!url || typeof url !== 'string') {\n    throw new Error('URL no válida o inexistente en el campo Web');\n  }\n  \n  // Limpiar espacios en blanco\n  url = url.trim();\n  \n  // Asegurar que tiene protocolo (agregar http:// si no tiene ninguno)\n  if (!url.match(/^https?:\\/\\//)) {\n    url = 'http://' + url;\n  }\n  \n  // Cambiar http:// a https://\n  url = url.replace(/^http:\\/\\//, 'https://');\n  \n  // Eliminar www. si existe\n  url = url.replace(/^https:\\/\\/www\\./, 'https://');\n  \n  // Asegurar que termine con /\n  if (!url.endsWith('/')) {\n    url += '/';\n  }\n  \n  // Retornar solo la URL limpia\n  return url;\n  \n} catch (error) {\n  // En caso de error, retornar mensaje de error\n  return `Error: ${error.message}`;\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        1392
+      ],
+      "id": "852674a4-c3c3-4a48-9331-5a52ed1ebf1b",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 22
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        1360
+      ],
+      "id": "d0158389-0e94-4a72-8f4c-af28e9be22ad",
+      "name": "Schedule Trigger1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=info web: {{ $json.cleanText }}"
+            },
+            {
+              "content": "=Actúa como un experto en ventas B2B especializado en cold emailing para empresas que ofrecen soluciones de Inteligencia Artificial y Automatización de procesos. Tu tarea es generar un mensaje *icebreaker* llamativo y personalizado que abra un correo de prospección en frío.\n\nVas a recibir la información de la web completa y los colores que se utilizan en esa web que te servirá para hacer mejor tu trabajo y además que la salida sea completamente personalizada y adaptada al posible cliente.\n\n### 🎯 Objetivo:\nEl mensaje debe captar la atención del lector desde la primera línea, generar curiosidad o identificación inmediata, y provocar una **respuesta clara y rápida**. No debe sonar genérico, ni técnico, ni ser una presentación directa de la empresa. Tampoco debe ser robótico o impersonal. **No menciones que estás vendiendo ni que representas una empresa al inicio.**\n\n\n### 🧠 Contexto del negocio (lo puedes usar implícitamente):\nSomos expertos en implementar soluciones de IA en negocios como el del prospecto, con el objetivo de automatizar procesos repetitivos, ahorrar tiempo y permitir flujos de trabajo más eficientes.  \nPuedes consultar el contenido del sitio web para inspirarte en el enfoque, tono, casos de uso y tipo de clientes.\n\n### ✅ Requisitos clave del icebreaker:\n- Que sea breve (5-7 frases máximo).\n- Que hable directamente a una posible *frustración*, *reto* o *curiosidad* del prospecto.\n- Que refleje conocimiento del contexto empresarial actual (sin exagerar).\n- Que no repita literalmente la propuesta de valor.\n- Que invite naturalmente a seguir leyendo o responder.\n- Que cuente que somos especialistas en implementar IA en negocios como el suyo (y que  lo mencione)\n- Hablar en primera persona para generar confianza, tutear.\n- Terminar con un claro CTA para que respondan sí o sí a este primer email. Este CTA tiene que ser en formato botón y ese botón debe redirigir a la respuesta del email a **juanpe@divisualproject.com**\n- Utiliza colores que generen minimalisto y confianza en los seres humanos. Utiliza colores que visualmente sean correctos en todo momento.\n- incluye al final \"Un saludo, Juan Pe Navarro, CEO De Divisual Project\" y en \"Divisual Project\" inluye un link interno hacia: https://divisualproject.com/\n\n\n### 🧪 Formato de salida:\n- [HTML] bien estructurado, bonito y que genere confianza para ponerlo en un mail, con sus encabezados, sus negrias, etc...\n- [Asunto] del email en texto plano.\n- Siempre nombra las salidas como \"HTML\" y como \"ASUNTO\"\n\n### ✳️ Ejemplos de tono aceptado:\n- “¿Te ha pasado que terminas el día sintiendo que solo apagaste incendios, pero no avanzaste en lo importante?”  \n- “Vi lo que están haciendo en [Industria del prospecto] y no pude evitar pensar en cómo podrías eliminar el 80% del trabajo repetitivo sin contratar a nadie nuevo.”  \n- “No sé si ya estás probando IA internamente o todavía parece ciencia ficción para tu equipo, pero…”  \n\nAhora, genera un icebreaker persuasivo para una empresa del sector: **[insertar aquí sector del prospecto o nombre de la empresa si se conoce]**.\n",
+              "role": "system"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        1792,
+        -128
+      ],
+      "id": "7c4e7832-3f07-4e80-8916-33e9320079a9",
+      "name": "Agente creador de Email IceBreaker",
+      "credentials": {
+        "openAiApi": {
+          "id": "8hgw1j72mroqso8Q",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $('Loop Over Items').first().json.data || '';\n\n// Limpieza del texto visible\nconst clean = html\n  .replace(/<script[\\s\\S]*?>[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?>[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<\\/?[^>]+(>|$)/g, '') // eliminar etiquetas HTML\n  .slice(0, 3000); // limitar longitud\n\n// Extracción de colores\nconst colorRegex = /(#(?:[0-9a-f]{3}){1,2}|rgb\\([^)]+\\)|rgba\\([^)]+\\))/gi;\nconst colores = html.match(colorRegex) || [];\n\nreturn [{\n  json: {\n    cleanText: clean,\n    colores: colores\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -128
+      ],
+      "id": "bead1ef1-9557-4693-8ee8-f4d56ff7ad23",
+      "name": "Limpiar codigo + colores"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Mapeo correo - web').item.json.correo }}",
+        "subject": "={{ $json.message.content.ASUNTO }}",
+        "message": "={{ $json.message.content.HTML }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        2192,
+        -368
+      ],
+      "id": "0304d7cf-accf-41a6-8c17-9a947483debf",
+      "name": "Gmail",
+      "webhookId": "fe5ad01a-4fcd-47da-a355-162292216374",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IokBtq93nPyyaQsm",
+          "name": "Gmail divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        928,
+        -144
+      ],
+      "id": "15020753-6d4f-4f39-a412-3f6656e9c029",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fb6979ad-b631-408e-b42b-8f2401b39c1c",
+              "name": "correo",
+              "value": "={{ $('Filter').item.json.Correo }}",
+              "type": "string"
+            },
+            {
+              "id": "999b858f-f84e-401a-8f8d-e8a7d2a9be23",
+              "name": "web",
+              "value": "={{ $('Filter').item.json.Web }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1232,
+        -128
+      ],
+      "id": "fc89cdef-4d73-4fbe-bc1d-b60c5a4fc9a9",
+      "name": "Mapeo correo - web"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        208,
+        -144
+      ],
+      "id": "edff71ce-8b0b-448b-ac1d-1b930eb9a024",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "content": "# ✉️ Envío automatizado de correos tipo *Icebreaker*\n\nEste flujo representa el paso final del sistema, donde el agente recibe leads desde una hoja de cálculo y genera correos personalizados para iniciar conversaciones comerciales de forma automatizada.\n\n---\n\n## 🔁 Flujo paso a paso\n\n### 🟢 1. Google Sheets Trigger\n> Detecta automáticamente cuando se añade un nuevo contacto a la hoja de cálculo (nuevo lead).\n\n### 🔎 2. Filter\n> Valida que la fila añadida contenga los datos necesarios (por ejemplo: email + URL).\n\n### ✍️ 3. Edit Fields\n> Ajusta el formato y estructura de los datos para que puedan ser usados correctamente en los siguientes pasos.\n\n### 🌐 4. Scrape Company URLs\n> Visita la web del contacto y extrae contenido útil para entender mejor el negocio.\n\n### 🧼 5. Limpiar código\n> Elimina etiquetas HTML u otros elementos innecesarios, dejando solo texto limpio y legible.\n\n### 🤖 6. OpenAI (Message Model)\n> El agente analiza la información y redacta un primer mensaje *icebreaker*, personalizado y contextual.\nIMPORTANTE: **REVISA Y ADAPTA EL PROMPT DEL AGENTE**\n\n### 📧 7. Gmail\n> Envía automáticamente el mensaje generado al contacto correspondiente desde tu cuenta.\n\n---\n\n## ✅ ¿Qué consigue este flujo?\n\n- Automatiza el primer contacto con leads.\n- Crea mensajes naturales y personalizados.\n- Aumenta las probabilidades de respuesta frente a correos genéricos.\n\n---\n\n**Hecho con ❤️ por [Juan Pe Navarro](https://www.youtube.com/@juanpe.divisual)**",
+        "height": 1080,
+        "width": 3360
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -480
+      ],
+      "id": "e66a5371-020f-415f-a2d9-ff97c484ba4b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4",
+          "mode": "list",
+          "cachedResultName": "LEAD SCRAPPING CONTROL - CURSO N8N JUANPE ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Web": "={{ $('Mapeo correo - web').item.json.web }}",
+            "Correo Icebreaker": "={{ $json.message.content.ASUNTO }}",
+            "Estado": "Enviado"
+          },
+          "matchingColumns": [
+            "Web"
+          ],
+          "schema": [
+            {
+              "id": "Web",
+              "displayName": "Web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Correo",
+              "displayName": "Correo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Análisis de la web",
+              "displayName": "Análisis de la web",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Correo Icebreaker",
+              "displayName": "Correo Icebreaker",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Estado",
+              "displayName": "Estado",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        2192,
+        -128
+      ],
+      "id": "d59aa5c8-e131-482e-9666-41ca31603713",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "i8uAjlC8WiPjtIsA",
+          "name": "Google Sheets divisual@divisualproject.com"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.Web }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "followRedirects": false
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        688,
+        -144
+      ],
+      "id": "46bd8dd7-e6de-4317-a562-6e9fe53a0d97",
+      "name": "Scrape Company URLs",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f14ca2eb-cd08-4b89-ab65-e5e926a04fa6",
+              "leftValue": "={{ $json.Estado }}",
+              "rightValue": "Sin enviar",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "db1d64e9-a019-4278-a4b2-7192335bf864",
+              "leftValue": "={{ $json.Correo }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        -144
+      ],
+      "id": "2569cdd0-22e6-487a-9521-0cbb4f21da9c",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4",
+          "mode": "list",
+          "cachedResultName": "LEAD SCRAPPING CONTROL - CURSO N8N JUANPE ",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Hoja 1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1xUzEgPtPdGVEAsMQ-loiTd5zUCnglGsAPxGw2y1u6O4/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        -144
+      ],
+      "id": "9bc2b196-0c6f-419d-952f-e3a0af282748",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "GoWFIHNwPLQSgSlD",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "@[youtube](MsWd3NkvADE)",
+        "height": 928,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        -320
+      ],
+      "id": "1f534a6e-aeeb-4e52-b0e4-0e4aa4f84d6d",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 La Tribu Divisual\n\n## Este sistema tiene un valor en el mercado de **$5000.**\n\n\n## Accede a **La Tribu Divisual** para aprender a crear agentes más avanzados y a generar altos ingresos con ellos de forma real y segura.\n\n# 👉 [Click aquí para unirte a la Lista de espera](https://divisualproject.academy/)\n",
+        "height": 360,
+        "width": 952,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        240
+      ],
+      "id": "14ceb5d1-55da-4e32-9350-46ef404e967f",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## En caso de que se acumulen leads, utilizar este sistema:\n",
+        "height": 544,
+        "width": 3280,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -736,
+        1120
+      ],
+      "id": "e71a5d5b-2e4e-4a96-842d-482fa1012204",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Scrape Company URLs1": {
+      "main": [
+        [
+          {
+            "node": "Mapeo correo - web1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo correo - web1": {
+      "main": [
+        [
+          {
+            "node": "Limpiar codigo + colores1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar codigo + colores1": {
+      "main": [
+        [
+          {
+            "node": "Agente creador de Email IceBreaker1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente creador de Email IceBreaker1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Gmail1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Scrape Company URLs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar codigo + colores": {
+      "main": [
+        [
+          {
+            "node": "Agente creador de Email IceBreaker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Agente creador de Email IceBreaker": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Mapeo correo - web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mapeo correo - web": {
+      "main": [
+        [
+          {
+            "node": "Limpiar codigo + colores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Company URLs": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Scrape Company URLs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "e13027f2-9f82-40e0-9a12-39c046c31fec",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "2bzNhEqbsm8iJe6s",
+  "tags": [
+    {
+      "createdAt": "2025-06-01T18:57:05.689Z",
+      "updatedAt": "2025-06-01T18:57:05.689Z",
+      "id": "uhDg4e01CCZHetVc",
+      "name": "Curso Adrián Sáenz"
+    }
+  ]
+}

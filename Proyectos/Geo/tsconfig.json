@@ -15,5 +15,5 @@
       "node"
     ]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "scripts/**/*"]
 }

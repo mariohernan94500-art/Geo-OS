@@ -86,22 +86,9 @@ export async function transcribirAudio(filePath: string): Promise<string> {
  */
 export async function sintetizarVoz(texto: string): Promise<string> {
     const seguro = texto.length > 4500 ? texto.substring(0, 4500) + '...' : texto;
-    const provider = appConfig.llm.ttsProvider;
 
-    // 1. ElevenLabs (primero si está configurado como proveedor activo)
-    if (provider === 'elevenlabs' && appConfig.llm.elevenlabsKey) {
-        try {
-            console.log('[TTS] Intentando ElevenLabs (proveedor activo)...');
-            const path = await conTimeout(ttsElevenLabs(seguro), TTS_TIMEOUT_MS, 'ElevenLabs');
-            console.log('[TTS] ✅ ElevenLabs OK');
-            return path;
-        } catch (e: any) {
-            console.warn('[TTS] ⚠️  ElevenLabs falló:', e.message);
-        }
-    }
-
-    // 2. Google Cloud TTS (solo si es el proveedor activo o como fallback)
-    if (provider !== 'elevenlabs' && ttsClient) {
+    // 1. Google Cloud TTS
+    if (ttsClient) {
         try {
             console.log('[TTS] Intentando Google Cloud...');
             const path = await conTimeout(ttsGoogle(seguro), TTS_TIMEOUT_MS, 'Google TTS');
@@ -112,16 +99,31 @@ export async function sintetizarVoz(texto: string): Promise<string> {
         }
     }
 
-    // 3. ElevenLabs como fallback universal (si no fue el proveedor activo)
-    if (provider !== 'elevenlabs' && appConfig.llm.elevenlabsKey) {
+    // 2. ElevenLabs (fallback)
+    if (appConfig.llm.elevenlabsKey) {
         try {
-            console.log('[TTS] Intentando ElevenLabs (fallback)...');
+            console.log('[TTS] Intentando ElevenLabs...');
             const path = await conTimeout(ttsElevenLabs(seguro), TTS_TIMEOUT_MS, 'ElevenLabs');
             console.log('[TTS] ✅ ElevenLabs OK');
             return path;
         } catch (e: any) {
             console.warn('[TTS] ⚠️  ElevenLabs falló:', e.message);
         }
+    }
+
+    // 3. Piper local (fallback offline)
+    try {
+        console.log('[TTS] Intentando Piper local...');
+        const { exec } = await import('child_process');
+        const { promisify } = await import('util');
+        const execAsync = promisify(exec);
+        const outputPath = join(TEMP_DIR, `tts_${Date.now()}.wav`);
+        const textoEscapado = seguro.replace(/"/g, '\"');
+        await execAsync(`echo "${textoEscapado}" | piper --model /opt/piper/voices/es_MX-claude-high.onnx --output_file ${outputPath}`);
+        console.log('[TTS] ✅ Piper OK');
+        return outputPath;
+    } catch (e: any) {
+        console.warn('[TTS] ⚠️  Piper falló:', e.message);
     }
 
     throw new Error('Todos los proveedores TTS fallaron');
@@ -164,7 +166,7 @@ async function ttsGoogle(texto: string): Promise<string> {
 
 // ─── ElevenLabs TTS ──────────────────────────────────────────────────────────
 async function ttsElevenLabs(texto: string): Promise<string> {
-    const VOICE_ID = 'pNInz6obpgDQGcFmaJgB'; // Adam
+    const VOICE_ID = appConfig.llm.elevenlabsVoiceId || 'pNInz6obpZtJ5BLqLqd3';
 
     const response = await fetch(
         `https://api.elevenlabs.io/v1/text-to-speech/${VOICE_ID}?output_format=mp3_44100_128`,

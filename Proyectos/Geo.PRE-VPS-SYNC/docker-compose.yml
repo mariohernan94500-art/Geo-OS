@@ -1,0 +1,27 @@
+version: "3.8"
+
+services:
+  geo-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: geo-core
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DB_PATH=/data/memory.db
+    volumes:
+      - geo_data:/data
+    # ── Puerto solo accesible desde el host (loopback) ─────────────
+    # Nginx/Caddy en el VPS hace el reverse proxy con TLS.
+    # NUNCA exponer 0.0.0.0:3000 en producción.
+    ports:
+      - "127.0.0.1:3000:3000"
+    # Labels de Traefik eliminados: se usa Nginx + Certbot en el host
+    # (ver infra/nginx_api_geoos.conf o infra/Caddyfile)
+
+volumes:
+  geo_data:
+    driver: local

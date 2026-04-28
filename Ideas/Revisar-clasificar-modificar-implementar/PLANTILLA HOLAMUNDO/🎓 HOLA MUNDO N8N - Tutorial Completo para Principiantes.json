@@ -1,0 +1,1655 @@
+{
+  "name": "🎓 HOLA MUNDO N8N - Tutorial Completo para Principiantes",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "# 🎓 BIENVENIDO A N8N - TUTORIAL HOLA MUNDO\n\n## ¿Qué es n8n?\nn8n es una plataforma de automatización que conecta apps y servicios mediante \"nodos\". Cada nodo hace una tarea específica y los conectas para crear flujos automáticos.\n\n## ¿Qué aprenderás en este workflow?\n\n✅ **Triggers** - Cómo iniciar un workflow\n✅ **Set** - Crear y transformar datos\n✅ **Code** - Escribir JavaScript personalizado\n✅ **IF** - Tomar decisiones condicionales\n✅ **HTTP Request** - Llamar APIs externas\n✅ **Google Sheets** - Guardar datos en hojas de cálculo\n✅ **OpenAI** - Usar inteligencia artificial\n✅ **Merge** - Combinar datos de múltiples fuentes\n\n## Cómo usar este tutorial\n\n1. Lee cada nota (como esta) antes de cada sección\n2. Haz clic en cada nodo para ver su configuración\n3. Ejecuta el workflow con el botón ▶️\n4. Observa cómo fluyen los datos\n\n---\n\n**Creado por:** Juan Pe Navarro\n**Canal:** youtube.com/@juanpe.divisual",
+        "height": 664,
+        "width": 1232,
+        "color": 4
+      },
+      "id": "nota-bienvenida",
+      "name": "📋 BIENVENIDA",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1648,
+        -2912
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 SECCIÓN 1: TRIGGERS (Disparadores)\n\n## ¿Qué es un Trigger?\nUn trigger es el PRIMER nodo de todo workflow. Es lo que \"dispara\" o inicia la automatización.\n\n## Tipos de Triggers más comunes\n\n**1. Manual Trigger** ⭐\n- Se ejecuta cuando haces clic en \"Test\"\n- Perfecto para pruebas y workflows manuales\n\n**2. Schedule Trigger** ⏰\n- Se ejecuta automáticamente cada X tiempo\n- Ej: Cada hora, cada día a las 9:00, etc.\n\n**3. Webhook** 🌐\n- Se ejecuta cuando recibe datos de otra app\n- Ej: Cuando llega un formulario, un pago, etc.\n\n## En este ejemplo usamos:\n→ **Manual Trigger** para que puedas ejecutarlo cuando quieras\n\n## Pruébalo:\n1. Haz clic en el nodo \"Manual Trigger\"\n2. Haz clic en \"Test step\"\n3. Verás que genera datos vacíos (es normal)",
+        "height": 580,
+        "width": 400
+      },
+      "id": "nota-triggers",
+      "name": "📋 SECCIÓN 1: TRIGGERS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1072,
+        -720
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "manual-trigger",
+      "name": "1️⃣ Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -928,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 📝 SECCIÓN 2: SET NODE (Crear/Transformar Datos)\n\n## ¿Qué hace el nodo Set?\nEl nodo SET te permite:\n- Crear nuevos campos de datos\n- Transformar datos existentes\n- Renombrar campos\n- Eliminar campos que no necesitas\n\n## Es como una \"fábrica de datos\"\nEntra información → Se procesa → Sale transformada\n\n## En este ejemplo:\nCreamos datos de un usuario ficticio:\n- nombre: \"Juan\"\n- edad: 30\n- email: \"juan@ejemplo.com\"\n- premium: true\n\n## Conceptos importantes:\n\n**Tipos de datos:**\n- String (texto): \"Hola mundo\"\n- Number (número): 42\n- Boolean (verdadero/falso): true/false\n\n## Pruébalo:\n1. Ejecuta el Manual Trigger\n2. Mira cómo el Set crea los datos\n3. Observa la salida en el panel derecho",
+        "height": 980,
+        "width": 400,
+        "color": 2
+      },
+      "id": "nota-set",
+      "name": "📋 SECCIÓN 2: SET NODE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -1120
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "nombre",
+              "name": "nombre",
+              "value": "Juan",
+              "type": "string"
+            },
+            {
+              "id": "edad",
+              "name": "edad",
+              "value": 30,
+              "type": "number"
+            },
+            {
+              "id": "email",
+              "name": "email",
+              "value": "juan@ejemplo.com",
+              "type": "string"
+            },
+            {
+              "id": "premium",
+              "name": "es_premium",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "timestamp",
+              "name": "fecha_registro",
+              "value": "={{ $now.format('dd/MM/yyyy HH:mm') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-crear-datos",
+      "name": "2️⃣ Crear Datos de Usuario",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -16,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 💡 EXPRESIONES EN N8N\n\n## ¿Qué son las expresiones?\nSon fórmulas que empiezan con `=` y usan `{{ }}`\n\n## Ejemplos básicos:\n\n**Acceder a datos del nodo anterior:**\n```\n={{ $json.nombre }}\n```\n\n**Fecha actual:**\n```\n={{ $now.format('dd/MM/yyyy') }}\n```\n\n**Combinar texto:**\n```\n=Hola {{ $json.nombre }}!\n```\n\n## Regla de oro:\n- Sin `=` → Texto literal\n- Con `=` → Se evalúa como expresión",
+        "height": 748,
+        "width": 340,
+        "color": 5
+      },
+      "id": "nota-expresiones",
+      "name": "📋 EXPRESIONES N8N",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🔀 SECCIÓN 3: IF NODE (Condicionales)\n\n## ¿Qué hace el nodo IF?\nToma decisiones basadas en condiciones:\n- SI algo es verdadero → Va por un camino\n- SI NO → Va por otro camino\n\n## Es como un semáforo\n🟢 Condición TRUE → Salida superior\n🔴 Condición FALSE → Salida inferior\n\n## En este ejemplo:\nPreguntamos: ¿El usuario es premium?\n- SI es premium → Mensaje VIP\n- NO es premium → Mensaje estándar\n\n## Operadores comunes:\n- **equals** - Es igual a\n- **not equals** - No es igual a\n- **greater than** - Mayor que\n- **less than** - Menor que\n- **contains** - Contiene texto\n- **is empty** - Está vacío\n\n## Pruébalo:\n1. Cambia `es_premium` a `false` en el Set\n2. Ejecuta de nuevo\n3. Observa que ahora va por el otro camino",
+        "height": 980,
+        "width": 400,
+        "color": 3
+      },
+      "id": "nota-if",
+      "name": "📋 SECCIÓN 3: IF NODE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        528,
+        -1120
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condicion-premium",
+              "leftValue": "={{ $json.es_premium }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "if-es-premium",
+      "name": "3️⃣ ¿Es Usuario Premium?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mensaje",
+              "name": "mensaje",
+              "value": "=🌟 ¡Bienvenido {{ $json.nombre }}! Eres un usuario VIP con acceso exclusivo.",
+              "type": "string"
+            },
+            {
+              "id": "tipo",
+              "name": "tipo_usuario",
+              "value": "VIP",
+              "type": "string"
+            },
+            {
+              "id": "descuento",
+              "name": "descuento",
+              "value": 20,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-mensaje-vip",
+      "name": "4️⃣ Mensaje VIP",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        -192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mensaje",
+              "name": "mensaje",
+              "value": "=👋 ¡Hola {{ $json.nombre }}! Bienvenido a nuestra plataforma.",
+              "type": "string"
+            },
+            {
+              "id": "tipo",
+              "name": "tipo_usuario",
+              "value": "Estándar",
+              "type": "string"
+            },
+            {
+              "id": "descuento",
+              "name": "descuento",
+              "value": 5,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-mensaje-normal",
+      "name": "4️⃣ Mensaje Normal",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1104,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🔗 SECCIÓN 4: MERGE NODE (Combinar)\n\n## ¿Qué hace el nodo Merge?\nCombina datos de múltiples caminos en uno solo.\n\n## ¿Por qué lo necesitamos?\nDespués de un IF tenemos 2 caminos separados. El Merge los vuelve a unir.\n\n## Modos del Merge:\n\n**Append** (el que usamos)\n- Junta todos los items de todas las entradas\n- Ej: 2 items + 3 items = 5 items\n\n**Combine**\n- Une datos por posición o campo común\n- Útil para relacionar datos\n\n**Choose Branch**\n- Solo pasa datos del camino que tenga datos\n- Ignora caminos vacíos\n\n## En este ejemplo:\nUsamos \"Append\" para continuar el flujo sin importar qué camino tomó el IF.",
+        "height": 976,
+        "width": 400,
+        "color": 6
+      },
+      "id": "nota-merge",
+      "name": "📋 SECCIÓN 4: MERGE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1584,
+        -1120
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "merge-unir",
+      "name": "5️⃣ Unir Caminos",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 💻 SECCIÓN 5: CODE NODE (JavaScript)\n\n## ¿Qué hace el nodo Code?\nTe permite escribir código JavaScript personalizado para transformaciones complejas.\n\n## ¿Cuándo usarlo?\n- Lógica que no puedes hacer con otros nodos\n- Transformaciones complejas de datos\n- Cálculos matemáticos\n- Manipulación de arrays/objetos\n\n## Estructura básica:\n```javascript\n// Obtener datos de entrada\nconst datos = $input.first().json;\n\n// Hacer algo con ellos\nconst resultado = datos.nombre.toUpperCase();\n\n// Devolver SIEMPRE un array de objetos\nreturn [{\n  json: {\n    campo: resultado\n  }\n}];\n```\n\n## Regla de oro:\n⚠️ SIEMPRE devolver `[{json: {...}}]`\n\n## Acceder a nodos anteriores:\n```javascript\nconst datosSet = $('Nombre del Nodo').first().json;\n```",
+        "height": 580,
+        "width": 400,
+        "color": 7
+      },
+      "id": "nota-code",
+      "name": "📋 SECCIÓN 5: CODE NODE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2336,
+        -848
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ========================================\n// EJEMPLO DE CODE NODE EN N8N\n// ========================================\n\n// 1. Obtener los datos del nodo anterior\nconst datos = $input.first().json;\n\n// 2. Crear variables con los datos\nconst nombre = datos.nombre;\nconst edad = datos.edad;\nconst descuento = datos.descuento;\n\n// 3. Hacer transformaciones\nconst nombreMayusculas = nombre.toUpperCase();\nconst edadEnMeses = edad * 12;\nconst precioFinal = 100 - (100 * descuento / 100);\n\n// 4. Crear un mensaje personalizado\nconst resumen = `\n📊 RESUMEN DEL USUARIO\n━━━━━━━━━━━━━━━━━━━━━\n👤 Nombre: ${nombreMayusculas}\n🎂 Edad: ${edad} años (${edadEnMeses} meses)\n💰 Descuento: ${descuento}%\n🏷️ Precio final: $${precioFinal}\n━━━━━━━━━━━━━━━━━━━━━\n`;\n\n// 5. SIEMPRE devolver un array con objetos json\nreturn [{\n  json: {\n    ...datos,  // Mantener datos anteriores\n    nombre_mayusculas: nombreMayusculas,\n    edad_en_meses: edadEnMeses,\n    precio_final: precioFinal,\n    resumen: resumen,\n    procesado_con_code: true\n  }\n}];"
+      },
+      "id": "code-transformar",
+      "name": "6️⃣ Transformar con JavaScript",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2432,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🌐 SECCIÓN 6: HTTP REQUEST (Llamar APIs)\n\n## ¿Qué hace el nodo HTTP Request?\nLlama a APIs externas para:\n- Obtener datos (GET)\n- Enviar datos (POST)\n- Actualizar datos (PUT/PATCH)\n- Eliminar datos (DELETE)\n\n## Es como un mensajero\nEnvías una petición → Recibes una respuesta\n\n## Métodos HTTP:\n- **GET** - Obtener información\n- **POST** - Enviar/crear información\n- **PUT** - Actualizar información completa\n- **PATCH** - Actualizar parcialmente\n- **DELETE** - Eliminar información\n\n## En este ejemplo:\nUsamos una API pública gratuita para obtener una actividad aleatoria.\n\nURL: https://www.boredapi.com/api/activity\n\n## Autenticación común:\n- **API Key** - Clave en header o parámetro\n- **Bearer Token** - Token en header Authorization\n- **OAuth2** - Autenticación con login\n- **Basic Auth** - Usuario y contraseña",
+        "height": 964,
+        "width": 400
+      },
+      "id": "nota-http",
+      "name": "📋 SECCIÓN 6: HTTP REQUEST",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2960,
+        -1104
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://www.boredapi.com/api/activity",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "http-api-externa",
+      "name": "7️⃣ Llamar API Externa",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3104,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🤖 SECCIÓN 7: OPENAI (Inteligencia Artificial)\n\n## ¿Qué hace el nodo OpenAI?\nConecta con ChatGPT y otros modelos de OpenAI para:\n- Generar texto\n- Analizar imágenes\n- Crear embeddings\n- Transcribir audio\n\n## Modelos disponibles:\n- **gpt-4o** - Más inteligente, más caro\n- **gpt-4o-mini** - Equilibrio calidad/precio\n- **gpt-3.5-turbo** - Rápido y económico\n\n## En este ejemplo:\nLe pedimos a GPT que genere un saludo personalizado usando los datos del usuario.\n\n## Parámetros importantes:\n- **Temperature** (0-1): Creatividad\n  - 0 = Respuestas consistentes\n  - 1 = Respuestas creativas/variadas\n- **Max Tokens**: Longitud máxima de respuesta\n\n## ⚠️ Configuración requerida:\nNecesitas crear una credencial de OpenAI con tu API Key de platform.openai.com",
+        "height": 956,
+        "width": 400,
+        "color": 2
+      },
+      "id": "nota-openai",
+      "name": "📋 SECCIÓN 7: OPENAI (IA)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3696,
+        -1104
+      ]
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Genera un saludo creativo y divertido para un usuario con estos datos:\n\n- Nombre: {{ $('6️⃣ Transformar con JavaScript').item.json.nombre }}\n- Tipo de usuario: {{ $('6️⃣ Transformar con JavaScript').item.json.tipo_usuario }}\n- Descuento disponible: {{ $('6️⃣ Transformar con JavaScript').item.json.descuento }}%\n\nActividad sugerida para hoy: {{ $json.activity }}\n\nResponde en español, máximo 3 líneas, usando emojis."
+            }
+          ]
+        },
+        "options": {
+          "maxTokens": 150,
+          "temperature": 0.8
+        }
+      },
+      "id": "openai-generar",
+      "name": "8️⃣ Generar con IA",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        3776,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 📊 SECCIÓN 8: GOOGLE SHEETS\n\n## ¿Qué hace el nodo Google Sheets?\nInteractúa con hojas de cálculo de Google:\n- **Leer** datos de una hoja\n- **Escribir** nuevas filas\n- **Actualizar** filas existentes\n- **Eliminar** filas\n\n## Operaciones comunes:\n\n**Append Row**\n- Añade una nueva fila al final\n- Ideal para logs y registros\n\n**Read Rows**\n- Lee todas las filas o filtra\n- Útil para obtener datos\n\n**Update Row**\n- Actualiza una fila existente\n- Necesita identificar la fila\n\n**Lookup**\n- Busca filas por un valor\n- Como BUSCARV en Excel\n\n## ⚠️ Configuración requerida:\n1. Crear credencial Google Sheets OAuth2\n2. Seleccionar el documento\n3. Seleccionar la hoja\n4. Mapear las columnas\n\n## Este nodo está preparado pero necesita tu credencial y documento.",
+        "height": 1072,
+        "width": 400,
+        "color": 3
+      },
+      "id": "nota-sheets",
+      "name": "📋 SECCIÓN 8: GOOGLE SHEETS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4368,
+        -1216
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fecha",
+              "name": "Fecha",
+              "value": "={{ $now.format('dd/MM/yyyy HH:mm:ss') }}",
+              "type": "string"
+            },
+            {
+              "id": "nombre",
+              "name": "Nombre",
+              "value": "={{ $('6️⃣ Transformar con JavaScript').item.json.nombre }}",
+              "type": "string"
+            },
+            {
+              "id": "tipo",
+              "name": "Tipo Usuario",
+              "value": "={{ $('6️⃣ Transformar con JavaScript').item.json.tipo_usuario }}",
+              "type": "string"
+            },
+            {
+              "id": "saludo",
+              "name": "Saludo IA",
+              "value": "={{ $json.message.content }}",
+              "type": "string"
+            },
+            {
+              "id": "actividad",
+              "name": "Actividad Sugerida",
+              "value": "={{ $('7️⃣ Llamar API Externa').item.json.activity }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-preparar-sheets",
+      "name": "9️⃣ Preparar para Sheets",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4208,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        }
+      },
+      "id": "sheets-guardar",
+      "name": "🔟 Guardar en Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        4528,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🎉 ¡FELICIDADES!\n\n## Has aprendido los nodos fundamentales de n8n:\n\n✅ **Manual Trigger** - Iniciar workflows manualmente\n\n✅ **Set** - Crear y transformar datos\n\n✅ **IF** - Tomar decisiones condicionales\n\n✅ **Merge** - Combinar caminos\n\n✅ **Code** - JavaScript personalizado\n\n✅ **HTTP Request** - Llamar APIs\n\n✅ **OpenAI** - Inteligencia Artificial\n\n✅ **Google Sheets** - Guardar datos\n\n---\n\n## Próximos pasos:\n\n1. **Practica** modificando este workflow\n2. **Explora** otros nodos en el panel izquierdo\n3. **Crea** tu primer workflow desde cero\n4. **Conecta** tus propias cuentas (Gmail, Slack, etc.)\n\n---\n\n## Recursos:\n\n📺 **YouTube:** youtube.com/@juanpe.divisual\n🌐 **Documentación:** docs.n8n.io\n💬 **Comunidad:** community.n8n.io\n\n---\n\n**¡Ahora es tu turno de automatizar!** 🚀",
+        "height": 1416,
+        "width": 400,
+        "color": 4
+      },
+      "id": "nota-final",
+      "name": "📋 RESUMEN FINAL",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5344,
+        -1536
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "status",
+              "name": "status",
+              "value": "✅ COMPLETADO",
+              "type": "string"
+            },
+            {
+              "id": "mensaje",
+              "name": "mensaje_final",
+              "value": "=🎉 ¡Hola Mundo completado! El usuario {{ $('6️⃣ Transformar con JavaScript').item.json.nombre }} ha sido procesado correctamente.",
+              "type": "string"
+            },
+            {
+              "id": "nodos",
+              "name": "nodos_utilizados",
+              "value": "Manual Trigger, Set, IF, Merge, Code, HTTP Request, OpenAI, Google Sheets",
+              "type": "string"
+            },
+            {
+              "id": "timestamp",
+              "name": "completado_en",
+              "value": "={{ $now.format('dd/MM/yyyy HH:mm:ss') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "set-final",
+      "name": "✅ Workflow Completado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4912,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🎯 OTROS TRIGGERS COMUNES\n\n## Schedule Trigger ⏰\nEjecuta el workflow automáticamente:\n- Cada X minutos/horas\n- Todos los días a las 9:00\n- Cada lunes a las 8:00\n\n## Webhook 🌐\nRecibe datos de otras apps:\n- Formularios web\n- Pagos de Stripe\n- Mensajes de Slack\n\n## App Triggers 📱\nCuando algo pasa en una app:\n- Nuevo email en Gmail\n- Nueva fila en Google Sheets\n- Nuevo mensaje en Telegram\n\n## Tip:\nPuedes tener MÚLTIPLES triggers en un workflow, pero solo UNO se ejecutará a la vez.",
+        "height": 772,
+        "width": 360,
+        "color": 5
+      },
+      "id": "nota-otros-triggers",
+      "name": "📋 OTROS TRIGGERS COMUNES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1536,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🧰 OTROS NODOS ÚTILES\n\n## Switch 🔀\nComo IF pero con múltiples opciones:\n- Si país = España → Camino 1\n- Si país = México → Camino 2\n- Si país = Argentina → Camino 3\n\n## Filter 🔍\nFiltra items que cumplan condiciones:\n- Solo usuarios mayores de 18\n- Solo emails que contengan \"@gmail\"\n\n## Loop / Split in Batches 🔁\nProcesa items en grupos:\n- 1000 contactos → 10 grupos de 100\n\n## Wait ⏳\nPausa la ejecución:\n- Esperar 30 segundos\n- Esperar hasta mañana\n\n## Remove Duplicates 🧹\nElimina items duplicados.",
+        "height": 756,
+        "width": 360,
+        "color": 6
+      },
+      "id": "nota-otros-nodos",
+      "name": "📋 OTROS NODOS ÚTILES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        208,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# ⚠️ MANEJO DE ERRORES\n\n## ¿Qué pasa si algo falla?\nn8n tiene un sistema de manejo de errores.\n\n## Opciones por nodo:\nSettings → On Error:\n\n**Stop Workflow**\n- Para todo si hay error\n\n**Continue**\n- Ignora el error y sigue\n\n**Continue (error output)**\n- Sigue por un camino alternativo\n\n## Error Trigger:\nPuedes crear un workflow separado que se ejecute cuando otro falle.\n\n## Tip profesional:\nSiempre añade manejo de errores en workflows de producción.",
+        "height": 732,
+        "width": 360,
+        "color": 7
+      },
+      "id": "nota-errores",
+      "name": "📋 MANEJO DE ERRORES",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5360,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🧩 ¿QUÉ ES UN NODO?\n\n## Definición Simple\nUn **NODO** es como una **pieza de LEGO** 🧱\n\nCada nodo hace UNA cosa específica y los conectas para crear automatizaciones.\n\n---\n\n## Analogía del Mundo Real\n\nImagina una **fábrica** 🏭:\n\n```\n📦 ENTRADA → 🔧 MÁQUINA 1 → 🔧 MÁQUINA 2 → 📦 SALIDA\n```\n\nCada máquina (nodo) procesa el producto y lo pasa a la siguiente.\n\n---\n\n## Partes de un Nodo\n\n**1. Nombre** - Cómo lo identificas\n**2. Tipo** - Qué hace (Set, IF, HTTP...)\n**3. Parámetros** - Configuración específica\n**4. Entrada** - Datos que recibe (⚫ izquierda)\n**5. Salida** - Datos que envía (⚫ derecha)\n\n---\n\n## Tipos Principales\n\n🟢 **Triggers** - INICIAN el workflow\n🔵 **Acciones** - HACEN algo con datos\n🟡 **Lógica** - DECIDEN qué camino\n🟣 **Integraciones** - CONECTAN apps\n\n---\n\n## Regla de Oro\n\n> \"Un workflow SIEMPRE empieza con un TRIGGER\"\n> \n> Sin trigger = No hay inicio = No funciona",
+        "height": 1324,
+        "width": 944,
+        "color": 4
+      },
+      "id": "nota-que-es-nodo",
+      "name": "📋 ¿QUÉ ES UN NODO?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -3600,
+        -848
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 ¿CÓMO VIAJA LA INFORMACIÓN?\n\n## El Flujo de Datos\n\nLa información viaja de **IZQUIERDA a DERECHA** ➡️\n\n```\n[Nodo A] ──datos──> [Nodo B] ──datos──> [Nodo C]\n```\n\n---\n\n## Analogía: Un Río 🌊\n\nImagina que los datos son **agua**:\n\n- El **Trigger** es el **nacimiento** del río\n- Cada **nodo** es una **compuerta** que puede:\n  - Filtrar el agua (Filter)\n  - Dividir el río (IF/Switch)\n  - Unir ríos (Merge)\n  - Transformar el agua (Set/Code)\n\n---\n\n## Formato JSON\n\nLos datos viajan en formato **JSON**:\n\n```json\n{\n  \"nombre\": \"Juan\",\n  \"edad\": 30,\n  \"email\": \"juan@email.com\"\n}\n```\n\n---\n\n## Acceder a Datos\n\n**Del nodo ANTERIOR:**\n```\n{{ $json.nombre }}\n```\n\n**De un nodo ESPECÍFICO:**\n```\n{{ $('Nombre Nodo').item.json.campo }}\n```\n\n---\n\n## Items Múltiples\n\nUn nodo puede enviar VARIOS items:\n\n```\nItem 1: {nombre: \"Ana\"}\nItem 2: {nombre: \"Luis\"}\nItem 3: {nombre: \"María\"}\n```",
+        "height": 1000,
+        "width": 480,
+        "color": 5
+      },
+      "id": "nota-flujo-informacion",
+      "name": "📋 ¿CÓMO VIAJA LA INFORMACIÓN?",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        -784
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🔄 NODOS INTERNOS vs EXTERNOS\n\n## 🔵 NODOS INTERNOS (de n8n)\n\n**NO necesitan credenciales** ✅\n\nHerramientas de n8n para manipular datos:\n\n- **Set** - Crear/modificar campos\n- **Code** - JavaScript/Python\n- **IF** - Decisiones binarias\n- **Switch** - Múltiples caminos\n- **Merge** - Combinar datos\n- **Filter** - Filtrar items\n- **Split in Batches** - Dividir en lotes\n- **Wait** - Pausar ejecución\n- **HTTP Request** - Llamar cualquier API\n\n---\n\n## 🟣 NODOS EXTERNOS (Apps)\n\n**SÍ necesitan credenciales** 🔐\n\nConectan con servicios externos:\n\n- **Gmail** → OAuth2 Google\n- **Slack** → OAuth2 / Bot Token\n- **Telegram** → Bot Token\n- **OpenAI** → API Key\n- **Google Sheets** → OAuth2 Google\n- **Shopify** → Access Token\n- **WhatsApp** → API Key / Token\n\n---\n\n## ⚙️ Configurar Credenciales\n\n1. Clic en nodo externo\n2. Busca \"Credential\"\n3. Click \"Create New\"\n4. Sigue instrucciones\n5. Guarda y prueba",
+        "height": 1140,
+        "width": 480,
+        "color": 6
+      },
+      "id": "nota-nodos-internos-externos",
+      "name": "📋 NODOS INTERNOS vs EXTERNOS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2096,
+        1840
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🔗 APPS EXTERNAS (Requieren Credenciales)\n\n## ¿Qué son?\n\nSon nodos que conectan n8n con servicios externos como:\n- Redes sociales (Telegram, Slack, Discord)\n- Email (Gmail, Outlook)\n- Almacenamiento (Google Drive, Dropbox)\n- CRM (HubSpot, Salesforce)\n- E-commerce (Shopify, WooCommerce)\n\n---\n\n## 🔐 ¿Por qué necesitan credenciales?\n\nPorque n8n necesita **permiso** para actuar en tu nombre en esas apps.\n\nEs como darle las llaves de tu casa a alguien de confianza.\n\n---\n\n## Tipos de Credenciales\n\n**OAuth2** - Login con la app (más seguro)\n- Gmail, Google Sheets, Slack, etc.\n\n**API Key** - Clave secreta del servicio\n- OpenAI, SendGrid, etc.\n\n**Token** - Código de acceso\n- Telegram Bot, Shopify, etc.\n\n---\n\n## Abajo ves ejemplos de:\n\n📧 **Gmail** - Enviar emails automáticos\n💬 **Slack** - Mensajes a canales\n🤖 **Telegram** - Bots de Telegram\n📄 **Notion** - Base de datos\n\n⚠️ **NOTA**: Estos nodos mostrarán icono de advertencia hasta que configures las credenciales.",
+        "height": 920,
+        "width": 500,
+        "color": 3
+      },
+      "id": "nota-seccion-apps",
+      "name": "📋 SECCIÓN: APPS EXTERNAS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        1712
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "demo-trigger-apps",
+      "name": "📍 Demo: Apps Externas",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "ejemplo@email.com",
+        "subject": "Mensaje de prueba desde n8n",
+        "message": "Este es un mensaje automático generado por n8n.\n\nSaludos!",
+        "options": {}
+      },
+      "id": "ejemplo-gmail",
+      "name": "📧 Gmail (Ejemplo)",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        112,
+        1712
+      ],
+      "webhookId": "c463d6a7-2c89-443f-82df-060f12a83878"
+    },
+    {
+      "parameters": {
+        "text": "=👋 ¡Hola equipo! Mensaje automático desde n8n.",
+        "otherOptions": {}
+      },
+      "id": "ejemplo-slack",
+      "name": "💬 Slack (Ejemplo)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        1904
+      ],
+      "webhookId": "142f707b-c2ea-4a9b-a88a-83347b9ef5f3"
+    },
+    {
+      "parameters": {
+        "chatId": "123456789",
+        "text": "=🚀 Mensaje automático desde n8n!",
+        "additionalFields": {}
+      },
+      "id": "ejemplo-telegram",
+      "name": "🤖 Telegram (Ejemplo)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        112,
+        2112
+      ],
+      "webhookId": "47d58af4-ce6b-4086-9c96-bef02d859e16"
+    },
+    {
+      "parameters": {
+        "pageId": {
+          "__rl": true,
+          "mode": "url",
+          "value": ""
+        },
+        "options": {}
+      },
+      "id": "ejemplo-notion",
+      "name": "📄 Notion (Ejemplo)",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        112,
+        2304
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🛠️ NODOS INTERNOS (Sin Credenciales)\n\n## ¿Qué son?\n\nSon herramientas que n8n te da para **manipular datos** sin conectar a servicios externos.\n\n---\n\n## ✅ Ventajas\n\n- No necesitan configuración externa\n- Funcionan inmediatamente\n- Son gratuitos (sin límites de API)\n- Procesan datos localmente\n\n---\n\n## Nodos Internos Más Usados\n\n**Set** - Crear/modificar campos\n**Code** - Lógica personalizada JS/Python\n**IF** - Decisiones (si/entonces)\n**Switch** - Múltiples caminos\n**Merge** - Combinar flujos\n**Filter** - Filtrar datos\n**Sort** - Ordenar items\n**Limit** - Limitar cantidad\n**Remove Duplicates** - Quitar repetidos\n**Split in Batches** - Procesar en lotes\n**Wait** - Pausar ejecución\n**Date & Time** - Manipular fechas\n**Crypto** - Encriptar/hash\n**HTML** - Extraer de HTML\n**XML** - Procesar XML\n**Markdown** - Convertir formato\n\n---\n\n## A la derecha ves ejemplos de:\n\n📝 **Set** - Crear datos\n🔀 **Switch** - Múltiples rutas\n🔍 **Filter** - Filtrar items\n⏳ **Wait** - Pausar",
+        "height": 1448,
+        "width": 420,
+        "color": 2
+      },
+      "id": "nota-seccion-internos",
+      "name": "📋 SECCIÓN: NODOS INTERNOS",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        560,
+        1712
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "demo-trigger-internos",
+      "name": "📍 Demo: Nodos Internos",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "demo1",
+              "name": "producto",
+              "value": "Camiseta",
+              "type": "string"
+            },
+            {
+              "id": "demo2",
+              "name": "precio",
+              "value": 29.99,
+              "type": "number"
+            },
+            {
+              "id": "demo3",
+              "name": "disponible",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ejemplo-set",
+      "name": "📝 Set (Crear Datos)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.precio }}",
+                    "rightValue": 50,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Caro"
+            },
+            {
+              "conditions": {
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.precio }}",
+                    "rightValue": 50,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Barato"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ejemplo-switch",
+      "name": "🔀 Switch (Rutas)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1280,
+        1904
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "leftValue": "={{ $json.disponible }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ejemplo-filter",
+      "name": "🔍 Filter (Filtrar)",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1280,
+        2112
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "ejemplo-wait",
+      "name": "⏳ Wait (Pausar)",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        2304
+      ],
+      "webhookId": "2b6c11f0-844f-42ab-8bc4-ccc2ab2ad568"
+    },
+    {
+      "parameters": {
+        "content": "# 🔄 DEMO: VE CÓMO FLUYE LA INFO\n\n## Instrucciones\n\n1. Ejecuta el trigger \"Demo Flujo\"\n2. Observa cómo cada nodo transforma los datos\n3. Haz clic en cada nodo para ver entrada/salida\n\n---\n\n## El Flujo\n\n```\n🟢 PASO 1: Crear datos iniciales\n   ↓\n🔵 PASO 2: Añadir más campos\n   ↓\n🟡 PASO 3: Transformar con código\n   ↓\n🟣 PASO 4: Ver resultado final\n```\n\n---\n\n## Concepto Clave\n\nCada nodo **RECIBE** datos del anterior y **ENVÍA** datos al siguiente.\n\nPuedes ver esto haciendo clic en:\n- **INPUT** (izquierda) - Lo que recibió\n- **OUTPUT** (derecha) - Lo que envió\n\n---\n\n## Tip Pro\n\n👁️ Usa el panel de la derecha para ver los datos en cada paso.\n\nAsí entenderás exactamente qué hace cada nodo.",
+        "height": 1020,
+        "width": 420,
+        "color": 7
+      },
+      "id": "nota-demo-flujo",
+      "name": "📋 DEMO: FLUJO DE INFORMACIÓN",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        1712
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "demo-flujo-trigger",
+      "name": "🟢 PASO 1: Iniciar Demo",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1",
+              "name": "usuario",
+              "value": "María",
+              "type": "string"
+            },
+            {
+              "id": "f2",
+              "name": "puntos",
+              "value": 150,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-flujo-crear",
+      "name": "🔵 PASO 2: Crear Datos",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2480,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f3",
+              "name": "nivel",
+              "value": "={{ $json.puntos > 100 ? 'ORO' : 'PLATA' }}",
+              "type": "string"
+            },
+            {
+              "id": "f4",
+              "name": "bienvenida",
+              "value": "=¡Hola {{ $json.usuario }}! Tienes {{ $json.puntos }} puntos.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-flujo-enriquecer",
+      "name": "🟡 PASO 3: Añadir Info",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2720,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Recibimos los datos del nodo anterior\nconst datos = $input.first().json;\n\n// Creamos un resumen\nconst resumen = {\n  mensaje_final: `🌟 ${datos.usuario} es nivel ${datos.nivel}`,\n  puntos_dobles: datos.puntos * 2,\n  fecha_proceso: new Date().toLocaleString('es-ES'),\n  \n  // Mantenemos datos originales\n  datos_originales: datos\n};\n\n// SIEMPRE retornamos [{json: {...}}]\nreturn [{json: resumen}];"
+      },
+      "id": "demo-flujo-codigo",
+      "name": "🟣 PASO 4: Transformar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2960,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ff",
+              "name": "completado",
+              "value": "=¡Flujo completado! Ve el panel derecho para ver todos los datos.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-flujo-final",
+      "name": "✅ PASO 5: Resultado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3200,
+        1808
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🛡️ GUARDRAILS - Seguridad para IA\n\n## ¿Qué son los Guardrails?\n\nSon **filtros de seguridad** que protegen tus workflows de IA contra:\n\n- 🚫 **Prompt Injection** - Intentos de manipular la IA\n- 🔞 **Contenido NSFW** - Material inapropiado\n- 🔐 **Datos Sensibles (PII)** - Emails, teléfonos, DNI\n- 🔑 **Claves Secretas** - API keys, passwords\n- 🌐 **URLs Maliciosas** - Links peligrosos\n\n---\n\n## Dos Operaciones\n\n### 1️⃣ Classify (Detectar)\nAnaliza el texto y te dice SI hay violaciones.\n\n**Salidas:**\n- ✅ Output 1: Texto SEGURO\n- ❌ Output 2: Texto CON VIOLACIONES\n\n### 2️⃣ Sanitize (Limpiar)\nReemplaza datos sensibles por `[REDACTED]`.\n\n**Ejemplo:**\n```\nEntrada: \"Mi email es juan@gmail.com\"\nSalida: \"Mi email es [REDACTED]\"\n```\n\n---\n\n## Tipos de Guardrails\n\n- **pii** - Datos personales\n- **secretKeys** - Claves y tokens\n- **jailbreak** - Prompt injection\n- **nsfw** - Contenido adulto\n- **urls** - Enlaces\n- **keywords** - Palabras prohibidas\n- **custom** - Reglas personalizadas\n\n---\n\n## ⚠️ Requiere Credenciales\n\nGuardrails usa IA para analizar, necesitas credencial de OpenAI u otro modelo.",
+        "height": 1280,
+        "width": 480
+      },
+      "id": "nota-guardrails",
+      "name": "📋 SECCIÓN: GUARDRAILS (Seguridad IA)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        4080
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "demo-guardrails-trigger",
+      "name": "📍 Demo: Guardrails",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        4176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "g1",
+              "name": "mensaje_usuario",
+              "value": "Hola, mi email es juan@empresa.com y mi API key es sk-1234567890abcdef",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-guardrails-input",
+      "name": "📝 Simular Input Usuario",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1200,
+        4176
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "sanitize",
+        "text": "={{ $json.mensaje_usuario }}",
+        "guardrails": {
+          "pii": {
+            "value": {
+              "type": "all"
+            }
+          },
+          "secretKeys": {
+            "value": {
+              "permissiveness": "balanced"
+            }
+          }
+        }
+      },
+      "id": "demo-guardrails-sanitize",
+      "name": "🛡️ Guardrails: Sanitizar",
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        4080
+      ]
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.mensaje_usuario }}",
+        "guardrails": {}
+      },
+      "id": "demo-guardrails-classify",
+      "name": "🔍 Guardrails: Clasificar",
+      "type": "@n8n/n8n-nodes-langchain.guardrails",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        4288
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "gs",
+              "name": "resultado",
+              "value": "El texto pasó las validaciones de seguridad",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-guardrails-safe",
+      "name": "✅ Texto Seguro",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -592,
+        4240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "gu",
+              "name": "resultado",
+              "value": "El texto contiene violaciones y fue bloqueado",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-guardrails-unsafe",
+      "name": "❌ Texto Bloqueado",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -592,
+        4448
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🤖 AGENTES DE IA\n\n## ¿Qué es un Agente?\n\nUn **AI Agent** es una IA que puede:\n- 🧠 **PENSAR** - Analizar qué necesita hacer\n- 🛠️ **USAR HERRAMIENTAS** - Ejecutar acciones\n- 🔄 **ITERAR** - Repetir hasta completar la tarea\n\n---\n\n## Analogía: Un Asistente Humano\n\nImagina un asistente que:\n1. Escucha tu petición\n2. Decide qué herramientas usar\n3. Ejecuta las acciones necesarias\n4. Te da el resultado\n\n---\n\n## Componentes del Agente\n\n### 🧠 Modelo (OBLIGATORIO)\nEl \"cerebro\" - OpenAI, Anthropic, etc.\nConexion: `ai_languageModel`\n\n### 🛠️ Herramientas (Tools)\nAcciones que puede ejecutar:\n- Buscar en Google\n- Consultar base de datos\n- Enviar emails\n- Llamar APIs\nConexion: `ai_tool`\n\n### 💾 Memoria (Opcional)\nRecordar conversaciones previas.\nConexion: `ai_memory`\n\n---\n\n## Flujo Típico\n\n```\nWebhook/Chat → AI Agent → Respuesta\n                  ↑\n           Model + Tools + Memory\n```\n\n---\n\n## ⚠️ Conexiones Especiales\n\nLos nodos de IA usan conexiones **diferentes**:\n- `ai_languageModel` - Para modelos\n- `ai_tool` - Para herramientas\n- `ai_memory` - Para memoria\n\n¡NO son conexiones normales `main`!",
+        "height": 1452,
+        "width": 480,
+        "color": 2
+      },
+      "id": "nota-ai-agents",
+      "name": "📋 SECCIÓN: AGENTES DE IA",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        4224
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 🛠️ HERRAMIENTAS (Tools)\n\n## ¿Qué son las Tools?\n\nSon **acciones** que el agente puede ejecutar para completar tareas.\n\n---\n\n## Tools Más Comunes\n\n### 🌐 HTTP Request Tool\nLlamar cualquier API externa.\n\n### 📊 Google Sheets Tool\nLeer/escribir en hojas de cálculo.\n\n### 📅 Google Calendar Tool\nVer/crear eventos.\n\n### 🔍 Wikipedia Tool\nBuscar información.\n\n### 💻 Code Tool\nEjecutar código personalizado.\n\n### 📁 Vector Store Tool\nBuscar en documentos (RAG).\n\n---\n\n## Propiedad Clave: toolDescription\n\nCada tool necesita una **descripción** para que el agente sepa cuándo usarla:\n\n```\ntoolDescription: \"Busca pacientes \npor número de teléfono en la \nbase de datos\"\n```\n\n---\n\n## $fromAI() - Parámetros Dinámicos\n\nPermite que el agente pase valores:\n\n```javascript\n$fromAI('telefono', 'Número a buscar', 'string')\n```\n\nEl agente \"rellenará\" este campo automáticamente basado en la conversación.",
+        "height": 1132,
+        "width": 420,
+        "color": 5
+      },
+      "id": "nota-ai-tools",
+      "name": "📋 HERRAMIENTAS DEL AGENTE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1840,
+        4688
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "demo-agent-trigger",
+      "name": "📍 Demo: AI Agent",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        688,
+        4176
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ai1",
+              "name": "chatInput",
+              "value": "¿Qué tiempo hace hoy en Madrid?",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-agent-input",
+      "name": "📝 Mensaje del Usuario",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        4176
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "options": {
+          "temperature": 0.7
+        }
+      },
+      "id": "demo-agent-model",
+      "name": "🧠 OpenAI Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        864,
+        4544
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://wttr.in/{city}?format=3"
+      },
+      "id": "demo-agent-tool-http",
+      "name": "🌐 HTTP Tool (API)",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        4560
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "demo-agent-tool-calc",
+      "name": "🧮 Calculator Tool",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        4560
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ar",
+              "name": "respuesta_final",
+              "value": "={{ $json.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "demo-agent-response",
+      "name": "✅ Respuesta del Agente",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        4176
+      ]
+    },
+    {
+      "parameters": {
+        "content": "# 💾 MEMORIA (Memory)\n\n## ¿Para qué sirve?\n\nPermite que el agente **recuerde** conversaciones anteriores.\n\nSin memoria: Cada mensaje es independiente.\nCon memoria: El agente tiene contexto.\n\n---\n\n## Tipos de Memoria\n\n### Window Buffer Memory\nRecuerda los últimos N mensajes.\nIdeal para: Chatbots simples.\n\n### Postgres/Redis Chat Memory\nGuarda en base de datos.\nIdeal para: Persistencia entre sesiones.\n\n### Motorhead Memory\nMemoria avanzada con resumen.\nIdeal para: Conversaciones largas.\n\n---\n\n## Session ID\n\nCada conversación necesita un **ID único** para distinguir usuarios:\n\n```javascript\nsessionId: \"usuario_123\"\n```\n\nAsí el agente sabe qué recuerdos corresponden a qué usuario.\n\n---\n\n## Conexión\n\nLa memoria se conecta con:\n`ai_memory`",
+        "height": 780,
+        "width": 400,
+        "color": 6
+      },
+      "id": "nota-ai-memory",
+      "name": "📋 MEMORIA DEL AGENTE",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        4752
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1248,
+        4176
+      ],
+      "id": "a4e2c6d9-2904-4654-94b1-68b9ccfab74b",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1456,
+        4624
+      ],
+      "id": "b547b5c0-0d38-4702-b6b3-b9d440fa592f",
+      "name": "Simple Memory"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1️⃣ Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "2️⃣ Crear Datos de Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2️⃣ Crear Datos de Usuario": {
+      "main": [
+        [
+          {
+            "node": "3️⃣ ¿Es Usuario Premium?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3️⃣ ¿Es Usuario Premium?": {
+      "main": [
+        [
+          {
+            "node": "4️⃣ Mensaje VIP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "4️⃣ Mensaje Normal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4️⃣ Mensaje VIP": {
+      "main": [
+        [
+          {
+            "node": "5️⃣ Unir Caminos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4️⃣ Mensaje Normal": {
+      "main": [
+        [
+          {
+            "node": "5️⃣ Unir Caminos",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "5️⃣ Unir Caminos": {
+      "main": [
+        [
+          {
+            "node": "6️⃣ Transformar con JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6️⃣ Transformar con JavaScript": {
+      "main": [
+        [
+          {
+            "node": "7️⃣ Llamar API Externa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7️⃣ Llamar API Externa": {
+      "main": [
+        [
+          {
+            "node": "8️⃣ Generar con IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8️⃣ Generar con IA": {
+      "main": [
+        [
+          {
+            "node": "9️⃣ Preparar para Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9️⃣ Preparar para Sheets": {
+      "main": [
+        [
+          {
+            "node": "🔟 Guardar en Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔟 Guardar en Google Sheets": {
+      "main": [
+        [
+          {
+            "node": "✅ Workflow Completado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📍 Demo: Apps Externas": {
+      "main": [
+        [
+          {
+            "node": "📧 Gmail (Ejemplo)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "💬 Slack (Ejemplo)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🤖 Telegram (Ejemplo)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "📄 Notion (Ejemplo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📍 Demo: Nodos Internos": {
+      "main": [
+        [
+          {
+            "node": "📝 Set (Crear Datos)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔀 Switch (Rutas)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 Filter (Filtrar)",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "⏳ Wait (Pausar)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🟢 PASO 1: Iniciar Demo": {
+      "main": [
+        [
+          {
+            "node": "🔵 PASO 2: Crear Datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔵 PASO 2: Crear Datos": {
+      "main": [
+        [
+          {
+            "node": "🟡 PASO 3: Añadir Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🟡 PASO 3: Añadir Info": {
+      "main": [
+        [
+          {
+            "node": "🟣 PASO 4: Transformar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🟣 PASO 4: Transformar": {
+      "main": [
+        [
+          {
+            "node": "✅ PASO 5: Resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📍 Demo: Guardrails": {
+      "main": [
+        [
+          {
+            "node": "📝 Simular Input Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Simular Input Usuario": {
+      "main": [
+        [
+          {
+            "node": "🛡️ Guardrails: Sanitizar",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "🔍 Guardrails: Clasificar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🔍 Guardrails: Clasificar": {
+      "main": [
+        [
+          {
+            "node": "✅ Texto Seguro",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "❌ Texto Bloqueado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📍 Demo: AI Agent": {
+      "main": [
+        [
+          {
+            "node": "📝 Mensaje del Usuario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Mensaje del Usuario": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧠 OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🌐 HTTP Tool (API)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🧮 Calculator Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "✅ Respuesta del Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "06bacad4-9237-4f31-9812-e3e7fb914981",
+  "meta": {
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "9sGAv8FjRantzyKi",
+  "tags": [
+    {
+      "updatedAt": "2026-01-24T18:52:51.970Z",
+      "createdAt": "2026-01-24T18:52:51.970Z",
+      "id": "0MDAWeekbxRbdAKV",
+      "name": "Curso Adrián Sáenz N8N 2"
+    }
+  ]
+}

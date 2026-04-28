@@ -1,12 +1,13 @@
 /**
- * Memoria Unificada de GEO OS
+ * FASE 2 — Memoria Unificada
  * SQLite como caché local + Firestore como fuente de verdad compartida.
+ * Todos los apps (Geo, Voren, EcoOrigen) escriben y leen de aquí.
  */
 import Database from 'better-sqlite3';
 import { appConfig } from '../config.js';
 import { db as dbCloud } from '../database/firebase.js';
 
-export type MemorySource = 'geo' | 'productividad' | 'ecoorigen';
+export type MemorySource = 'geo' | 'voren' | 'antigravity' | 'ecoorigen';
 
 export interface MensajeChat {
     user_id: string;
@@ -51,32 +52,16 @@ dbLocal.exec(`
 // ─── Objeto Singleton ─────────────────────────────────────────────────────────
 export const memoria = {
 
-    // Máximo de mensajes por usuario/source antes de podar los más antiguos
-    MAX_HISTORIAL: 40,
-
     guardar(msg: MensajeChat) {
         const timestamp = msg.timestamp || new Date().toISOString();
-        const source = msg.source || 'geo';
-
         dbLocal.prepare(`
             INSERT INTO mensajes (user_id, role, content, tool_call_id, name, source, timestamp)
             VALUES (?, ?, ?, ?, ?, ?, ?)
         `).run(
             msg.user_id, msg.role, msg.content,
             msg.tool_call_id || null, msg.name || null,
-            source, timestamp
+            msg.source || 'geo', timestamp
         );
-
-        // Poda: mantener solo los últimos MAX_HISTORIAL mensajes por usuario+source
-        dbLocal.prepare(`
-            DELETE FROM mensajes
-            WHERE user_id = ? AND source = ?
-            AND id NOT IN (
-                SELECT id FROM mensajes
-                WHERE user_id = ? AND source = ?
-                ORDER BY timestamp DESC LIMIT ?
-            )
-        `).run(msg.user_id, source, msg.user_id, source, this.MAX_HISTORIAL);
 
         // Firestore async (no bloquea el ciclo de pensamiento)
         if (dbCloud) {

@@ -1,0 +1,423 @@
+{
+  "name": "Agente Google Reviews",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "review",
+        "operation": "reply",
+        "account": {
+          "__rl": true,
+          "value": "accounts/103866932474488396070",
+          "mode": "list",
+          "cachedResultName": "Divisual Project"
+        },
+        "location": {
+          "__rl": true,
+          "value": "locations/11303787163250651499",
+          "mode": "list",
+          "cachedResultName": "locations/11303787163250651499"
+        },
+        "review": {
+          "__rl": true,
+          "value": "={{ $('Google Business Profile Trigger').item.json.reviewId }}",
+          "mode": "id"
+        },
+        "reply": "={{ $('Generador de respuestas | Agente').item.json.message.content }}",
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.googleBusinessProfile",
+      "typeVersion": 1,
+      "position": [
+        176,
+        -208
+      ],
+      "id": "210eef46-c298-4b78-81bc-65ef5b4beee3",
+      "name": "Reply to review",
+      "credentials": {
+        "googleBusinessProfileOAuth2Api": {
+          "id": "o1w9CHwJA5VVfloY",
+          "name": "Google Business Profile - clase YouTube"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "account": {
+          "__rl": true,
+          "value": "accounts/103866932474488396070",
+          "mode": "list",
+          "cachedResultName": "Divisual Project"
+        },
+        "location": {
+          "__rl": true,
+          "value": "locations/11303787163250651499",
+          "mode": "list",
+          "cachedResultName": "locations/11303787163250651499"
+        }
+      },
+      "type": "n8n-nodes-base.googleBusinessProfileTrigger",
+      "typeVersion": 1,
+      "position": [
+        -896,
+        -208
+      ],
+      "id": "51a92b79-98f2-4ef2-8198-70b4ea807444",
+      "name": "Google Business Profile Trigger",
+      "credentials": {
+        "googleBusinessProfileOAuth2Api": {
+          "id": "o1w9CHwJA5VVfloY",
+          "name": "Google Business Profile - clase YouTube"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Reseña del usuario: {{ $('Google Business Profile Trigger').item.json.comment }}\n\nPuntuación sobre 5: {{ $('Google Business Profile Trigger').item.json.starRating }}\n\nNombre del reseñador: {{ $('Google Business Profile Trigger').item.json.reviewer.displayName }}"
+            },
+            {
+              "content": "=# Prompt para Agente de Respuesta a Reseñas Google\n\n## Contexto del Negocio\nEres el asistente de atención al cliente de **Divisual Project**, una agencia y academia especializada en inteligencia artificial y marketing digital. Tu función es responder a las reseñas de Google My Business de manera profesional, cercana y auténtica.\n\n## Tono y Estilo de Comunicación\n\n### Características principales:\n- **Tono cercano y humanizado**: Escribe como si fueras una persona real del equipo\n- **Confianza profesional**: Demuestra seguridad en los servicios sin ser arrogante\n- **Autenticidad**: Evita frases robóticas o demasiado formales\n- **Sin emoticonos**: No uses ningún tipo de emoticono o emoji\n- **Sin frases hechas**: Evita expresiones típicas de IA como \"¡Gracias por tu feedback!\", \"¡Nos alegra saber que!\", etc.\n\n### Lo que NO debes hacer:\n- Usar emoticonos o emojis\n- Sonar robótico o artificial\n- Usar frases cliché de atención al cliente\n- Respuestas demasiado largas o excesivamente formales\n- Promesas que no podemos cumplir\n\n## Instrucciones de Respuesta\n\n### Para Reseñas POSITIVAS (4-5 estrellas):\n\n**Estructura:**\n1. Agradecer de manera genuina y personal\n2. Reconocer brevemente el aspecto específico mencionado (si aplica)\n3. Invitar a seguir confiando en nosotros para futuros proyectos\n\n**Ejemplo de respuesta:**\n```\nGracias [nombre], realmente valoramos que hayas compartido tu experiencia con nosotros. Es muy gratificante saber que nuestro enfoque en [aspecto específico mencionado] te resultó útil. Esperamos poder acompañarte en futuros proyectos de IA y marketing digital.\n\nSaludos del equipo de Divisual Project.\n```\n\n### Para Reseñas SIN TEXTO (solo calificación):\n\n**Para calificaciones positivas (4-5 estrellas):**\n```\nGracias [nombre] por tomarte el tiempo de calificarnos. Valoramos mucho tu confianza en Divisual Project.\n\nSaludos del equipo de Divisual Project.\n```\n\n**Para calificaciones negativas (1-3 estrellas):**\n```\nHola [nombre], lamentamos que algo no haya funcionado bien. Nos gustaría conocer más detalles escribiéndonos a administracion@divisualproject.com\n\nSaludos del equipo de Divisual Project.\n```\n\n### Para Reseñas NEGATIVAS (1-3 estrellas):\n\n**Estructura:**\n1. Lamentar la experiencia de manera sincera\n2. Mostrar interés genuino en resolver la situación\n3. Solicitar que contacte por email para dar seguimiento personalizado\n4. Proporcionar el email: administracion@divisualproject.com\n\n**Ejemplo de respuesta:**\n```\nHola [nombre], lamentamos mucho que tu experiencia no haya sido la esperada. Esto no refleja los estándares que manejamos en Divisual Project y queremos entender qué ocurrió para poder mejorarlo.\n\n¿Podrías escribirnos con más detalles a administracion@divisualproject.com? Nos gustaría revisar tu caso personalmente y buscar una solución.\n\nGracias por darnos la oportunidad de mejorar.\n```\n\n## Variables a Utilizar\n\nUtiliza estas variables que recibirás del sistema N8N:\n- `{{ $json.name }}` - Nombre del reseñador\n- `{{ $json.stars }}` - Calificación en estrellas (1-5)\n- `{{ $json.text }}` - Texto de la reseña\n- `{{ $json.publishedAtDate }}` - Fecha de la reseña\n\n## Reglas Específicas\n\n1. **Personalización**: Siempre usa el nombre del reseñador si está disponible\n2. **Longitud**: \n   - Respuestas completas: 50-120 palabras\n   - Respuestas sin texto de reseña: 25-40 palabras\n3. **Tiempo de respuesta**: Actúa como si respondieras el mismo día\n4. **Consistencia**: Mantén el mismo tono profesional pero cercano en todas las respuestas\n5. **Email de contacto**: Solo menciona administracion@divisualproject.com en casos de reseñas negativas\n6. **Reseñas sin texto**: Si la reseña no contiene texto, usa las versiones breves según la calificación\n\n## Proceso de Decisión\n\n```\nIF review_text is empty or null:\n    → Respuesta breve según calificación\nELSE IF review_rating >= 4:\n    → Respuesta de agradecimiento completa\nELSE:\n    → Respuesta de disculpa con solicitud de contacto por email\n```\n\n## Firma\n\nTermina siempre con:\n```\nSaludos del equipo de Divisual Project.\n```\n\n---\n\n**Nota importante**: Mantén siempre un enfoque humano y auténtico. Los clientes deben sentir que están interactuando con una persona real del equipo, no con un bot automatizado.",
+              "role": "system"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -368,
+        -208
+      ],
+      "id": "82fe37cd-05ee-47c1-9b63-b7a04be34694",
+      "name": "Generador de respuestas | Agente",
+      "credentials": {
+        "openAiApi": {
+          "id": "8hgw1j72mroqso8Q",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "# ⭐️ Workflow «Responder Reseñas 2.0» — Google Business Profile ⚡️\n\n> **Objetivo:** Analizar cada nueva reseña, generar la mejor respuesta con IA, publicarla y **notificar** al equipo si es negativa.\n\n---\n\n## 🔗 Cadena de nodos\n\n1. **⚡ Google Business Profile Trigger**  \n   Detecta automáticamente una **nueva reseña**.\n\n2. **🧠 Analizador de Reseñas | Agente**  \n   - Clasifica la reseña como **Positiva** o **Negativa**.  \n   - Extrae el _sentimiento_, puntos clave y nivel de urgencia.\n\n3. **✍️ Generador de Respuestas | Agente**  \n   Crea la respuesta adecuada según el tono y las políticas de la marca.\n\n4. **⏸️ Wait**  \n   Breve pausa (ej. 5 s) para evitar límites de la API y garantizar orden.\n\n5. **🏁 Reply to review**  \n   Publica la respuesta en la misma reseña de Google.\n\n6. **🔀 Switch (Positiva / Negativa)**  \n   - **Positiva:** no se hace nada extra.  \n   - **Negativa:** envía alerta interna.\n\n7. **💬 Enviar texto**  \n   Notifica al canal interno (Slack/WhatsApp):  \n   - Link de la reseña  \n   - Resumen del análisis  \n   - Respuesta publicada\n\n---\n\n## 🛠️ Requisitos clave\n\n| Paso     |     Requisito |\n|----------|---------------|\n| 1 & 5     |           **Acceso aprobado** a la *My Business Account Management API* (puede tardar 5‑15 días) |\n| 2 & 3 | Credenciales de OpenAI u otro LLM configuradas |\n| 7 | Webhook/Token del canal de notificaciones EVOLUTION API |\n\n---\n\n## 🚦 Flujo resumido\n\n```mermaid\nflowchart LR\nA[GB Profile Trigger] --> B[Analizar Reseña]\nB --> C[Generar Respuesta]\nC --> D[Wait]\nD --> E[Reply to review]\nE --> F{Sentimiento}\nF -- Positiva --> X[Fin]\nF -- Negativa --> G[Enviar texto]\n\n```\n\n> _Hecho con ❤️ por [Juan Pe Navarro](https://www.youtube.com/@juanpe.divisual)_\n\n",
+        "height": 1300,
+        "width": 2500,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1520,
+        -736
+      ],
+      "id": "d6ec42f0-dd2d-466d-a990-2daef95aea3b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        -208
+      ],
+      "id": "c84a7306-1f03-4ed8-ae55-4398de334e25",
+      "name": "Wait",
+      "webhookId": "2d0ee2fd-ad21-4236-8087-7ecb0b8f8e83"
+    },
+    {
+      "parameters": {
+        "content": "> ## Este sistema tiene un valor de mercado real de:\n\n- $900 Set-Up\n- $50/mes",
+        "height": 140,
+        "width": 640,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        336,
+        432
+      ],
+      "id": "dcbcff62-0acd-480e-a6ed-da0d7e5b5291",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -896,
+        -400
+      ],
+      "id": "715717be-f7f0-4ae0-a5bd-daae88e7c02c",
+      "name": "When chat message received",
+      "webhookId": "50d80665-113a-4ea2-872d-c3e6598c3dc2"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Reseña: {{ $json.comment }}\nRating sobre 5: {{ $json.starRating }}"
+            },
+            {
+              "content": "=# Analizador de Reseñas - Google My Business\n\n## Rol\nEres un analizador especializado en clasificación de sentimientos para reseñas de Google My Business.\n\n## Contexto\nAnalizarás reseñas de la empresa **Divisual Project** (www.divisualproject.com), una empresa de servicios profesionales.\n\n## Tarea\nAnaliza el sentimiento de la reseña proporcionada y clasifícala como positiva o negativa basándote en:\n\n### Criterios de Clasificación\n\n**POSITIVA** - La reseña contiene:\n- Expresiones de satisfacción o elogio\n- Calificaciones de 4-5 estrellas (si se mencionan)\n- Recomendaciones del servicio\n- Comentarios constructivos favorables\n- Agradecimientos sinceros\n\n**NEGATIVA** - La reseña contiene:\n- Expresiones de insatisfacción o crítica\n- Calificaciones de 1-3 estrellas (si se mencionan)\n- Quejas sobre el servicio\n- Comentarios destructivos\n- Frustraciones evidentes\n\n### Ejemplos\n\n**Ejemplo de reseña positiva:**\n> \"Excelente servicio, muy profesionales y puntuales. Recomiendo totalmente.\"\n\n**Clasificación:** `positiva`\n\n**Ejemplo de reseña negativa:**\n> \"El servicio no cumplió mis expectativas, llegaron tarde y el trabajo no fue satisfactorio.\"\n\n**Clasificación:** `negativa`\n\n## Instrucciones de Respuesta\n\n**IMPORTANTE:** Tu respuesta debe contener ÚNICAMENTE una de estas dos palabras:\n\n- `positiva`\n- `negativa`\n\n**NO incluyas:**\n- Explicaciones adicionales\n- Justificaciones\n- Comentarios\n- Puntuación\n- Texto adicional de ningún tipo\n\n## Formato de Salida\n```\n[positiva/negativa]\n```\n\n---\n*Procesa la reseña y responde únicamente con la clasificación correspondiente.*"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        -688,
+        -208
+      ],
+      "id": "90b19a08-839a-4a1c-b7d3-f7e07512b14f",
+      "name": "Analizador de Reseñas | Agente de IA",
+      "credentials": {
+        "openAiApi": {
+          "id": "8hgw1j72mroqso8Q",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Analizador de Reseñas | Agente de IA').item.json.message.content }}",
+                    "rightValue": "positiva",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "f6e1dc21-3ae8-4a0d-b248-b80895e60f5b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Positiva"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "68adce6d-099a-458e-96c1-b82d965a1644",
+                    "leftValue": "={{ $('Analizador de Reseñas | Agente de IA').item.json.message.content }}",
+                    "rightValue": "negativa",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Negativa"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        368,
+        -208
+      ],
+      "id": "f01e3971-26d0-451d-b727-82d578108eec",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        592,
+        -64
+      ],
+      "id": "2cd813b4-d7db-4fa3-a658-d59e89f66d7f",
+      "name": "Send a message",
+      "webhookId": "a170563a-ea49-4c19-b7d1-58b9b2fe0ae9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "IokBtq93nPyyaQsm",
+          "name": "Gmail divisual@divisualproject.com"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "@[youtube](MsWd3NkvADE)",
+        "height": 928,
+        "width": 992
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        -368
+      ],
+      "id": "baff6482-1936-4dbb-81ab-dae266f97f18",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "# 🚀 La Tribu Divisual\n\n## Este sistema tiene un valor en el mercado de **$500.**\n\n\n## Accede a **La Tribu Divisual** para aprender a crear agentes más avanzados y a generar altos ingresos con ellos de forma real y segura.\n\n# 👉 [Click aquí para unirte a la Lista de espera](https://divisualproject.academy/)\n",
+        "height": 360,
+        "width": 952,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        192
+      ],
+      "id": "d32cdc70-7e56-4111-9502-015decdf8623",
+      "name": "Sticky Note10"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Business Profile Trigger": {
+      "main": [
+        [
+          {
+            "node": "Analizador de Reseñas | Agente de IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generador de respuestas | Agente": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Reply to review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        []
+      ]
+    },
+    "Analizador de Reseñas | Agente de IA": {
+      "main": [
+        [
+          {
+            "node": "Generador de respuestas | Agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reply to review": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a10b268a-517b-417e-84ae-621adcbbacce",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2723e5c0cdf73e609a9d6131a4145b2656ca7463c71fa761a441dc255964ffd8"
+  },
+  "id": "JCi4Wk0rTxCKS85h",
+  "tags": [
+    {
+      "createdAt": "2025-06-02T07:53:45.637Z",
+      "updatedAt": "2025-06-02T07:53:45.637Z",
+      "id": "UekrM9vcjkEV9ja9",
+      "name": "Funcional"
+    }
+  ]
+}
